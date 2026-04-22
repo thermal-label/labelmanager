@@ -2,13 +2,16 @@
 layout: home
 
 hero:
-  name: labelmanager
-  text: TypeScript driver for DYMO D1 label printers
-  tagline: Node.js · CLI · Browser — one protocol, three ways to print
+  name: "@thermal-label/labelmanager"
+  text: DYMO D1 label printing without the bloat
+  tagline: No vendor software. No proprietary drivers. Just USB, TypeScript, and a clean API — from Node.js, the CLI, or the browser.
   actions:
     - theme: brand
       text: Get started
       link: /getting-started
+    - theme: brand
+      text: Try it now →
+      link: /web
     - theme: alt
       text: GitHub
       link: https://github.com/thermal-label/labelmanager
@@ -16,7 +19,7 @@ hero:
 features:
   - icon: 🟢
     title: Node.js
-    details: Direct USB printing from Node.js server, desktop, and backend apps. Print text and images with a single async call.
+    details: Direct USB bulk-transfer printing from Node.js servers and desktop apps. Zero native dependencies beyond the usb package.
     link: /node
     linkText: Node.js guide
   - icon: ⌨️
@@ -26,7 +29,7 @@ features:
     linkText: CLI guide
   - icon: 🌐
     title: Browser
-    details: WebUSB printing directly from Chrome or Edge — no server, no native dependencies. Same protocol, pure web stack.
+    details: WebUSB printing directly from Chrome or Edge — no server, no install, no driver swap required.
     link: /web
     linkText: Web guide
 ---
@@ -52,8 +55,18 @@ features:
   </a>
 </div>
 
-## Try it in your browser
-
-<LiveDemo />
+<div class="ecosystem">
+  <p class="ecosystem-label">Also in this ecosystem</p>
+  <div class="ecosystem-links">
+    <a href="https://thermal-label.github.io/labelwriter/" class="ecosystem-link" target="_blank" rel="noopener">
+      <span class="eco-name">labelwriter</span>
+      <span class="eco-desc">DYMO LabelWriter series</span>
+    </a>
+    <a href="https://thermal-label.github.io/brother-ql/" class="ecosystem-link" target="_blank" rel="noopener">
+      <span class="eco-name">brother-ql</span>
+      <span class="eco-desc">Brother QL label printers</span>
+    </a>
+  </div>
+</div>
 
 </div>

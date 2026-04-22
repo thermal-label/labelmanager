@@ -88,3 +88,58 @@
   font-size: 1.1rem;
   letter-spacing: 0.02em;
 }
+
+/* Scale down the long package name slightly on smaller viewports */
+.VPHero .name {
+  word-break: break-word;
+}
+
+/* Ecosystem strip */
+.ecosystem {
+  border-top: 1px solid var(--vp-c-divider);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.ecosystem-label {
+  color: var(--vp-c-text-3);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.ecosystem-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ecosystem-link {
+  align-items: baseline;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  color: var(--vp-c-text-1);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.ecosystem-link:hover {
+  border-color: var(--vp-c-brand-1);
+}
+
+.eco-name {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.eco-desc {
+  color: var(--vp-c-text-3);
+  font-size: 0.8rem;
+}

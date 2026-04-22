@@ -2,8 +2,8 @@ import { defineConfig } from "vitepress";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
-  title: "labelmanager",
-  description: "TypeScript driver for DYMO D1 label printers",
+  title: "@thermal-label/labelmanager",
+  description: "DYMO D1 label printing for Node.js, CLI, and the browser — no vendor drivers or software required",
   base: "/labelmanager/",
   ignoreDeadLinks: [
     /^\.\/LICENSE$/,
