@@ -2,8 +2,8 @@
 import type {
   DeviceDescriptor,
   PrintOptions,
-  RawImageData
-} from "@thermal-label/labelmanager-core";
+  RawImageData,
+} from '@thermal-label/labelmanager-core';
 
 export interface OpenOptions {
   vid?: number;

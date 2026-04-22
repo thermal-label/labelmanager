@@ -1,6 +1,6 @@
-import { getRow, rotateBitmap, type LabelBitmap } from "@mbtech-nl/bitmap";
+import { getRow, rotateBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
 /* eslint-disable import-x/consistent-type-specifier-style */
-import type { PrintOptions } from "./types.js";
+import type { PrintOptions } from './types.js';
 
 const REPORT_SIZE = 64;
 const MAX_PAYLOAD_SIZE = REPORT_SIZE - 1;
@@ -16,13 +16,13 @@ function toReport(payload: number[]): Uint8Array {
 }
 
 export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
-  const density = options?.density ?? "normal";
-  const densityByte = density === "high" ? 0x01 : 0x00;
+  const density = options?.density ?? 'normal';
+  const densityByte = density === 'high' ? 0x01 : 0x00;
 
   return [
     toReport([0x1b, 0x40]), // reset
     toReport([0x1b, 0x43, 0x00]), // media type (tape)
-    toReport([0x1b, 0x65, densityByte]) // density
+    toReport([0x1b, 0x65, densityByte]), // density
   ];
 }
 
@@ -37,7 +37,7 @@ export function buildBitmapRows(bitmap: LabelBitmap): Uint8Array[] {
 
   if (rotated.heightPx !== 64) {
     throw new Error(
-      `Bitmap height must be 64 dots after rotation. Received ${String(rotated.heightPx)}.`
+      `Bitmap height must be 64 dots after rotation. Received ${String(rotated.heightPx)}.`,
     );
   }
 
@@ -67,10 +67,7 @@ export function buildFormFeed(): Uint8Array[] {
  * @param options Density/copies options.
  * @returns Full report list for one or more copies.
  */
-export function encodeLabel(
-  bitmap: LabelBitmap,
-  options: PrintOptions = {}
-): Uint8Array[] {
+export function encodeLabel(bitmap: LabelBitmap, options: PrintOptions = {}): Uint8Array[] {
   const copies = Math.max(1, options.copies ?? 1);
   const reports: Uint8Array[] = [];
 

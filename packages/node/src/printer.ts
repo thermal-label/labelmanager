@@ -1,7 +1,13 @@
-import { encodeLabel, renderImage, renderText, type DeviceDescriptor, type RawImageData } from "@thermal-label/labelmanager-core";
-import { readFile } from "node:fs/promises";
+import {
+  encodeLabel,
+  renderImage,
+  renderText,
+  type DeviceDescriptor,
+  type RawImageData,
+} from '@thermal-label/labelmanager-core';
+import { readFile } from 'node:fs/promises';
 /* eslint-disable import-x/consistent-type-specifier-style */
-import type { ImagePrintOptions, PrinterStatus, TextPrintOptions } from "./types.js";
+import type { ImagePrintOptions, PrinterStatus, TextPrintOptions } from './types.js';
 
 const WRITE_DELAY_MS = 5;
 const STATUS_QUERY = new Uint8Array([0x1b, 0x41]);
@@ -13,28 +19,28 @@ interface HidAsyncLike {
 }
 
 async function sleep(ms: number): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+  await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function decodeImageBuffer(buffer: Buffer): Promise<RawImageData> {
-  const maybeCanvas = await import("@napi-rs/canvas").catch(() => null);
+  const maybeCanvas = await import('@napi-rs/canvas').catch(() => null);
 
   if (!maybeCanvas) {
     throw new Error(
-      "Image decoding requires optional dependency @napi-rs/canvas. Pass pre-decoded RawImageData if unavailable."
+      'Image decoding requires optional dependency @napi-rs/canvas. Pass pre-decoded RawImageData if unavailable.',
     );
   }
 
   const image = await maybeCanvas.loadImage(buffer);
   const canvas = maybeCanvas.createCanvas(image.width, image.height);
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
   ctx.drawImage(image, 0, 0);
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
 
   return {
     width: image.width,
     height: image.height,
-    data: Uint8Array.from(imageData.data)
+    data: Uint8Array.from(imageData.data),
   };
 }
 
@@ -49,7 +55,7 @@ export class DymoPrinter {
 
   private async writeReports(reports: Uint8Array[]): Promise<void> {
     if (!this.hid) {
-      throw new Error("Printer is not connected.");
+      throw new Error('Printer is not connected.');
     }
 
     for (const report of reports) {
@@ -76,9 +82,12 @@ export class DymoPrinter {
    * @param image Image input.
    * @param options Print options.
    */
-  public async printImage(image: Buffer | string | RawImageData, options: ImagePrintOptions = {}): Promise<void> {
+  public async printImage(
+    image: Buffer | string | RawImageData,
+    options: ImagePrintOptions = {},
+  ): Promise<void> {
     let raw: RawImageData;
-    if (typeof image === "string") {
+    if (typeof image === 'string') {
       const file = await readFile(image);
       raw = await decodeImageBuffer(file);
     } else if (Buffer.isBuffer(image)) {
@@ -90,7 +99,7 @@ export class DymoPrinter {
     const bitmap = renderImage(raw, {
       ...(options.invert === undefined ? {} : { invert: options.invert }),
       ...(options.dither === undefined ? {} : { dither: options.dither }),
-      ...(options.threshold === undefined ? {} : { threshold: options.threshold })
+      ...(options.threshold === undefined ? {} : { threshold: options.threshold }),
     });
     const reports = encodeLabel(bitmap, options);
     await this.writeReports(reports);
@@ -103,7 +112,7 @@ export class DymoPrinter {
    */
   public async getStatus(): Promise<PrinterStatus> {
     if (!this.hid) {
-      throw new Error("Printer is not connected.");
+      throw new Error('Printer is not connected.');
     }
 
     await this.hid.write(STATUS_QUERY);
@@ -113,7 +122,7 @@ export class DymoPrinter {
     return {
       ready: (status & 0b00000001) === 0,
       tapeInserted: (status & 0b00000010) === 0,
-      labelLow: (status & 0b00000100) !== 0
+      labelLow: (status & 0b00000100) !== 0,
     };
   }
 

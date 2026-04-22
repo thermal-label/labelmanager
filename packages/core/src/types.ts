@@ -9,6 +9,6 @@ export interface DeviceDescriptor {
 }
 
 export interface PrintOptions {
-  density?: "normal" | "high";
+  density?: 'normal' | 'high';
   copies?: number;
 }

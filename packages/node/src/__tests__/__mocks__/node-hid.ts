@@ -33,5 +33,5 @@ export const HIDAsync = {
       throw new Error(`No mock HID handle for path: ${path}`);
     }
     return Promise.resolve(handle);
-  }
+  },
 };

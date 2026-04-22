@@ -1,10 +1,10 @@
-import { describe, it } from "vitest";
+import { describe, it } from 'vitest';
 
-const integrationEnabled = process.env.DYMO_INTEGRATION === "1";
+const integrationEnabled = process.env.DYMO_INTEGRATION === '1';
 const integrationDescribe = integrationEnabled ? describe : describe.skip;
 
-integrationDescribe("integration: manual hardware verification", () => {
-  it("manual checklist for hardware validation", () => {
+integrationDescribe('integration: manual hardware verification', () => {
+  it('manual checklist for hardware validation', () => {
     /**
      * Manual hardware verification checklist:
      *

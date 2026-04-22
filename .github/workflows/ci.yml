@@ -32,7 +32,7 @@ jobs:
         run: pnpm lint
 
       - name: Format check
-        run: prettier --check "packages/**/*.ts"
+        run: pnpm prettier --check "packages/**/*.ts"
 
       - name: Test with coverage
         run: pnpm test:coverage

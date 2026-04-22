@@ -29,7 +29,7 @@ export function createMockHIDDevice(vendorId = 0x0922, productId = 0x1002): Mock
     addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
       const bucket = (listeners[type] ??= []);
       const wrapped =
-        typeof listener === "function"
+        typeof listener === 'function'
           ? listener
           : (event: Event) => {
               listener.handleEvent(event);
@@ -37,7 +37,7 @@ export function createMockHIDDevice(vendorId = 0x0922, productId = 0x1002): Mock
       bucket.push(wrapped);
     },
     removeEventListener(type: string, listener: EventListenerOrEventListenerObject) {
-      listeners[type] = (listeners[type] ?? []).filter((entry) => entry !== listener);
+      listeners[type] = (listeners[type] ?? []).filter(entry => entry !== listener);
     },
     dispatchEvent(event: Event) {
       for (const listener of listeners[event.type] ?? []) {
@@ -45,7 +45,7 @@ export function createMockHIDDevice(vendorId = 0x0922, productId = 0x1002): Mock
       }
       return true;
     },
-    __writes: writes
+    __writes: writes,
   } as unknown as MockHIDDevice;
 
   return device;

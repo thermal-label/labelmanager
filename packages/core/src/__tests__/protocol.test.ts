@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { buildBitmapRows, buildFormFeed, buildResetSequence, encodeLabel } from "../protocol.js";
+import { describe, expect, it } from 'vitest';
+import { buildBitmapRows, buildFormFeed, buildResetSequence, encodeLabel } from '../protocol.js';
 /* eslint-disable import-x/consistent-type-specifier-style */
-import type { LabelBitmap } from "@mbtech-nl/bitmap";
+import type { LabelBitmap } from '@mbtech-nl/bitmap';
 
 function makeBitmap(widthPx: number, heightPx: number): LabelBitmap {
   const bytesPerRow = Math.ceil(widthPx / 8);
@@ -13,10 +13,10 @@ function makeBitmap(widthPx: number, heightPx: number): LabelBitmap {
   return { widthPx, heightPx, data };
 }
 
-describe("protocol", () => {
-  it("builds reset sequence with normal and high density", () => {
+describe('protocol', () => {
+  it('builds reset sequence with normal and high density', () => {
     const normal = buildResetSequence();
-    const high = buildResetSequence({ density: "high" });
+    const high = buildResetSequence({ density: 'high' });
     const normalReset = normal[0]!;
     const normalDensity = normal[2]!;
     const highDensity = high[2]!;
@@ -27,7 +27,7 @@ describe("protocol", () => {
     expect(highDensity.slice(0, 3)).toEqual(new Uint8Array([0x1b, 0x65, 0x01]));
   });
 
-  it("creates 64-byte zero-padded bitmap reports", () => {
+  it('creates 64-byte zero-padded bitmap reports', () => {
     const bitmap = makeBitmap(64, 64);
     const reports = buildBitmapRows(bitmap);
     const first = reports[0]!;
@@ -38,7 +38,7 @@ describe("protocol", () => {
     expect(first[63]).toBe(0x00);
   });
 
-  it("creates form feed command", () => {
+  it('creates form feed command', () => {
     const reports = buildFormFeed();
     const formFeed = reports[0]!;
 
@@ -46,9 +46,9 @@ describe("protocol", () => {
     expect(formFeed.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
   });
 
-  it("encodes complete report sequence and copies", () => {
+  it('encodes complete report sequence and copies', () => {
     const bitmap = makeBitmap(64, 64);
-    const reports = encodeLabel(bitmap, { copies: 2, density: "high" });
+    const reports = encodeLabel(bitmap, { copies: 2, density: 'high' });
     const first = reports[0]!;
     const endOfFirstCopy = reports[67]!;
     const firstOfSecondCopy = reports[68]!;
