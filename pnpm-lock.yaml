@@ -12,8 +12,8 @@ importers:
         specifier: ^2.0.0
         version: 2.31.0(@types/node@22.19.17)
       '@mbtech-nl/bitmap':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       '@mbtech-nl/eslint-config':
         specifier: ^1.0.0
         version: 1.0.0(@typescript-eslint/utils@8.59.0(eslint@9.39.4)(typescript@5.5.4))(eslint@9.39.4)(typescript@5.5.4)
@@ -79,8 +79,8 @@ importers:
   packages/core:
     dependencies:
       '@mbtech-nl/bitmap':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       '@mbtech-nl/tsconfig':
         specifier: ^1.0.0
@@ -618,8 +618,8 @@ packages:
   '@manypkg/get-packages@1.1.3':
     resolution: {integrity: sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A==}
 
-  '@mbtech-nl/bitmap@1.0.0':
-    resolution: {integrity: sha512-DbELMMa5xSLdzXeOa/EAgp0kZfOhWv7YJ5NRayqZdUgtqMplRBbCdXYB3tnFBunJIB+oguL76kPf3Okyd+CJmQ==}
+  '@mbtech-nl/bitmap@1.0.1':
+    resolution: {integrity: sha512-Mfmw2s97d8B1gkqkUUN0E69cF+ZfFXDOJOvGbhC5XbRu04PEoItHhPI3J85w2FKHRyDX/96xErfohFil36dprg==}
     engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
 
   '@mbtech-nl/eslint-config@1.0.0':
@@ -3271,7 +3271,7 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@mbtech-nl/bitmap@1.0.0': {}
+  '@mbtech-nl/bitmap@1.0.1': {}
 
   '@mbtech-nl/eslint-config@1.0.0(@typescript-eslint/utils@8.59.0(eslint@9.39.4)(typescript@5.5.4))(eslint@9.39.4)(typescript@5.5.4)':
     dependencies:

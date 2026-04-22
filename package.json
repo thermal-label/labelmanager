@@ -22,8 +22,8 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@mbtech-nl/bitmap": "^1.0.0",
     "@changesets/cli": "^2.0.0",
+    "@mbtech-nl/bitmap": "^1.0.1",
     "@mbtech-nl/eslint-config": "^1.0.0",
     "@mbtech-nl/prettier-config": "^1.0.0",
     "@mbtech-nl/tsconfig": "^1.0.0",

@@ -118,7 +118,7 @@ function drawPreview(): void {
 
   for (let y = 0; y < fitted.heightPx; y += 1) {
     for (let x = 0; x < fitted.widthPx; x += 1) {
-      if (getPixel(fitted, x, y) === 1) {
+      if (getPixel(fitted, x, y)) {
         context.fillRect(x * PREVIEW_SCALE, y * PREVIEW_SCALE, PREVIEW_SCALE, PREVIEW_SCALE);
       }
     }
