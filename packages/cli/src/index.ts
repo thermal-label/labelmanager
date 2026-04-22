@@ -89,6 +89,11 @@ export function createProgram(): Command {
   return program;
 }
 
+/**
+ * Execute the CLI.
+ *
+ * @param argv Process argument vector.
+ */
 export async function run(argv = process.argv): Promise<void> {
   const program = createProgram();
   await program.parseAsync(argv);

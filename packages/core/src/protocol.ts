@@ -26,6 +26,12 @@ export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
   ];
 }
 
+/**
+ * Convert a bitmap to printer row reports.
+ *
+ * @param bitmap Input monochrome bitmap.
+ * @returns Zero-padded HID payload reports.
+ */
 export function buildBitmapRows(bitmap: LabelBitmap): Uint8Array[] {
   const rotated = bitmap.heightPx === 64 ? bitmap : rotateBitmap(bitmap, 90);
 
@@ -45,10 +51,22 @@ export function buildBitmapRows(bitmap: LabelBitmap): Uint8Array[] {
   return reports;
 }
 
+/**
+ * Build the printer form-feed/cut command.
+ *
+ * @returns One HID payload report for cut/advance.
+ */
 export function buildFormFeed(): Uint8Array[] {
   return [toReport([0x1b, 0x47])];
 }
 
+/**
+ * Encode a complete label job into HID report payloads.
+ *
+ * @param bitmap Bitmap to print.
+ * @param options Density/copies options.
+ * @returns Full report list for one or more copies.
+ */
 export function encodeLabel(
   bitmap: LabelBitmap,
   options: PrintOptions = {}

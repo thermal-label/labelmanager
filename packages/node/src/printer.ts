@@ -58,12 +58,24 @@ export class DymoPrinter {
     }
   }
 
+  /**
+   * Print a text label.
+   *
+   * @param text Label text.
+   * @param options Print options.
+   */
   public async printText(text: string, options: TextPrintOptions = {}): Promise<void> {
     const bitmap = renderText(text, options.invert === undefined ? {} : { invert: options.invert });
     const reports = encodeLabel(bitmap, options);
     await this.writeReports(reports);
   }
 
+  /**
+   * Print an image from a path, encoded buffer, or pre-decoded raw pixels.
+   *
+   * @param image Image input.
+   * @param options Print options.
+   */
   public async printImage(image: Buffer | string | RawImageData, options: ImagePrintOptions = {}): Promise<void> {
     let raw: RawImageData;
     if (typeof image === "string") {
@@ -84,6 +96,11 @@ export class DymoPrinter {
     await this.writeReports(reports);
   }
 
+  /**
+   * Read printer status flags.
+   *
+   * @returns Parsed status booleans.
+   */
   public async getStatus(): Promise<PrinterStatus> {
     if (!this.hid) {
       throw new Error("Printer is not connected.");
@@ -100,6 +117,9 @@ export class DymoPrinter {
     };
   }
 
+  /**
+   * Close the HID handle if present.
+   */
   public close(): void {
     this.hid?.close();
   }

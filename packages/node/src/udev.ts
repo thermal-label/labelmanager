@@ -1,3 +1,8 @@
+/**
+ * Generate Linux udev rule content for DYMO LabelManager access.
+ *
+ * @returns Multi-line rule text ready for `/etc/udev/rules.d`.
+ */
 export function generateUdevRules(): string {
   return [
     '# DYMO LabelManager HID access rules',

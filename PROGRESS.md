@@ -104,32 +104,32 @@
   - [x] `pnpm build` produces output
 
 ## Step 6: Docs
-- [ ] Scaffold VitePress docs structure.
-- [ ] Implement docs config and theme:
-  - [ ] `docs/.vitepress/config.ts`
-  - [ ] `docs/.vitepress/theme/index.ts`
-- [ ] Fully author all documentation pages with complete prose and real examples:
-  - [ ] `docs/index.md`
-  - [ ] `docs/guide/introduction.md`
-  - [ ] `docs/guide/getting-started.md`
-  - [ ] `docs/guide/linux-setup.md`
-  - [ ] `docs/node/index.md`
-  - [ ] `docs/node/printing-text.md`
-  - [ ] `docs/node/printing-images.md`
-  - [ ] `docs/node/multi-printer.md`
-  - [ ] `docs/cli/index.md`
-  - [ ] `docs/cli/commands.md`
-  - [ ] `docs/web/index.md`
-  - [ ] `docs/web/quick-start.md`
-  - [ ] `docs/web/react-example.md`
-- [ ] Add TSDoc comments on all exported symbols across packages.
-- [ ] Configure and validate Typedoc API generation (`docs:api`).
-- [ ] Implement live demo component (`docs/.vitepress/components/LiveDemo.vue`) after web package is working.
-- [ ] Gate checks for Step 6:
-  - [ ] `pnpm typecheck` passes
-  - [ ] `pnpm lint` passes
-  - [ ] `pnpm test` passes
-  - [ ] `pnpm build` produces output
+- [x] Scaffold VitePress docs structure.
+- [x] Implement docs config and theme:
+  - [x] `docs/.vitepress/config.ts`
+  - [x] `docs/.vitepress/theme/index.ts`
+- [x] Fully author all documentation pages with complete prose and real examples:
+  - [x] `docs/index.md`
+  - [x] `docs/guide/introduction.md`
+  - [x] `docs/guide/getting-started.md`
+  - [x] `docs/guide/linux-setup.md`
+  - [x] `docs/node/index.md`
+  - [x] `docs/node/printing-text.md`
+  - [x] `docs/node/printing-images.md`
+  - [x] `docs/node/multi-printer.md`
+  - [x] `docs/cli/index.md`
+  - [x] `docs/cli/commands.md`
+  - [x] `docs/web/index.md`
+  - [x] `docs/web/quick-start.md`
+  - [x] `docs/web/react-example.md`
+- [x] Add TSDoc comments on all exported symbols across packages.
+- [x] Configure and validate Typedoc API generation (`docs:api`).
+- [x] Implement live demo component (`docs/.vitepress/components/LiveDemo.vue`) after web package is working.
+- [x] Gate checks for Step 6:
+  - [x] `pnpm typecheck` passes
+  - [x] `pnpm lint` passes
+  - [x] `pnpm test` passes
+  - [x] `pnpm build` produces output
 
 ## Step 7: CI
 - [ ] Finalize and verify workflows:

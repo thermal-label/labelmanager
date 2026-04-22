@@ -41,6 +41,13 @@ export const DEVICES = {
   }
 } as const satisfies Record<string, DeviceDescriptor>;
 
+/**
+ * Find a supported device descriptor by USB vendor and product ID.
+ *
+ * @param vid USB vendor ID.
+ * @param pid USB product ID.
+ * @returns Matching descriptor or `undefined` when unsupported.
+ */
 export function findDevice(vid: number, pid: number): DeviceDescriptor | undefined {
   return Object.values(DEVICES).find((device) => device.vid === vid && device.pid === pid);
 }

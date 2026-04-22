@@ -34,6 +34,13 @@ export async function listPrinters(): Promise<PrinterInfo[]> {
     .filter((value): value is PrinterInfo => value !== null);
 }
 
+/**
+ * Open a connected printer matching optional filters.
+ *
+ * @param options Optional VID/PID/serial filtering.
+ * @returns An opened `DymoPrinter` instance.
+ * @throws When no compatible device matches.
+ */
 export async function openPrinter(options: OpenOptions = {}): Promise<DymoPrinter> {
   const printers = await listPrinters();
   const match = printers.find((printer) => {
@@ -61,6 +68,9 @@ export async function openPrinter(options: OpenOptions = {}): Promise<DymoPrinte
   return new DymoPrinter(match.device, hid);
 }
 
+/**
+ * Default browser-style filters derived from known devices.
+ */
 export const DEFAULT_FILTERS = Object.values(DEVICES).map((device) => ({
   vendorId: device.vid,
   productId: device.pid
