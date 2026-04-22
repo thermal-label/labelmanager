@@ -11,7 +11,7 @@ hero:
       link: /getting-started
     - theme: brand
       text: Try it now →
-      link: /web
+      link: /demo
     - theme: alt
       text: GitHub
       link: https://github.com/thermal-label/labelmanager
@@ -37,7 +37,7 @@ features:
 <div class="home-extra">
 
 <div class="ref-links">
-  <a href="/hardware" class="ref-link">
+  <a href="./hardware.html" class="ref-link">
     <span class="ref-icon">🖨️</span>
     <span class="ref-body">
       <strong>Supported hardware</strong>
@@ -45,7 +45,7 @@ features:
     </span>
     <span class="ref-arrow">→</span>
   </a>
-  <a href="/core" class="ref-link">
+  <a href="./core.html" class="ref-link">
     <span class="ref-icon">📡</span>
     <span class="ref-body">
       <strong>Protocol & Core API</strong>

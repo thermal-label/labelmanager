@@ -126,6 +126,4 @@ Status is read actively via `getStatus()` → `transferOut(ESC A)` +
 
 ## Live demo
 
-<LiveDemo />
-
-> Requires Chrome or Edge. The bitmap preview works in any modern browser.
+→ [Open the interactive demo](/demo) to preview and print a label from your browser.
