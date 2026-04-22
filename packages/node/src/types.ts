@@ -24,12 +24,10 @@ export interface PrinterStatus {
 }
 
 export interface TextPrintOptions extends PrintOptions {
-  tapeWidth?: 6 | 9 | 12 | 19;
   invert?: boolean;
 }
 
 export interface ImagePrintOptions extends PrintOptions {
-  tapeWidth?: 6 | 9 | 12 | 19;
   invert?: boolean;
   dither?: boolean;
   threshold?: number;

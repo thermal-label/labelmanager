@@ -2,6 +2,7 @@ import {
   DEVICES,
   encodeLabel,
   findDevice,
+  type PrintOptions,
   renderImage,
   renderText,
   type DeviceDescriptor,
@@ -11,15 +12,11 @@ export interface RequestOptions {
   filters?: HIDDeviceFilter[];
 }
 
-export interface TextPrintOptions {
-  density?: 'normal' | 'high';
-  copies?: number;
+export interface TextPrintOptions extends PrintOptions {
   invert?: boolean;
 }
 
-export interface ImagePrintOptions {
-  density?: 'normal' | 'high';
-  copies?: number;
+export interface ImagePrintOptions extends PrintOptions {
   invert?: boolean;
   dither?: boolean;
   threshold?: number;

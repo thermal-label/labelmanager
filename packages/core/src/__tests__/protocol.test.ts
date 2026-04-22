@@ -47,6 +47,17 @@ describe('protocol', () => {
     expect(reports[63]).toHaveLength(64);
   });
 
+  it('respects tape width option for row count', () => {
+    const bitmap = makeBitmap(64, 64);
+    const reports6 = buildBitmapRows(bitmap, { tapeWidth: 6 });
+    const reports9 = buildBitmapRows(bitmap, { tapeWidth: 9 });
+    const reports12 = buildBitmapRows(bitmap, { tapeWidth: 12 });
+
+    expect(reports6).toHaveLength(32);
+    expect(reports9).toHaveLength(48);
+    expect(reports12).toHaveLength(64);
+  });
+
   it('creates form feed command', () => {
     const reports = buildFormFeed();
     const formFeed = reports[0]!;
@@ -67,5 +78,17 @@ describe('protocol', () => {
     expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
     expect(endOfFirstCopy.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
     expect(firstOfSecondCopy.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
+  });
+
+  it('encodes fewer bitmap rows for narrower tape', () => {
+    const bitmap = makeBitmap(64, 64);
+    const reports = encodeLabel(bitmap, { tapeWidth: 6 });
+    const first = reports[0]!;
+    const formFeed = reports[35]!;
+
+    // 3 reset + 32 bitmap rows + 1 form feed = 36
+    expect(reports).toHaveLength(36);
+    expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
+    expect(formFeed.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
   });
 });

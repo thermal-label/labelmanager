@@ -1,6 +1,6 @@
 import { getRow, rotateBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
 /* eslint-disable import-x/consistent-type-specifier-style */
-import type { PrintOptions } from './types.js';
+import type { PrintOptions, TapeWidth } from './types.js';
 
 const REPORT_SIZE = 64;
 const MAX_PAYLOAD_SIZE = REPORT_SIZE - 1;
@@ -53,6 +53,22 @@ function fitToHeadHeight(bitmap: LabelBitmap, targetHeight = 64): LabelBitmap {
   };
 }
 
+function tapeWidthToTargetHeight(tapeWidth?: TapeWidth): number {
+  switch (tapeWidth) {
+    case 6:
+      return 32;
+    case 9:
+      return 48;
+    case 12:
+      return 64;
+    case 19:
+      // 19mm media is currently constrained by the 64-dot transport path.
+      return 64;
+    default:
+      return 64;
+  }
+}
+
 export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
   const density = options?.density ?? 'normal';
   const densityByte = density === 'high' ? 0x01 : 0x00;
@@ -70,13 +86,14 @@ export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
  * @param bitmap Input monochrome bitmap.
  * @returns Zero-padded HID payload reports.
  */
-export function buildBitmapRows(bitmap: LabelBitmap): Uint8Array[] {
+export function buildBitmapRows(bitmap: LabelBitmap, options?: PrintOptions): Uint8Array[] {
+  const targetHeight = tapeWidthToTargetHeight(options?.tapeWidth);
   const rotated = bitmap.heightPx === 64 ? bitmap : rotateBitmap(bitmap, 90);
-  const fitted = fitToHeadHeight(rotated, 64);
+  const fitted = fitToHeadHeight(rotated, targetHeight);
 
-  if (fitted.heightPx !== 64) {
+  if (fitted.heightPx !== targetHeight) {
     throw new Error(
-      `Bitmap height must be 64 dots after fit. Received ${String(fitted.heightPx)}.`,
+      `Bitmap height must be ${String(targetHeight)} dots after fit. Received ${String(fitted.heightPx)}.`,
     );
   }
 
@@ -112,7 +129,7 @@ export function encodeLabel(bitmap: LabelBitmap, options: PrintOptions = {}): Ui
 
   for (let i = 0; i < copies; i += 1) {
     reports.push(...buildResetSequence(options));
-    reports.push(...buildBitmapRows(bitmap));
+    reports.push(...buildBitmapRows(bitmap, options));
     reports.push(...buildFormFeed());
   }
 

@@ -11,4 +11,5 @@ export interface DeviceDescriptor {
 export interface PrintOptions {
   density?: 'normal' | 'high';
   copies?: number;
+  tapeWidth?: TapeWidth;
 }

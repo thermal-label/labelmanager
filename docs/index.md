@@ -42,3 +42,5 @@ await printer.printText("Hello DYMO");
 ## Browser Demo
 
 <LiveDemo />
+
+> Printing requires Chrome/Edge with WebHID support. The bitmap preview works in any modern browser.
