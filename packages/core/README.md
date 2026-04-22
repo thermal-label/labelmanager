@@ -23,10 +23,10 @@ npm install @thermal-label/labelmanager-core
 ## Quick Start
 
 ```ts
-import { encodeLabel, renderText } from "@thermal-label/labelmanager-core";
+import { encodeLabel, renderText } from '@thermal-label/labelmanager-core';
 
-const bitmap = renderText("Hello DYMO");
-const reports = encodeLabel(bitmap, { tapeWidth: 12, density: "normal" });
+const bitmap = renderText('Hello DYMO');
+const reports = encodeLabel(bitmap, { tapeWidth: 12, density: 'normal' });
 ```
 
 `reports` is an array of `Uint8Array` chunks ready to send to a HID transport implementation.
@@ -44,12 +44,12 @@ const reports = encodeLabel(bitmap, { tapeWidth: 12, density: "normal" });
 ### Render and encode text with print options
 
 ```ts
-import { encodeLabel, renderText } from "@thermal-label/labelmanager-core";
+import { encodeLabel, renderText } from '@thermal-label/labelmanager-core';
 
-const bitmap = renderText("Shelf A-17", { invert: false });
+const bitmap = renderText('Shelf A-17', { invert: false });
 const reports = encodeLabel(bitmap, {
   tapeWidth: 12,
-  density: "high",
+  density: 'high',
   copies: 2,
 });
 ```
@@ -57,7 +57,7 @@ const reports = encodeLabel(bitmap, {
 ### Convert raw RGBA image pixels into printer reports
 
 ```ts
-import { encodeLabel, renderImage } from "@thermal-label/labelmanager-core";
+import { encodeLabel, renderImage } from '@thermal-label/labelmanager-core';
 
 const raw = {
   width: 128,
@@ -72,11 +72,11 @@ const reports = encodeLabel(bitmap, { tapeWidth: 12 });
 ### Check whether a USB HID device is supported
 
 ```ts
-import { findDevice } from "@thermal-label/labelmanager-core";
+import { findDevice } from '@thermal-label/labelmanager-core';
 
 const descriptor = findDevice(0x0922, 0x1002);
 if (!descriptor) {
-  throw new Error("Unsupported DYMO LabelManager device");
+  throw new Error('Unsupported DYMO LabelManager device');
 }
 ```
 

@@ -1,6 +1,6 @@
 [**labelmanager**](README.md)
 
-***
+---
 
 # API Modules
 

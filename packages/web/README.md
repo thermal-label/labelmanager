@@ -17,10 +17,10 @@ npm install @thermal-label/labelmanager-web
 ## Quick Start
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 const printer = await requestPrinter();
-await printer.printText("Hello WebHID", { tapeWidth: 12 });
+await printer.printText('Hello WebHID', { tapeWidth: 12 });
 ```
 
 ## Usage
@@ -28,12 +28,12 @@ await printer.printText("Hello WebHID", { tapeWidth: 12 });
 ### Print text
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 const printer = await requestPrinter();
-await printer.printText("Shipping Label", {
+await printer.printText('Shipping Label', {
   tapeWidth: 12,
-  density: "high",
+  density: 'high',
   copies: 1,
 });
 ```
@@ -41,10 +41,10 @@ await printer.printText("Shipping Label", {
 ### Print image URL
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 const printer = await requestPrinter();
-await printer.printImageURL("/assets/label.png", { tapeWidth: 12, dither: true });
+await printer.printImageURL('/assets/label.png', { tapeWidth: 12, dither: true });
 ```
 
 ## Requirements

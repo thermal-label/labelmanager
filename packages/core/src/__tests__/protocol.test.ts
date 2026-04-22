@@ -94,7 +94,7 @@ describe('protocol', () => {
     const reports = encodeLabel(bitmap, { copies: 2, density: 'high' });
     const first = reports[0]!;
     const endOfFirstCopy = reports[reportsPerCopy - 1]!; // index 181
-    const firstOfSecondCopy = reports[reportsPerCopy]!;  // index 182
+    const firstOfSecondCopy = reports[reportsPerCopy]!; // index 182
 
     expect(reports).toHaveLength(reportsPerCopy * 2);
     expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
@@ -107,7 +107,7 @@ describe('protocol', () => {
     // Each row: SYN (1) + 8 bytes = 9; 434×9 = 3906.
     // Total: 3 (ESC C 0) + 3 (ESC D 8) + 3906 + 2 (ESC A) = 3914.
     const scaledWidth = Math.round(40 * (64 / 8)); // 320
-    const rows = scaledWidth + 2 * FEED_MARGIN_PX;  // 434
+    const rows = scaledWidth + 2 * FEED_MARGIN_PX; // 434
     const bitmap = makeBitmap(40, 8);
     const stream = buildPrinterStream(bitmap, { tapeWidth: 12 });
 
@@ -134,7 +134,7 @@ describe('protocol', () => {
     // Each row: SYN (1) + 4 bytes = 5; 154×5 = 770.
     // Total: 3 + 3 + 770 + 2 = 778.
     const scaledWidth = Math.round(10 * (32 / 8)); // 40
-    const rows = scaledWidth + 2 * FEED_MARGIN_PX;  // 154
+    const rows = scaledWidth + 2 * FEED_MARGIN_PX; // 154
     const bitmap = makeBitmap(10, 8);
     const stream = buildPrinterStream(bitmap, { tapeWidth: 6 });
 

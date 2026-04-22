@@ -8,12 +8,12 @@ or native dependencies required.
 
 ## Browser support
 
-| Browser | Support |
-|---|---|
-| Chrome 89+ | ✅ |
-| Edge 89+ | ✅ |
-| Firefox | ❌ No WebUSB |
-| Safari | ❌ No WebUSB |
+| Browser    | Support      |
+| ---------- | ------------ |
+| Chrome 89+ | ✅           |
+| Edge 89+   | ✅           |
+| Firefox    | ❌ No WebUSB |
+| Safari     | ❌ No WebUSB |
 
 WebUSB requires a **secure context** (`https://` or `localhost`).
 
@@ -28,18 +28,18 @@ pnpm add @thermal-label/labelmanager-web
 ## Vanilla JS quick start
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 // Must be called from a user gesture (button click, etc.)
 const printer = await requestPrinter();
-await printer.printText("Hello from the browser", { tapeWidth: 12 });
+await printer.printText('Hello from the browser', { tapeWidth: 12 });
 await printer.disconnect();
 ```
 
 ### Print an image from a URL
 
 ```ts
-await printer.printImageURL("/assets/logo.png", { dither: true });
+await printer.printImageURL('/assets/logo.png', { dither: true });
 ```
 
 ### Status check
@@ -54,8 +54,8 @@ console.log(status.ready, status.tapeInserted, status.labelLow);
 ## React example
 
 ```tsx
-import { useState } from "react";
-import { requestPrinter, type WebDymoPrinter } from "@thermal-label/labelmanager-web";
+import { useState } from 'react';
+import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
 
 export function PrintButton() {
   const [printer, setPrinter] = useState<WebDymoPrinter | null>(null);
@@ -66,7 +66,7 @@ export function PrintButton() {
 
   async function print() {
     if (!printer) return;
-    await printer.printText("React label", { tapeWidth: 12 });
+    await printer.printText('React label', { tapeWidth: 12 });
   }
 
   async function disconnect() {
@@ -77,9 +77,15 @@ export function PrintButton() {
 
   return (
     <div>
-      <button onClick={connect} disabled={!!printer}>Connect</button>
-      <button onClick={print} disabled={!printer}>Print</button>
-      <button onClick={disconnect} disabled={!printer}>Disconnect</button>
+      <button onClick={connect} disabled={!!printer}>
+        Connect
+      </button>
+      <button onClick={print} disabled={!printer}>
+        Print
+      </button>
+      <button onClick={disconnect} disabled={!printer}>
+        Disconnect
+      </button>
     </div>
   );
 }
@@ -109,14 +115,14 @@ Status is read actively via `getStatus()` → `transferOut(ESC A)` +
 
 ## API summary
 
-| Function / Method | Description |
-|---|---|
-| `requestPrinter(opts?)` | Show USB permission prompt and connect |
-| `fromHIDDevice(device)` | Wrap an already-opened `USBDevice` |
-| `printer.printText(text, opts?)` | Print a text label |
-| `printer.printImageURL(url, opts?)` | Fetch and print an image from a URL |
-| `printer.getStatus()` | Read status flags |
-| `printer.disconnect()` | Release interface and close device |
+| Function / Method                   | Description                            |
+| ----------------------------------- | -------------------------------------- |
+| `requestPrinter(opts?)`             | Show USB permission prompt and connect |
+| `fromHIDDevice(device)`             | Wrap an already-opened `USBDevice`     |
+| `printer.printText(text, opts?)`    | Print a text label                     |
+| `printer.printImageURL(url, opts?)` | Fetch and print an image from a URL    |
+| `printer.getStatus()`               | Read status flags                      |
+| `printer.disconnect()`              | Release interface and close device     |
 
 ## Live demo
 

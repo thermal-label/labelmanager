@@ -7,17 +7,17 @@ Node.js, CLI, or Web packages instead.
 
 ## Core API
 
-| Export | Description |
-|---|---|
-| `buildPrinterStream(bitmap, opts)` | Encode a full label job as a raw USB byte stream |
-| `buildBitmapRows(bitmap, opts)` | Encode bitmap as HID report payloads |
-| `buildResetSequence(opts)` | ESC reset + media type + density reports |
-| `buildFormFeed()` | Form-feed / cut report |
-| `encodeLabel(bitmap, opts)` | Full HID report sequence for one or more copies |
-| `findDevice(devices, pid)` | Look up a device descriptor by USB PID |
-| `DEVICES` | Array of all known `DeviceDescriptor` objects |
-| `PrintOptions` | Shared options type (`density`, `copies`, `tapeWidth`) |
-| `TapeWidth` | `6 \| 9 \| 12 \| 19` |
+| Export                             | Description                                            |
+| ---------------------------------- | ------------------------------------------------------ |
+| `buildPrinterStream(bitmap, opts)` | Encode a full label job as a raw USB byte stream       |
+| `buildBitmapRows(bitmap, opts)`    | Encode bitmap as HID report payloads                   |
+| `buildResetSequence(opts)`         | ESC reset + media type + density reports               |
+| `buildFormFeed()`                  | Form-feed / cut report                                 |
+| `encodeLabel(bitmap, opts)`        | Full HID report sequence for one or more copies        |
+| `findDevice(devices, pid)`         | Look up a device descriptor by USB PID                 |
+| `DEVICES`                          | Array of all known `DeviceDescriptor` objects          |
+| `PrintOptions`                     | Shared options type (`density`, `copies`, `tapeWidth`) |
+| `TapeWidth`                        | `6 \| 9 \| 12 \| 19`                                   |
 
 ---
 
@@ -110,14 +110,14 @@ is usually not loaded, but the detach call is safe to make unconditionally).
 
 ```typescript
 // packages/node/src/discovery.ts
-const iface = device.interface(0);                // Interface 0 — Printer class
+const iface = device.interface(0); // Interface 0 — Printer class
 if (process.platform === 'linux' && iface.isKernelDriverActive()) {
   iface.detachKernelDriver();
 }
 iface.claim();
 
 const out = iface.endpoint(0x05) as usb.OutEndpoint; // EP 5 OUT — print data
-const inp = iface.endpoint(0x85) as usb.InEndpoint;  // EP 5 IN  — status
+const inp = iface.endpoint(0x85) as usb.InEndpoint; // EP 5 IN  — status
 ```
 
 ## Print protocol
@@ -161,11 +161,11 @@ Tells the printer how many data bytes follow each `SYN` command.
 `N` is derived from tape width:
 
 | Tape width | Printable dots | Bytes per line |
-|:---:|:---:|:---:|
-| 6 mm  | 32 | 4 |
-| 9 mm  | 48 | 6 |
-| 12 mm | 64 | 8 |
-| 19 mm | 64 | 8 |
+| :--------: | :------------: | :------------: |
+|    6 mm    |       32       |       4        |
+|    9 mm    |       48       |       6        |
+|   12 mm    |       64       |       8        |
+|   19 mm    |       64       |       8        |
 
 Formula: `N = ceil(printable_dots / 8)`. For 12 mm and 19 mm the print head
 has 64 dots, so `N = 8` in both cases.
@@ -185,7 +185,7 @@ It is followed immediately by exactly `N` bytes (matching the last `ESC D N`
 value). Each byte holds 8 pixels, MSB first.
 
 **Orientation:** the printer head scans across the 64-dot (or 48/32-dot)
-axis. One `SYN` command represents one *column* of the printed label, not
+axis. One `SYN` command represents one _column_ of the printed label, not
 one row. The full bitmap must be rotated 90° before encoding:
 
 ```
@@ -209,11 +209,11 @@ then `rotateBitmap` before encoding columns.
 For tapes narrower than 12 mm, the bitmap is scaled proportionally to fill the
 available print head dots:
 
-| Tape | Dots used | Scale factor (vs 12 mm) |
-|:---:|:---:|:---:|
-| 6 mm  | 32 | 0.5× |
-| 9 mm  | 48 | 0.75× |
-| 12 mm | 64 | 1× |
+| Tape  | Dots used | Scale factor (vs 12 mm) |
+| :---: | :-------: | :---------------------: |
+| 6 mm  |    32     |          0.5×           |
+| 9 mm  |    48     |          0.75×          |
+| 12 mm |    64     |           1×            |
 
 `scaleBitmap(bitmap, targetHeight)` in `packages/core/src/protocol.ts` handles
 this. The label width scales proportionally so the aspect ratio is preserved.
@@ -237,20 +237,20 @@ in-flight data is fully consumed.
 
 Status byte bit flags:
 
-| Bit | Meaning when set |
-|:---:|---|
-| 0 | Printer busy / not ready |
-| 1 | No tape inserted |
-| 2 | Label supply low |
-| 3–7 | Reserved |
+| Bit | Meaning when set         |
+| :-: | ------------------------ |
+|  0  | Printer busy / not ready |
+|  1  | No tape inserted         |
+|  2  | Label supply low         |
+| 3–7 | Reserved                 |
 
 ### Commands present in earlier implementations but not used
 
-| Command | Bytes | Notes |
-|---|:---:|---|
-| ESC @ — Reset | `1B 40` | Resets the printer state machine. **Do not send on Interface 0.** Sending `ESC @` via raw USB puts the printer into an undefined state and blocks subsequent print jobs until power-cycled. |
-| ESC e — Density | `1B 65 00/01` | Normal / high density. Not observed in confirmed-working `labelle` sessions. The device appears to use a fixed density. |
-| ESC G — Form feed | `1B 47` | Advances and cuts. Labelle uses `ESC A` (status query) as the print terminator instead. `ESC G` may work on some firmware revisions but was not tested. |
+| Command           |     Bytes     | Notes                                                                                                                                                                                       |
+| ----------------- | :-----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ESC @ — Reset     |    `1B 40`    | Resets the printer state machine. **Do not send on Interface 0.** Sending `ESC @` via raw USB puts the printer into an undefined state and blocks subsequent print jobs until power-cycled. |
+| ESC e — Density   | `1B 65 00/01` | Normal / high density. Not observed in confirmed-working `labelle` sessions. The device appears to use a fixed density.                                                                     |
+| ESC G — Form feed |    `1B 47`    | Advances and cuts. Labelle uses `ESC A` (status query) as the print terminator instead. `ESC G` may work on some firmware revisions but was not tested.                                     |
 
 ## Flow control (synwait)
 
@@ -271,7 +271,7 @@ very long image labels (> ~200 columns) you may encounter
 A synwait implementation would look like:
 
 ```typescript
-const SYNWAIT = 64;           // max SYN bytes between status checks
+const SYNWAIT = 64; // max SYN bytes between status checks
 const STATUS_QUERY = Buffer.from([0x1b, 0x41]);
 
 async function writeWithSynwait(stream: Uint8Array, transport: PrinterTransport) {
@@ -300,17 +300,17 @@ async function writeWithSynwait(stream: Uint8Array, transport: PrinterTransport)
 [labelle](https://github.com/labelle-org/labelle) is the reference Python
 implementation. The key differences from this TypeScript driver:
 
-| Aspect | labelle | This driver |
-|---|---|---|
-| Language | Python | TypeScript / Node.js |
-| USB library | `pyusb` / `libusb` | `usb` npm package |
-| Interface | Interface 0 (Printer class) | Interface 0 (Printer class) |
-| Protocol | ESC C, ESC D, SYN, ESC A | Same |
-| Image rotation | `ROTATE_270` (PIL) | `rotateBitmap(bmp, 90)` (equivalent) |
-| Tape scaling | Margin calculation | `scaleBitmap` + `padBitmap` |
-| Flow control | synwait=64 | Not yet implemented |
-| Status read | EP 5 IN | EP 5 IN |
-| Multi-copy | Not natively | `copies` option (repeated sequence) |
+| Aspect         | labelle                     | This driver                          |
+| -------------- | --------------------------- | ------------------------------------ |
+| Language       | Python                      | TypeScript / Node.js                 |
+| USB library    | `pyusb` / `libusb`          | `usb` npm package                    |
+| Interface      | Interface 0 (Printer class) | Interface 0 (Printer class)          |
+| Protocol       | ESC C, ESC D, SYN, ESC A    | Same                                 |
+| Image rotation | `ROTATE_270` (PIL)          | `rotateBitmap(bmp, 90)` (equivalent) |
+| Tape scaling   | Margin calculation          | `scaleBitmap` + `padBitmap`          |
+| Flow control   | synwait=64                  | Not yet implemented                  |
+| Status read    | EP 5 IN                     | EP 5 IN                              |
+| Multi-copy     | Not natively                | `copies` option (repeated sequence)  |
 
 `ROTATE_270` (PIL/Pillow) and `rotateBitmap(bitmap, 90)` (`@mbtech-nl/bitmap`)
 produce identical output: the label's leftmost column becomes the bitmap's

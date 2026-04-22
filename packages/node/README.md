@@ -17,10 +17,10 @@ npm install @thermal-label/labelmanager-node
 ## Quick Start
 
 ```ts
-import { openPrinter } from "@thermal-label/labelmanager-node";
+import { openPrinter } from '@thermal-label/labelmanager-node';
 
 const printer = await openPrinter();
-await printer.printText("Hello DYMO", { tapeWidth: 12 });
+await printer.printText('Hello DYMO', { tapeWidth: 12 });
 printer.close();
 ```
 
@@ -29,7 +29,7 @@ printer.close();
 ### Discover printers
 
 ```ts
-import { listPrinters } from "@thermal-label/labelmanager-node";
+import { listPrinters } from '@thermal-label/labelmanager-node';
 
 const printers = await listPrinters();
 console.log(printers);
@@ -38,17 +38,17 @@ console.log(printers);
 ### Print an image
 
 ```ts
-import { openPrinter } from "@thermal-label/labelmanager-node";
+import { openPrinter } from '@thermal-label/labelmanager-node';
 
 const printer = await openPrinter();
-await printer.printImage("./label.png", { tapeWidth: 12, dither: true });
+await printer.printImage('./label.png', { tapeWidth: 12, dither: true });
 printer.close();
 ```
 
 ### Linux setup helper
 
 ```ts
-import { generateUdevRules } from "@thermal-label/labelmanager-node";
+import { generateUdevRules } from '@thermal-label/labelmanager-node';
 
 console.log(generateUdevRules());
 ```

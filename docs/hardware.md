@@ -6,14 +6,14 @@ supported tape widths and USB product IDs.
 
 ## Supported devices
 
-| Device | USB PID | Tape widths | Status |
-|---|---|---|---|
-| LabelManager PnP | `0x1002` | 6, 9, 12 mm | ✅ Verified |
-| LabelManager 420P | `0x1004` | 6, 9, 12, 19 mm | 🔲 Expected |
-| LabelManager Wireless PnP | `0x1008` | 6, 9, 12 mm | 🔲 Expected |
-| LabelManager PC | `0x1002` | 6, 9, 12 mm | 🔲 Expected |
-| LabelPoint 350 | `0x1003` | 6, 9, 12 mm | 🔲 Expected |
-| MobileLabeler | `0x1009` | 6, 9, 12 mm | 🔲 Expected |
+| Device                    | USB PID  | Tape widths     | Status      |
+| ------------------------- | -------- | --------------- | ----------- |
+| LabelManager PnP          | `0x1002` | 6, 9, 12 mm     | ✅ Verified |
+| LabelManager 420P         | `0x1004` | 6, 9, 12, 19 mm | 🔲 Expected |
+| LabelManager Wireless PnP | `0x1008` | 6, 9, 12 mm     | 🔲 Expected |
+| LabelManager PC           | `0x1002` | 6, 9, 12 mm     | 🔲 Expected |
+| LabelPoint 350            | `0x1003` | 6, 9, 12 mm     | 🔲 Expected |
+| MobileLabeler             | `0x1009` | 6, 9, 12 mm     | 🔲 Expected |
 
 **Verified** — tested on real hardware. **Expected** — same VID/protocol family,
 untested. If you confirm a device works (or doesn't), please open an issue.
@@ -24,22 +24,22 @@ untested. If you confirm a device works (or doesn't), please open an issue.
 Vendor ID:  0x0922   Dymo-CoStar Corp.
 ```
 
-| Device | Product ID |
-|---|---|
-| LabelManager PnP / LabelManager PC | `0x1002` |
-| LabelPoint 350 | `0x1003` |
-| LabelManager 420P | `0x1004` |
-| LabelManager Wireless PnP | `0x1008` |
-| MobileLabeler | `0x1009` |
+| Device                             | Product ID |
+| ---------------------------------- | ---------- |
+| LabelManager PnP / LabelManager PC | `0x1002`   |
+| LabelPoint 350                     | `0x1003`   |
+| LabelManager 420P                  | `0x1004`   |
+| LabelManager Wireless PnP          | `0x1008`   |
+| MobileLabeler                      | `0x1009`   |
 
 ## Tape widths and print head dots
 
-| Tape | Printable dots | Bytes per line |
-|:---:|:---:|:---:|
-| 6 mm  | 32 | 4 |
-| 9 mm  | 48 | 6 |
-| 12 mm | 64 | 8 |
-| 19 mm | 64 | 8 |
+| Tape  | Printable dots | Bytes per line |
+| :---: | :------------: | :------------: |
+| 6 mm  |       32       |       4        |
+| 9 mm  |       48       |       6        |
+| 12 mm |       64       |       8        |
+| 19 mm |       64       |       8        |
 
 All models with a 12 mm or 19 mm capacity share the same 64-dot print head.
 19 mm tape is physically wider but the printable area is the same 64-dot path.

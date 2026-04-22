@@ -19,7 +19,6 @@ function toReport(payload: number[]): Uint8Array {
   return report;
 }
 
-
 function tapeWidthToTargetHeight(tapeWidth?: TapeWidth): number {
   switch (tapeWidth) {
     case 6:

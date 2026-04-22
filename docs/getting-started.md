@@ -11,9 +11,9 @@ pnpm add @thermal-label/labelmanager-node
 ```
 
 ```ts
-import { openPrinter } from "@thermal-label/labelmanager-node";
+import { openPrinter } from '@thermal-label/labelmanager-node';
 const printer = await openPrinter();
-await printer.printText("Hello DYMO");
+await printer.printText('Hello DYMO');
 printer.close();
 ```
 
@@ -48,11 +48,11 @@ pnpm add @thermal-label/labelmanager-web
 ```
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 // Must be called from a user gesture (button click, etc.)
 const printer = await requestPrinter();
-await printer.printText("Hello from the browser", { tapeWidth: 12 });
+await printer.printText('Hello from the browser', { tapeWidth: 12 });
 await printer.disconnect();
 ```
 

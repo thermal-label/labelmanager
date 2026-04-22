@@ -17,7 +17,9 @@
   gap: 0.85rem;
   padding: 0.85rem 1rem;
   text-decoration: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .ref-link:hover {
@@ -75,7 +77,9 @@
 
 /* Slightly lift cards on hover */
 .VPFeatures .VPFeature {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .VPFeatures .VPFeature:hover {

@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "@thermal-label/labelmanager"
+  name: '@thermal-label/labelmanager'
   text: DYMO D1 label printing without the bloat
   tagline: No vendor software. No proprietary drivers. Just USB, TypeScript, and a clean API — from Node.js, the CLI, or the browser.
   actions:

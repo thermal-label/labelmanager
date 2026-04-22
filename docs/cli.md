@@ -31,9 +31,7 @@ dymo list
 Output example:
 
 ```json
-[
-  { "serialNumber": "ABC12345", "name": "LabelManager PnP", "pid": "0x1002" }
-]
+[{ "serialNumber": "ABC12345", "name": "LabelManager PnP", "pid": "0x1002" }]
 ```
 
 ---
@@ -49,12 +47,12 @@ dymo print text "Fragile" --tape 12 --density high --copies 2
 
 ### Flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--tape <mm>` | `12` | Tape width: `6`, `9`, `12`, or `19` |
-| `--density <level>` | `normal` | `normal` or `high` |
-| `--copies <n>` | `1` | Number of copies |
-| `--invert` | off | White-on-black rendering |
+| Flag                | Default  | Description                         |
+| ------------------- | -------- | ----------------------------------- |
+| `--tape <mm>`       | `12`     | Tape width: `6`, `9`, `12`, or `19` |
+| `--density <level>` | `normal` | `normal` or `high`                  |
+| `--copies <n>`      | `1`      | Number of copies                    |
+| `--invert`          | off      | White-on-black rendering            |
 
 ---
 
@@ -69,12 +67,12 @@ dymo print image ./logo.png --dither --threshold 140 --tape 12
 
 ### Flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--tape <mm>` | `12` | Tape width: `6`, `9`, `12`, or `19` |
-| `--density <level>` | `normal` | `normal` or `high` |
-| `--dither` | off | Floyd-Steinberg dithering |
-| `--threshold <n>` | `128` | Binarization threshold (0–255) |
+| Flag                | Default  | Description                         |
+| ------------------- | -------- | ----------------------------------- |
+| `--tape <mm>`       | `12`     | Tape width: `6`, `9`, `12`, or `19` |
+| `--density <level>` | `normal` | `normal` or `high`                  |
+| `--dither`          | off      | Floyd-Steinberg dithering           |
+| `--threshold <n>`   | `128`    | Binarization threshold (0–255)      |
 
 ---
 
