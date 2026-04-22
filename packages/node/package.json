@@ -1,0 +1,52 @@
+{
+  "name": "@thermal-label/labelmanager-node",
+  "version": "0.0.0",
+  "description": "Node.js HID driver for DYMO LabelManager devices",
+  "type": "module",
+  "author": "Mannes Brak",
+  "license": "MIT",
+  "homepage": "https://github.com/thermal-label/labelmanager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thermal-label/labelmanager.git",
+    "directory": "packages/node"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/mannes"
+    },
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/mannes"
+    }
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@thermal-label/labelmanager-core": "workspace:*",
+    "node-hid": "^3.3.0"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas": "^0.1.74"
+  },
+  "devDependencies": {
+    "@mbtech-nl/tsconfig": "^1.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
