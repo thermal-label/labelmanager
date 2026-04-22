@@ -20,7 +20,11 @@ function makeDevice(
     release: vi.fn((cb?: (err: null) => void) => cb?.(null)),
     endpoint: (address: number) =>
       address === 0x05
-        ? { transfer: vi.fn((_data: Buffer, cb: (err: null) => void) => { cb(null); }) }
+        ? {
+            transfer: vi.fn((_data: Buffer, cb: (err: null) => void) => {
+              cb(null);
+            }),
+          }
         : {
             transfer: vi.fn((_len: number, cb: (err: null, data: Buffer) => void) => {
               cb(null, Buffer.from([0]));
