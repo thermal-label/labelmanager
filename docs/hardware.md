@@ -15,14 +15,28 @@ supported tape widths and USB product IDs.
 | LabelPoint 350            | `0x1003` | 6, 9, 12 mm     | 🔲 Expected |
 | MobileLabeler             | `0x1009` | 6, 9, 12 mm     | 🔲 Expected |
 
-::: tip Got one of the expected devices?
-Five models on this list are untested. If you own one, a two-minute test helps
-everyone — just run `dymo list` and `dymo print text "test"` and let us know
-what happens.
-
-**It works** · **Partially works** · **Doesn't work** — all three are useful.
-[Open a compatibility report →](https://github.com/thermal-label/labelmanager/issues/new?template=compatibility.md&title=Hardware+report%3A+%5BDevice+name%5D)
-:::
+<div class="hw-cta">
+  <div class="hw-cta-header">
+    <span class="hw-cta-icon">🔌</span>
+    <div class="hw-cta-text">
+      <strong>Got one of the five untested devices?</strong>
+      <span>A two-minute test helps everyone who buys one of these printers.</span>
+    </div>
+  </div>
+  <div class="hw-cta-steps">
+    <span>Run these two commands and report what happens:</span>
+    <div class="hw-cta-cmds">
+      <code>dymo list</code>
+      <span class="hw-cta-arrow">→</span>
+      <code>dymo print text "test"</code>
+    </div>
+  </div>
+  <div class="hw-cta-actions">
+    <a class="hw-chip hw-chip-works" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Verified%3A+%5BDevice+name%5D&labels=hardware%2Cverified" target="_blank" rel="noopener">✅ It works</a>
+    <a class="hw-chip hw-chip-partial" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Partial%3A+%5BDevice+name%5D&labels=hardware%2Cpartial" target="_blank" rel="noopener">⚠️ Partially works</a>
+    <a class="hw-chip hw-chip-broken" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Broken%3A+%5BDevice+name%5D&labels=hardware%2Cbroken" target="_blank" rel="noopener">❌ Doesn't work</a>
+  </div>
+</div>
 
 ## USB identifiers
 
