@@ -88,18 +88,12 @@ export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
  */
 export function buildBitmapRows(bitmap: LabelBitmap, options?: PrintOptions): Uint8Array[] {
   const targetHeight = tapeWidthToTargetHeight(options?.tapeWidth);
-  const rotated = bitmap.heightPx === 64 ? bitmap : rotateBitmap(bitmap, 90);
-  const fitted = fitToHeadHeight(rotated, targetHeight);
-
-  if (fitted.heightPx !== targetHeight) {
-    throw new Error(
-      `Bitmap height must be ${String(targetHeight)} dots after fit. Received ${String(fitted.heightPx)}.`,
-    );
-  }
+  const fitted = fitToHeadHeight(bitmap, targetHeight);
+  const rotated = rotateBitmap(fitted, 90);
 
   const reports: Uint8Array[] = [];
-  for (let y = 0; y < fitted.heightPx; y += 1) {
-    const row = getRow(fitted, y);
+  for (let y = 0; y < rotated.heightPx; y += 1) {
+    const row = getRow(rotated, y);
     const payload = [0x16, ...Array.from(row)];
     reports.push(toReport(payload));
   }
@@ -114,6 +108,40 @@ export function buildBitmapRows(bitmap: LabelBitmap, options?: PrintOptions): Ui
  */
 export function buildFormFeed(): Uint8Array[] {
   return [toReport([0x1b, 0x47])];
+}
+
+/**
+ * Build a raw byte stream for the USB Printer class endpoint (Interface 0).
+ *
+ * Uses the labelle-compatible protocol: ESC C 0, ESC D N, SYN + row, ESC A.
+ * No HID report framing — send directly to EP 5 OUT.
+ *
+ * @param bitmap Bitmap to print.
+ * @param options Print options (tapeWidth, copies).
+ * @returns Raw byte stream ready for bulk transfer.
+ */
+export function buildPrinterStream(bitmap: LabelBitmap, options: PrintOptions = {}): Uint8Array {
+  const copies = Math.max(1, options.copies ?? 1);
+  const targetHeight = tapeWidthToTargetHeight(options.tapeWidth);
+  const fitted = fitToHeadHeight(bitmap, targetHeight);
+  const rotated = rotateBitmap(fitted, 90);
+  const bytesPerLine = Math.ceil(targetHeight / 8);
+
+  const chunks: number[] = [];
+
+  for (let i = 0; i < copies; i += 1) {
+    chunks.push(0x1b, 0x43, 0x00); // ESC C 0 — tape type
+    chunks.push(0x1b, 0x44, bytesPerLine); // ESC D N — bytes per line
+
+    for (let y = 0; y < rotated.heightPx; y += 1) {
+      const row = getRow(rotated, y);
+      chunks.push(0x16, ...Array.from(row)); // SYN + row bytes
+    }
+
+    chunks.push(0x1b, 0x41); // ESC A — status query / flush
+  }
+
+  return new Uint8Array(chunks);
 }
 
 /**

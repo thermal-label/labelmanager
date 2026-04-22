@@ -38,18 +38,20 @@ export function createProgram(): Command {
     .option('-s, --serial <sn>', 'Target a specific printer by serial number')
     .action(async (text: string, options) => {
       const spinner = ora('Printing text label...').start();
+      let printer;
       try {
-        const printer = await openPrinter({ serialNumber: options.serial });
+        printer = await openPrinter({ serialNumber: options.serial });
         await printer.printText(text, {
           tapeWidth: Number(options.tape),
           invert: Boolean(options.invert),
           density: options.density,
         });
-        printer.close();
         spinner.succeed('Printed text label.');
       } catch (error) {
         spinner.fail(error instanceof Error ? error.message : 'Failed to print text label.');
         throw error;
+      } finally {
+        printer?.close();
       }
     });
 
@@ -62,19 +64,21 @@ export function createProgram(): Command {
     .option('-i, --invert', 'Invert image')
     .action(async (file: string, options) => {
       const spinner = ora('Printing image label...').start();
+      let printer;
       try {
-        const printer = await openPrinter();
+        printer = await openPrinter();
         await printer.printImage(file, {
           tapeWidth: Number(options.tape),
           dither: Boolean(options.dither),
           threshold: Number(options.threshold),
           invert: Boolean(options.invert),
         });
-        printer.close();
         spinner.succeed('Printed image label.');
       } catch (error) {
         spinner.fail(error instanceof Error ? error.message : 'Failed to print image label.');
         throw error;
+      } finally {
+        printer?.close();
       }
     });
 

@@ -1,8 +1,8 @@
 <template>
   <section class="live-demo">
-    <h3>Live WebHID Demo</h3>
+    <h3>Live Demo</h3>
     <p>
-      Preview updates instantly in any browser. Printing requires WebHID support in Chrome or Edge.
+      Preview updates instantly in any browser. Printing requires WebUSB support in Chrome or Edge.
     </p>
 
     <div class="controls">

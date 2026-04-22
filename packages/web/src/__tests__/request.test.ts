@@ -1,36 +1,47 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fromHIDDevice, requestPrinter } from '../index.js';
-import { createMockHIDDevice } from './webhid-mock.js';
+import { fromUSBDevice, requestPrinter } from '../index.js';
+import { createMockUSBDevice } from './webusb-mock.js';
 
 describe('requestPrinter', () => {
-  it('requests devices with default filters and opens selected device', async () => {
-    const device = createMockHIDDevice();
-    const requestDevice = vi.fn(() => Promise.resolve([device]));
+  it('requests devices with default DYMO filters and opens the selected device', async () => {
+    const device = createMockUSBDevice();
+    const requestDevice = vi.fn(() => Promise.resolve(device));
     Object.defineProperty(globalThis, 'navigator', {
-      value: { hid: { requestDevice } },
+      value: { usb: { requestDevice } },
       configurable: true,
     });
 
     const printer = await requestPrinter();
 
     expect(requestDevice).toHaveBeenCalledTimes(1);
+    const callArg = (
+      requestDevice.mock.calls as unknown as [{ filters: USBDeviceFilter[] }][]
+    )[0]![0];
+    expect(callArg.filters.some(f => f.vendorId === 0x0922)).toBe(true);
     expect(printer.isConnected()).toBe(true);
   });
 
-  it('throws when no device is selected', async () => {
-    const requestDevice = vi.fn(() => Promise.resolve([]));
+  it('passes custom filters when provided', async () => {
+    const device = createMockUSBDevice();
+    const requestDevice = vi.fn(() => Promise.resolve(device));
     Object.defineProperty(globalThis, 'navigator', {
-      value: { hid: { requestDevice } },
+      value: { usb: { requestDevice } },
       configurable: true,
     });
 
-    await expect(requestPrinter()).rejects.toThrow('No HID device selected.');
+    await requestPrinter({ filters: [{ vendorId: 0x0922, productId: 0x1002 }] });
+
+    const callArg = (
+      requestDevice.mock.calls as unknown as [{ filters: USBDeviceFilter[] }][]
+    )[0]![0];
+    expect(callArg.filters).toHaveLength(1);
+    expect(callArg.filters[0]!.productId).toBe(0x1002);
   });
 
-  it('throws for unsupported HID device', () => {
-    const unsupported = createMockHIDDevice(0x1234, 0x5678);
-    expect(() => fromHIDDevice(unsupported)).toThrow(
-      'Unsupported HID device for DYMO LabelManager protocol.',
+  it('throws for unsupported USB device', () => {
+    const unsupported = createMockUSBDevice(0x1234, 0x5678);
+    expect(() => fromUSBDevice(unsupported)).toThrow(
+      'Unsupported USB device for DYMO LabelManager protocol.',
     );
   });
 });

@@ -9,7 +9,7 @@
 
 # labelmanager-ts
 
-TypeScript monorepo for DYMO D1 LabelManager printing across Node.js, browser WebHID, and CLI.
+TypeScript monorepo for DYMO D1 LabelManager printing across Node.js, browser WebUSB, and CLI.
 
 ## Packages
 

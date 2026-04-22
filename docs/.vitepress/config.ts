@@ -22,7 +22,8 @@ export default defineConfig({
       "/guide/": [
         { text: "Introduction", link: "/guide/introduction" },
         { text: "Getting Started", link: "/guide/getting-started" },
-        { text: "Linux Setup", link: "/guide/linux-setup" }
+        { text: "Linux Setup", link: "/guide/linux-setup" },
+        { text: "USB Protocol Internals", link: "/guide/usb-internals" }
       ],
       "/node/": [
         { text: "Overview", link: "/node/" },

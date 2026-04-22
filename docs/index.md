@@ -1,6 +1,6 @@
 # labelmanager-ts
 
-TypeScript-first DYMO D1 LabelManager driver for Node.js, browsers (WebHID), and CLI workflows.
+TypeScript-first DYMO D1 LabelManager driver for Node.js, browsers (WebUSB), and CLI workflows.
 
 ## Install
 
@@ -14,8 +14,8 @@ npm install @thermal-label/labelmanager-node
 
 ## Features
 
-- Node.js USB HID printing for DYMO LabelManager devices
-- Browser printing with WebHID (Chrome/Edge)
+- Node.js USB printing for DYMO LabelManager devices
+- Browser printing with WebUSB (Chrome/Edge)
 - CLI commands for printing, status checks, and Linux setup
 - Shared protocol core with tests and typed APIs
 - Zero external runtime dependencies in core
@@ -43,4 +43,4 @@ await printer.printText("Hello DYMO");
 
 <LiveDemo />
 
-> Printing requires Chrome/Edge with WebHID support. The bitmap preview works in any modern browser.
+> Printing requires Chrome or Edge with WebUSB support. The bitmap preview works in any modern browser.

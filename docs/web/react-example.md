@@ -13,16 +13,25 @@ export function PrintButton() {
 
   async function print() {
     if (!printer) return;
-    await printer.printText("React label");
+    await printer.printText("React label", { tapeWidth: 12 });
+  }
+
+  async function disconnect() {
+    if (!printer) return;
+    await printer.disconnect();
+    setPrinter(null);
   }
 
   return (
     <div>
-      <button onClick={connect}>Connect</button>
+      <button onClick={connect} disabled={!!printer}>Connect</button>
       <button onClick={print} disabled={!printer}>Print</button>
+      <button onClick={disconnect} disabled={!printer}>Disconnect</button>
     </div>
   );
 }
 ```
 
-This pattern keeps WebHID permission and device references in component state.
+This pattern keeps WebUSB permission and device references in component state.
+`disconnect()` releases USB Interface 0 and closes the device — call it when
+the component unmounts or the user is done printing.

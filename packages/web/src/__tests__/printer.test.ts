@@ -1,23 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fromHIDDevice } from '../index.js';
-import { createMockHIDDevice } from './webhid-mock.js';
+import { fromUSBDevice } from '../index.js';
+import { createMockUSBDevice } from './webusb-mock.js';
 
 describe('WebDymoPrinter', () => {
-  it('sends HID reports for text prints', async () => {
-    const device = createMockHIDDevice();
+  it('sends USB transfers for text prints', async () => {
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    await device.selectConfiguration(1);
+    await device.claimInterface(0);
+    const printer = fromUSBDevice(device);
 
-    await printer.printText('HELLO', { invert: true, density: 'high', copies: 2 });
+    await printer.printText('HELLO', { invert: true, tapeWidth: 12 });
 
-    expect(device.__writes.length).toBeGreaterThan(0);
-    expect(device.__writes[0]!.reportId).toBe(0x00);
+    expect(device.__transfers.length).toBeGreaterThan(0);
+    expect(device.__transfers[0]!.endpointNumber).toBe(5);
   });
 
-  it('sends HID reports for image prints', async () => {
-    const device = createMockHIDDevice();
+  it('sends USB transfers for image prints', async () => {
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    await device.selectConfiguration(1);
+    await device.claimInterface(0);
+    const printer = fromUSBDevice(device);
     const imageData = {
       width: 64,
       height: 64,
@@ -26,22 +30,42 @@ describe('WebDymoPrinter', () => {
 
     await printer.printImage(imageData);
 
-    expect(device.__writes.length).toBeGreaterThan(0);
-    expect(device.__writes[0]!.reportId).toBe(0x00);
+    expect(device.__transfers.length).toBeGreaterThan(0);
+    expect(device.__transfers[0]!.endpointNumber).toBe(5);
+  });
+
+  it('first transfer starts with ESC C 0 (tape type command)', async () => {
+    const device = createMockUSBDevice();
+    await device.open();
+    await device.selectConfiguration(1);
+    await device.claimInterface(0);
+    const printer = fromUSBDevice(device);
+
+    await printer.printText('HI', { tapeWidth: 12 });
+
+    const firstChunk = device.__transfers[0]!.data;
+    expect(firstChunk[0]).toBe(0x1b); // ESC
+    expect(firstChunk[1]).toBe(0x43); // C
+    expect(firstChunk[2]).toBe(0x00); // 0
   });
 
   it('disconnects cleanly', async () => {
-    const device = createMockHIDDevice();
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    await device.selectConfiguration(1);
+    await device.claimInterface(0);
+    const printer = fromUSBDevice(device);
+
     await printer.disconnect();
     expect(printer.isConnected()).toBe(false);
   });
 
   it('prints image from URL when fetch and canvas decode succeed', async () => {
-    const device = createMockHIDDevice();
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    await device.selectConfiguration(1);
+    await device.claimInterface(0);
+    const printer = fromUSBDevice(device);
 
     const fetchMock = vi.fn(() =>
       Promise.resolve({
@@ -76,13 +100,13 @@ describe('WebDymoPrinter', () => {
     await printer.printImageURL('https://example.test/label.png');
 
     expect(fetchMock).toHaveBeenCalledWith('https://example.test/label.png');
-    expect(device.__writes.length).toBeGreaterThan(0);
+    expect(device.__transfers.length).toBeGreaterThan(0);
   });
 
   it('throws when image URL fetch fails', async () => {
-    const device = createMockHIDDevice();
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    const printer = fromUSBDevice(device);
 
     Object.defineProperty(globalThis, 'fetch', {
       value: vi.fn(() =>
@@ -100,9 +124,9 @@ describe('WebDymoPrinter', () => {
   });
 
   it('throws when offscreen canvas context is unavailable', async () => {
-    const device = createMockHIDDevice();
+    const device = createMockUSBDevice();
     await device.open();
-    const printer = fromHIDDevice(device);
+    const printer = fromUSBDevice(device);
 
     Object.defineProperty(globalThis, 'fetch', {
       value: vi.fn(() =>
@@ -131,15 +155,19 @@ describe('WebDymoPrinter', () => {
     );
   });
 
-  it('captures latest status byte from input report', () => {
-    const device = createMockHIDDevice();
-    const printer = fromHIDDevice(device);
+  it('getStatus sends ESC A and parses response byte', async () => {
+    const device = createMockUSBDevice();
+    await device.open();
+    const printer = fromUSBDevice(device);
 
-    device.dispatchEvent({
-      type: 'inputreport',
-      data: new DataView(new Uint8Array([0x05]).buffer),
-    } as unknown as Event);
+    const status = await printer.getStatus();
 
-    expect(printer.getLatestStatusByte()).toBe(0x05);
+    // mock returns 0x00 → ready, tape inserted, not low
+    expect(status.ready).toBe(true);
+    expect(status.tapeInserted).toBe(true);
+    expect(status.labelLow).toBe(false);
+
+    const statusQuery = device.__transfers.find(t => t.data[0] === 0x1b && t.data[1] === 0x41);
+    expect(statusQuery).toBeDefined();
   });
 });

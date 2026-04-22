@@ -1,5 +1,5 @@
 import {
-  encodeLabel,
+  buildPrinterStream,
   renderImage,
   renderText,
   type DeviceDescriptor,
@@ -10,28 +10,16 @@ import { readFile } from 'node:fs/promises';
 import type { ImagePrintOptions, PrinterStatus, TextPrintOptions } from './types.js';
 
 const WRITE_DELAY_MS = 5;
-const STATUS_QUERY = new Uint8Array([0x1b, 0x41]);
-const HID_REPORT_ID = 0x00;
-const HID_REPORT_SIZE = 64;
+const CHUNK_SIZE = 64;
 
-interface HidAsyncLike {
-  write(data: number[] | Uint8Array): Promise<number>;
-  readTimeout(timeout: number): Promise<number[]>;
+export interface PrinterTransport {
+  write(data: Buffer): Promise<void>;
+  read(length: number): Promise<Buffer>;
   close(): void;
 }
 
 async function sleep(ms: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function toNodeHidWriteBuffer(payload: Uint8Array): Uint8Array {
-  const report = new Uint8Array(HID_REPORT_SIZE);
-  report.set(payload.slice(0, HID_REPORT_SIZE));
-
-  const out = new Uint8Array(HID_REPORT_SIZE + 1);
-  out[0] = HID_REPORT_ID;
-  out.set(report, 1);
-  return out;
 }
 
 async function decodeImageBuffer(buffer: Buffer): Promise<RawImageData> {
@@ -58,20 +46,25 @@ async function decodeImageBuffer(buffer: Buffer): Promise<RawImageData> {
 
 export class DymoPrinter {
   public readonly device: DeviceDescriptor;
-  private readonly hid: HidAsyncLike | undefined;
+  private readonly transport: PrinterTransport | undefined;
 
-  public constructor(device: DeviceDescriptor, hid?: HidAsyncLike) {
+  public constructor(device: DeviceDescriptor, transport?: PrinterTransport) {
     this.device = device;
-    this.hid = hid;
+    this.transport = transport;
   }
 
-  private async writeReports(reports: Uint8Array[]): Promise<void> {
-    if (!this.hid) {
+  private async writeStream(data: Uint8Array): Promise<void> {
+    if (!this.transport) {
       throw new Error('Printer is not connected.');
     }
 
-    for (const report of reports) {
-      await this.hid.write(toNodeHidWriteBuffer(report));
+    for (let offset = 0; offset < data.length; offset += CHUNK_SIZE) {
+      const chunk = Buffer.from(
+        data.buffer,
+        data.byteOffset + offset,
+        Math.min(CHUNK_SIZE, data.length - offset),
+      );
+      await this.transport.write(chunk);
       await sleep(WRITE_DELAY_MS);
     }
   }
@@ -84,8 +77,8 @@ export class DymoPrinter {
    */
   public async printText(text: string, options: TextPrintOptions = {}): Promise<void> {
     const bitmap = renderText(text, options.invert === undefined ? {} : { invert: options.invert });
-    const reports = encodeLabel(bitmap, options);
-    await this.writeReports(reports);
+    const stream = buildPrinterStream(bitmap, options);
+    await this.writeStream(stream);
   }
 
   /**
@@ -113,8 +106,8 @@ export class DymoPrinter {
       ...(options.dither === undefined ? {} : { dither: options.dither }),
       ...(options.threshold === undefined ? {} : { threshold: options.threshold }),
     });
-    const reports = encodeLabel(bitmap, options);
-    await this.writeReports(reports);
+    const stream = buildPrinterStream(bitmap, options);
+    await this.writeStream(stream);
   }
 
   /**
@@ -123,12 +116,12 @@ export class DymoPrinter {
    * @returns Parsed status booleans.
    */
   public async getStatus(): Promise<PrinterStatus> {
-    if (!this.hid) {
+    if (!this.transport) {
       throw new Error('Printer is not connected.');
     }
 
-    await this.hid.write(toNodeHidWriteBuffer(STATUS_QUERY));
-    const response = await this.hid.readTimeout(200);
+    await this.transport.write(Buffer.from([0x1b, 0x41]));
+    const response = await this.transport.read(64);
     const status = response[0] ?? 0;
 
     return {
@@ -139,9 +132,9 @@ export class DymoPrinter {
   }
 
   /**
-   * Close the HID handle if present.
+   * Close the printer transport if present.
    */
   public close(): void {
-    this.hid?.close();
+    this.transport?.close();
   }
 }
