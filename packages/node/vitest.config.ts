@@ -11,5 +11,15 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    coverage: {
+      exclude: [
+        'dist/**',
+        '**/*.d.ts',
+        'src/types.ts',
+        'src/types.js',
+        'src/index.ts',
+        'vitest.config.ts',
+      ],
+    },
   },
 });

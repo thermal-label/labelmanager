@@ -11,5 +11,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    coverage: {
+      exclude: ['dist/**', '**/*.d.ts', 'vitest.config.ts'],
+    },
   },
 });
