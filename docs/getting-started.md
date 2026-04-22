@@ -115,3 +115,11 @@ Some Windows systems need the default printer driver replaced with WinUSB so
 2. Select the DYMO device from the dropdown
 3. Choose **WinUSB** as the target driver
 4. Click **Install Driver** and reconnect the printer
+
+---
+
+## Looking for a Python alternative?
+
+[labelle](https://github.com/labelle-org/labelle) is a mature open-source
+Python tool for the same DYMO LabelManager device family. If your stack is
+Python-based, it may be a better fit.

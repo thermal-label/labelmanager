@@ -122,8 +122,8 @@ const inp = iface.endpoint(0x85) as usb.InEndpoint; // EP 5 IN  — status
 
 ## Print protocol
 
-The protocol byte stream sent to EP 5 OUT matches the `labelle` Python
-implementation and was confirmed working on hardware. All values are hex.
+The protocol byte stream sent to EP 5 OUT has been confirmed working on
+hardware. All values are hex.
 
 ### Sequence structure
 
@@ -249,13 +249,13 @@ Status byte bit flags:
 | Command           |     Bytes     | Notes                                                                                                                                                                                       |
 | ----------------- | :-----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ESC @ — Reset     |    `1B 40`    | Resets the printer state machine. **Do not send on Interface 0.** Sending `ESC @` via raw USB puts the printer into an undefined state and blocks subsequent print jobs until power-cycled. |
-| ESC e — Density   | `1B 65 00/01` | Normal / high density. Not observed in confirmed-working `labelle` sessions. The device appears to use a fixed density.                                                                     |
-| ESC G — Form feed |    `1B 47`    | Advances and cuts. Labelle uses `ESC A` (status query) as the print terminator instead. `ESC G` may work on some firmware revisions but was not tested.                                     |
+| ESC e — Density   | `1B 65 00/01` | Normal / high density. Not observed in confirmed-working sessions. The device appears to use a fixed density.                                                                               |
+| ESC G — Form feed |    `1B 47`    | Advances and cuts. `ESC A` (status query) is used as the print terminator instead. `ESC G` may work on some firmware revisions but was not tested.                                          |
 
 ## Flow control (synwait)
 
-For long labels, the printer can fall behind the host. `labelle` implements a
-flow control mechanism called `synwait`:
+For long labels, the printer can fall behind the host. A flow control
+mechanism called `synwait` addresses this:
 
 1. Before sending a chunk of data, send `ESC A` (status query).
 2. Wait for the 1-byte status response on EP 5 IN.
@@ -295,33 +295,12 @@ async function writeWithSynwait(stream: Uint8Array, transport: PrinterTransport)
 }
 ```
 
-## Comparison with labelle
-
-[labelle](https://github.com/labelle-org/labelle) is the reference Python
-implementation. The key differences from this TypeScript driver:
-
-| Aspect         | labelle                     | This driver                          |
-| -------------- | --------------------------- | ------------------------------------ |
-| Language       | Python                      | TypeScript / Node.js                 |
-| USB library    | `pyusb` / `libusb`          | `usb` npm package                    |
-| Interface      | Interface 0 (Printer class) | Interface 0 (Printer class)          |
-| Protocol       | ESC C, ESC D, SYN, ESC A    | Same                                 |
-| Image rotation | `ROTATE_270` (PIL)          | `rotateBitmap(bmp, 90)` (equivalent) |
-| Tape scaling   | Margin calculation          | `scaleBitmap` + `padBitmap`          |
-| Flow control   | synwait=64                  | Not yet implemented                  |
-| Status read    | EP 5 IN                     | EP 5 IN                              |
-| Multi-copy     | Not natively                | `copies` option (repeated sequence)  |
-
-`ROTATE_270` (PIL/Pillow) and `rotateBitmap(bitmap, 90)` (`@mbtech-nl/bitmap`)
-produce identical output: the label's leftmost column becomes the bitmap's
-first row. Both rotate counter-clockwise by 90°.
-
 ## WebUSB (browser)
 
 The `@thermal-label/labelmanager-web` package uses the browser
 [WebUSB API](https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API)
 (`navigator.usb.requestDevice`). It targets Interface 0 (Printer class,
-EP 5 OUT) — the same interface as the Node.js driver and labelle.
+EP 5 OUT) — the same interface as the Node.js driver.
 
 `requestPrinter()` calls `open()` → `selectConfiguration(1)` →
 `claimInterface(0)`, then wraps the device in `WebDymoPrinter`. Print data is
