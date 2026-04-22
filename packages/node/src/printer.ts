@@ -11,6 +11,8 @@ import type { ImagePrintOptions, PrinterStatus, TextPrintOptions } from './types
 
 const WRITE_DELAY_MS = 5;
 const STATUS_QUERY = new Uint8Array([0x1b, 0x41]);
+const HID_REPORT_ID = 0x00;
+const HID_REPORT_SIZE = 64;
 
 interface HidAsyncLike {
   write(data: number[] | Uint8Array): Promise<number>;
@@ -20,6 +22,16 @@ interface HidAsyncLike {
 
 async function sleep(ms: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function toNodeHidWriteBuffer(payload: Uint8Array): Uint8Array {
+  const report = new Uint8Array(HID_REPORT_SIZE);
+  report.set(payload.slice(0, HID_REPORT_SIZE));
+
+  const out = new Uint8Array(HID_REPORT_SIZE + 1);
+  out[0] = HID_REPORT_ID;
+  out.set(report, 1);
+  return out;
 }
 
 async function decodeImageBuffer(buffer: Buffer): Promise<RawImageData> {
@@ -59,7 +71,7 @@ export class DymoPrinter {
     }
 
     for (const report of reports) {
-      await this.hid.write(report);
+      await this.hid.write(toNodeHidWriteBuffer(report));
       await sleep(WRITE_DELAY_MS);
     }
   }
@@ -115,7 +127,7 @@ export class DymoPrinter {
       throw new Error('Printer is not connected.');
     }
 
-    await this.hid.write(STATUS_QUERY);
+    await this.hid.write(toNodeHidWriteBuffer(STATUS_QUERY));
     const response = await this.hid.readTimeout(200);
     const status = response[0] ?? 0;
 
