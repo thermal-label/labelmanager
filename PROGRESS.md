@@ -132,17 +132,17 @@
   - [x] `pnpm build` produces output
 
 ## Step 7: CI
-- [ ] Finalize and verify workflows:
-  - [ ] CI workflow uses required checks and Codecov upload.
-  - [ ] Release workflow uses trusted publishing.
-  - [ ] Docs workflow deploys VitePress to Pages.
-- [ ] Add root README badges (CI, codecov, npm, MIT).
-- [ ] Validate repo scripts align with workflow commands.
-- [ ] Gate checks for Step 7:
-  - [ ] `pnpm typecheck` passes
-  - [ ] `pnpm lint` passes
-  - [ ] `pnpm test` passes
-  - [ ] `pnpm build` produces output
+- [x] Finalize and verify workflows:
+  - [x] CI workflow uses required checks and Codecov upload.
+  - [x] Release workflow uses trusted publishing.
+  - [x] Docs workflow deploys VitePress to Pages.
+- [x] Add root README badges (CI, codecov, npm, MIT).
+- [x] Validate repo scripts align with workflow commands.
+- [x] Gate checks for Step 7:
+  - [x] `pnpm typecheck` passes
+  - [x] `pnpm lint` passes
+  - [x] `pnpm test` passes
+  - [x] `pnpm build` produces output
 
 ## Step 8: `HARDWARE.md`
 - [ ] Author full compatibility table.
