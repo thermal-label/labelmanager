@@ -145,14 +145,14 @@
   - [x] `pnpm build` produces output
 
 ## Step 8: `HARDWARE.md`
-- [ ] Author full compatibility table.
-- [ ] Document hardware verification instructions.
-- [ ] Add hardware donation/contribution note.
-- [ ] Gate checks for Step 8:
-  - [ ] `pnpm typecheck` passes
-  - [ ] `pnpm lint` passes
-  - [ ] `pnpm test` passes
-  - [ ] `pnpm build` produces output
+- [x] Author full compatibility table.
+- [x] Document hardware verification instructions.
+- [x] Add hardware donation/contribution note.
+- [x] Gate checks for Step 8:
+  - [x] `pnpm typecheck` passes
+  - [x] `pnpm lint` passes
+  - [x] `pnpm test` passes
+  - [x] `pnpm build` produces output
 
 ## Finalization
-- [ ] Ensure every checkbox above is ticked.
+- [x] Ensure every checkbox above is ticked.
