@@ -1,9 +1,13 @@
-import { getRow, rotateBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
+import { getRow, padBitmap, rotateBitmap, scaleBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
 /* eslint-disable import-x/consistent-type-specifier-style */
 import type { PrintOptions, TapeWidth } from './types.js';
 
 const REPORT_SIZE = 64;
 const MAX_PAYLOAD_SIZE = REPORT_SIZE - 1;
+
+// ~8 mm at 180 DPI — blank feed added before and after the bitmap so the
+// printed area can be cut cleanly on both sides.
+const FEED_MARGIN_PX = 57;
 
 function toReport(payload: number[]): Uint8Array {
   if (payload.length > MAX_PAYLOAD_SIZE) {
@@ -15,43 +19,6 @@ function toReport(payload: number[]): Uint8Array {
   return report;
 }
 
-function fitToHeadHeight(bitmap: LabelBitmap, targetHeight = 64): LabelBitmap {
-  if (bitmap.heightPx === targetHeight) {
-    return bitmap;
-  }
-
-  const bytesPerRow = Math.ceil(bitmap.widthPx / 8);
-  const fittedData = new Uint8Array(bytesPerRow * targetHeight);
-
-  if (bitmap.heightPx < targetHeight) {
-    const topPadding = Math.floor((targetHeight - bitmap.heightPx) / 2);
-    for (let row = 0; row < bitmap.heightPx; row += 1) {
-      const srcStart = row * bytesPerRow;
-      const srcEnd = srcStart + bytesPerRow;
-      const dstStart = (row + topPadding) * bytesPerRow;
-      fittedData.set(bitmap.data.slice(srcStart, srcEnd), dstStart);
-    }
-    return {
-      widthPx: bitmap.widthPx,
-      heightPx: targetHeight,
-      data: fittedData,
-    };
-  }
-
-  const cropStart = Math.floor((bitmap.heightPx - targetHeight) / 2);
-  for (let row = 0; row < targetHeight; row += 1) {
-    const srcStart = (row + cropStart) * bytesPerRow;
-    const srcEnd = srcStart + bytesPerRow;
-    const dstStart = row * bytesPerRow;
-    fittedData.set(bitmap.data.slice(srcStart, srcEnd), dstStart);
-  }
-
-  return {
-    widthPx: bitmap.widthPx,
-    heightPx: targetHeight,
-    data: fittedData,
-  };
-}
 
 function tapeWidthToTargetHeight(tapeWidth?: TapeWidth): number {
   switch (tapeWidth) {
@@ -88,8 +55,9 @@ export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
  */
 export function buildBitmapRows(bitmap: LabelBitmap, options?: PrintOptions): Uint8Array[] {
   const targetHeight = tapeWidthToTargetHeight(options?.tapeWidth);
-  const fitted = fitToHeadHeight(bitmap, targetHeight);
-  const rotated = rotateBitmap(fitted, 90);
+  const scaled = scaleBitmap(bitmap, targetHeight);
+  const padded = padBitmap(scaled, { left: FEED_MARGIN_PX, right: FEED_MARGIN_PX });
+  const rotated = rotateBitmap(padded, 90);
 
   const reports: Uint8Array[] = [];
   for (let y = 0; y < rotated.heightPx; y += 1) {
@@ -123,8 +91,9 @@ export function buildFormFeed(): Uint8Array[] {
 export function buildPrinterStream(bitmap: LabelBitmap, options: PrintOptions = {}): Uint8Array {
   const copies = Math.max(1, options.copies ?? 1);
   const targetHeight = tapeWidthToTargetHeight(options.tapeWidth);
-  const fitted = fitToHeadHeight(bitmap, targetHeight);
-  const rotated = rotateBitmap(fitted, 90);
+  const scaled = scaleBitmap(bitmap, targetHeight);
+  const padded = padBitmap(scaled, { left: FEED_MARGIN_PX, right: FEED_MARGIN_PX });
+  const rotated = rotateBitmap(padded, 90);
   const bytesPerLine = Math.ceil(targetHeight / 8);
 
   const chunks: number[] = [];

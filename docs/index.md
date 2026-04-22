@@ -1,46 +1,59 @@
-# labelmanager
+---
+layout: home
 
-TypeScript-first DYMO D1 LabelManager driver for Node.js, browsers (WebUSB), and CLI workflows.
+hero:
+  name: labelmanager
+  text: TypeScript driver for DYMO D1 label printers
+  tagline: Node.js · CLI · Browser — one protocol, three ways to print
+  actions:
+    - theme: brand
+      text: Get started
+      link: /getting-started
+    - theme: alt
+      text: GitHub
+      link: https://github.com/thermal-label/labelmanager
 
-## Install
+features:
+  - icon: 🟢
+    title: Node.js
+    details: Direct USB printing from Node.js server, desktop, and backend apps. Print text and images with a single async call.
+    link: /node
+    linkText: Node.js guide
+  - icon: ⌨️
+    title: CLI
+    details: One-line label printing from the terminal. Great for scripting, cron jobs, ad-hoc labels, and Linux udev setup.
+    link: /cli
+    linkText: CLI guide
+  - icon: 🌐
+    title: Browser
+    details: WebUSB printing directly from Chrome or Edge — no server, no native dependencies. Same protocol, pure web stack.
+    link: /web
+    linkText: Web guide
+---
 
-```bash
-pnpm add @thermal-label/labelmanager-node
-```
+<div class="home-extra">
 
-```bash
-npm install @thermal-label/labelmanager-node
-```
+<div class="ref-links">
+  <a href="/hardware" class="ref-link">
+    <span class="ref-icon">🖨️</span>
+    <span class="ref-body">
+      <strong>Supported hardware</strong>
+      <span>Device list, USB PIDs, tape widths</span>
+    </span>
+    <span class="ref-arrow">→</span>
+  </a>
+  <a href="/core" class="ref-link">
+    <span class="ref-icon">📡</span>
+    <span class="ref-body">
+      <strong>Protocol & Core API</strong>
+      <span>ESC sequences, bitmap encoding, porting guide</span>
+    </span>
+    <span class="ref-arrow">→</span>
+  </a>
+</div>
 
-## Features
-
-- Node.js USB printing for DYMO LabelManager devices
-- Browser printing with WebUSB (Chrome/Edge)
-- CLI commands for printing, status checks, and Linux setup
-- Shared protocol core with tests and typed APIs
-- Zero external runtime dependencies in core
-
-## Supported Devices
-
-| Device | USB PID | Tape widths | Status |
-|---|---|---|---|
-| LabelManager PnP | `0x1002` | 6, 9, 12mm | Verified |
-| LabelManager 420P | `0x1004` | 6, 9, 12, 19mm | Expected |
-| LabelManager Wireless PnP | `0x1008` | 6, 9, 12mm | Expected |
-| LabelManager PC | `0x1002` | 6, 9, 12mm | Expected |
-| LabelPoint 350 | `0x1003` | 6, 9, 12mm | Expected |
-| MobileLabeler | `0x1009` | 6, 9, 12mm | Expected |
-
-## Three-line Example
-
-```ts
-import { openPrinter } from "@thermal-label/labelmanager-node";
-const printer = await openPrinter();
-await printer.printText("Hello DYMO");
-```
-
-## Browser Demo
+## Try it in your browser
 
 <LiveDemo />
 
-> Printing requires Chrome or Edge with WebUSB support. The bitmap preview works in any modern browser.
+</div>

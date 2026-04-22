@@ -1,7 +1,7 @@
 {
   "name": "@thermal-label/labelmanager-node",
   "version": "0.0.0",
-  "description": "Node.js HID driver for DYMO LabelManager devices",
+  "description": "Node.js USB driver for DYMO LabelManager label printers",
   "type": "module",
   "author": "Mannes Brak",
   "license": "MIT",

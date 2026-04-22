@@ -1,6 +1,29 @@
-# USB Protocol Internals
+# Core
 
-This page documents the actual USB topology and print protocol of the DYMO
+`@thermal-label/labelmanager-core` is the shared protocol layer used by all
+other packages. It contains the ESC-sequence encoder, bitmap pipeline, device
+metadata, and TypeScript types. You rarely import it directly — use the
+Node.js, CLI, or Web packages instead.
+
+## Core API
+
+| Export | Description |
+|---|---|
+| `buildPrinterStream(bitmap, opts)` | Encode a full label job as a raw USB byte stream |
+| `buildBitmapRows(bitmap, opts)` | Encode bitmap as HID report payloads |
+| `buildResetSequence(opts)` | ESC reset + media type + density reports |
+| `buildFormFeed()` | Form-feed / cut report |
+| `encodeLabel(bitmap, opts)` | Full HID report sequence for one or more copies |
+| `findDevice(devices, pid)` | Look up a device descriptor by USB PID |
+| `DEVICES` | Array of all known `DeviceDescriptor` objects |
+| `PrintOptions` | Shared options type (`density`, `copies`, `tapeWidth`) |
+| `TapeWidth` | `6 \| 9 \| 12 \| 19` |
+
+---
+
+## USB Protocol
+
+This section documents the actual USB topology and print protocol of the DYMO
 LabelManager PnP (`0922:1002`), based on hands-on reverse engineering conducted
 while building this driver. It is written for developers porting the driver to
 new languages, debugging hardware issues, or extending the existing packages.
@@ -14,8 +37,8 @@ state. This page documents what actually works and why.
 
 ## Device overview
 
-After `usb_modeswitch` (see [Linux Setup](/guide/linux-setup)), the device
-enumerates with three USB interfaces:
+After `usb_modeswitch` (see [Getting Started](/getting-started#linux-setup)),
+the device enumerates with three USB interfaces:
 
 ```
 Bus 003 Device 010: ID 0922:1002 Dymo-CoStar Corp. LabelManager PnP
@@ -38,7 +61,7 @@ bInterfaceProtocol  2   Bidirectional
 ```
 
 This is the interface `labelle` (Python) uses. It is the correct target for all
-print data. You must claim this interface via `libusb` / `node-hid` cannot reach
+print data. You must claim this interface via `libusb` — `node-hid` cannot reach
 it.
 
 ### Interface 1 — Mass Storage
@@ -177,21 +200,29 @@ column 0 → column 1    row 0  (leftmost label column)
 ```
 
 The `@mbtech-nl/bitmap` package's `rotateBitmap(bitmap, 90)` performs this
-transformation. In `packages/core`, `buildPrinterStream` calls `rotateBitmap`
-internally after fitting the bitmap to the target head height.
+transformation. In `packages/core`, `buildPrinterStream` calls `scaleBitmap`
+to fit the bitmap to the target head height, `padBitmap` to add feed margins,
+then `rotateBitmap` before encoding columns.
 
-#### Centering for narrow tapes
+#### Scaling for narrow tapes
 
-For tapes narrower than 12 mm, the image is centred within the 64-dot head:
+For tapes narrower than 12 mm, the bitmap is scaled proportionally to fill the
+available print head dots:
 
-| Tape | Dots used | Top margin | Bottom margin |
-|:---:|:---:|:---:|:---:|
-| 6 mm  | 32 | 16 | 16 |
-| 9 mm  | 48 |  8 |  8 |
-| 12 mm | 64 |  0 |  0 |
+| Tape | Dots used | Scale factor (vs 12 mm) |
+|:---:|:---:|:---:|
+| 6 mm  | 32 | 0.5× |
+| 9 mm  | 48 | 0.75× |
+| 12 mm | 64 | 1× |
 
-The `fitToHeadHeight` function in `packages/core/src/protocol.ts` handles
-padding (or cropping if the source image is taller than the tape).
+`scaleBitmap(bitmap, targetHeight)` in `packages/core/src/protocol.ts` handles
+this. The label width scales proportionally so the aspect ratio is preserved.
+
+#### Feed margins
+
+An 8 mm blank feed is added on each side of the bitmap (≈ 57 dots at 180 DPI)
+via `padBitmap`. This gives enough tape on each side to cut cleanly without
+cutting into the printed area.
 
 ### ESC A — status query / flush
 
@@ -276,7 +307,7 @@ implementation. The key differences from this TypeScript driver:
 | Interface | Interface 0 (Printer class) | Interface 0 (Printer class) |
 | Protocol | ESC C, ESC D, SYN, ESC A | Same |
 | Image rotation | `ROTATE_270` (PIL) | `rotateBitmap(bmp, 90)` (equivalent) |
-| Tape centering | Margin calculation | `fitToHeadHeight` |
+| Tape scaling | Margin calculation | `scaleBitmap` + `padBitmap` |
 | Flow control | synwait=64 | Not yet implemented |
 | Status read | EP 5 IN | EP 5 IN |
 | Multi-copy | Not natively | `copies` option (repeated sequence) |
@@ -303,22 +334,6 @@ Status is read actively via `getStatus()` → `transferOut(ESC A)` +
 WebUSB requires a secure context (`https://` or `localhost`) and is supported
 in Chrome 89+ and Edge 89+. Firefox and Safari do not implement WebUSB.
 
-## Porting checklist
-
-If you are porting this driver to another language or platform:
-
-- [ ] Use `libusb` (or equivalent) — **not** the OS HID driver
-- [ ] Target Interface 0 (Printer class), not Interface 2 (HID)
-- [ ] Detach any kernel driver attached to Interface 0 before claiming
-- [ ] Send `ESC C 0` + `ESC D N` before any bitmap data
-- [ ] Use `SYN` (`0x16`) + exactly `N` bytes per label column
-- [ ] Rotate the bitmap 90° counter-clockwise before encoding columns
-- [ ] Centre the image vertically for tapes narrower than 12 mm
-- [ ] Terminate with `ESC A` and read the status response
-- [ ] **Do not send `ESC @` (reset)** over the Printer interface
-- [ ] Implement synwait flow control for labels longer than ~200 columns
-- [ ] Set up udev rules for both `hidraw` and `usb` subsystems (see [Linux Setup](/guide/linux-setup))
-
 ## udev rules
 
 Two separate udev rules are required because `node-hid` (if used for status
@@ -331,27 +346,21 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0922", MODE="0666", TAG+="uaccess"
 SUBSYSTEM=="usb", ATTR{idVendor}=="0922", MODE="0666", TAG+="uaccess"
 ```
 
-Both rules are generated by `dymo setup linux` (see [CLI Commands](/cli/commands)).
+Both rules are generated by `dymo setup linux` (see [CLI](/cli#dymo-setup-linux)).
 
-## Hardware reference
+## Porting checklist
 
-```
-Vendor:   Dymo-CoStar Corp.  VID 0x0922
-Device:   LabelManager PnP   PID 0x1002  (post-modeswitch)
+If you are porting this driver to another language or platform:
 
-Interface 0  Printer class
-  Protocol:     Bidirectional (0x02)
-  EP 5 OUT:     0x05  Bulk  64 bytes  wMaxPacketSize=64
-  EP 5 IN:      0x85  Bulk  64 bytes  wMaxPacketSize=64
-
-Interface 1  Mass Storage (SCSI Bulk-Only)
-  EP 2 IN:      0x82  Bulk  64 bytes
-  EP 2 OUT:     0x02  Bulk  64 bytes
-
-Interface 2  HID
-  EP 1 OUT:     0x01  Interrupt  8 bytes  bInterval=10ms
-  Report descriptor: 34 bytes (input report only — no output report)
-```
-
-Full `lsusb -v -d 0922:1002` output is the canonical reference for any
-discrepancies.
+- [ ] Use `libusb` (or equivalent) — **not** the OS HID driver
+- [ ] Target Interface 0 (Printer class), not Interface 2 (HID)
+- [ ] Detach any kernel driver attached to Interface 0 before claiming
+- [ ] Send `ESC C 0` + `ESC D N` before any bitmap data
+- [ ] Use `SYN` (`0x16`) + exactly `N` bytes per label column
+- [ ] Rotate the bitmap 90° counter-clockwise before encoding columns
+- [ ] Scale the image to fill available head dots for the tape width
+- [ ] Add blank feed margin (~8 mm) on each side before rotation
+- [ ] Terminate with `ESC A` and read the status response
+- [ ] **Do not send `ESC @` (reset)** over the Printer interface
+- [ ] Implement synwait flow control for labels longer than ~200 columns
+- [ ] Set up udev rules for both `hidraw` and `usb` subsystems
