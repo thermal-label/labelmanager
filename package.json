@@ -16,7 +16,7 @@
     "typecheck": "pnpm -r run typecheck",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:api": "typedoc --skipErrorChecking --plugin typedoc-plugin-markdown --out docs/api packages/*/dist/src/index.d.ts",
+    "docs:api": "typedoc --skipErrorChecking --plugin typedoc-plugin-markdown --out docs/api packages/*/dist/index.d.ts",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"
