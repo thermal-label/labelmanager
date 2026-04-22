@@ -6,7 +6,7 @@
 [![npm cli](https://img.shields.io/npm/v/@thermal-label/labelmanager-cli)](https://npmjs.com/package/@thermal-label/labelmanager-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-# labelmanager-ts
+# labelmanager
 
 TypeScript-first DYMO D1 LabelManager driver suite for Node.js, browser WebHID, and CLI workflows.
 

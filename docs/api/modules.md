@@ -1,4 +1,4 @@
-[**labelmanager-ts**](README.md)
+[**labelmanager**](README.md)
 
 ***
 

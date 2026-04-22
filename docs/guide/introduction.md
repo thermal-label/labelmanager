@@ -1,6 +1,6 @@
 # Introduction
 
-`labelmanager-ts` is a monorepo with one protocol core and multiple frontends:
+`labelmanager` is a monorepo with one protocol core and multiple frontends:
 
 - `@thermal-label/labelmanager-core` for encoding and device metadata
 - `@thermal-label/labelmanager-node` for USB on Node.js

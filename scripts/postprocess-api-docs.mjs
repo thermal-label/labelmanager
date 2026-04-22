@@ -36,7 +36,7 @@ async function patchApiReadme() {
 async function patchModules() {
   const raw = await readFile(modulesPath, "utf8");
   const next = [
-    "[**labelmanager-ts**](README.md)",
+    "[**labelmanager**](README.md)",
     "",
     "***",
     "",

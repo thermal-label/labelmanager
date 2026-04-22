@@ -1,4 +1,4 @@
-# labelmanager-ts
+# labelmanager
 
 TypeScript-first DYMO D1 LabelManager driver for Node.js, browsers (WebUSB), and CLI workflows.
 
