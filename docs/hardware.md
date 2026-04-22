@@ -32,9 +32,9 @@ supported tape widths and USB product IDs.
     </div>
   </div>
   <div class="hw-cta-actions">
-    <a class="hw-chip hw-chip-works" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Verified%3A+%5BDevice+name%5D&labels=hardware%2Cverified" target="_blank" rel="noopener">✅ It works</a>
-    <a class="hw-chip hw-chip-partial" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Partial%3A+%5BDevice+name%5D&labels=hardware%2Cpartial" target="_blank" rel="noopener">⚠️ Partially works</a>
-    <a class="hw-chip hw-chip-broken" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.md&title=Broken%3A+%5BDevice+name%5D&labels=hardware%2Cbroken" target="_blank" rel="noopener">❌ Doesn't work</a>
+    <a class="hw-chip hw-chip-works" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.yml&title=Verified%3A+%5BDevice+name%5D&labels=hardware%2Cverified" target="_blank" rel="noopener">✅ It works</a>
+    <a class="hw-chip hw-chip-partial" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.yml&title=Partial%3A+%5BDevice+name%5D&labels=hardware%2Cpartial" target="_blank" rel="noopener">⚠️ Partially works</a>
+    <a class="hw-chip hw-chip-broken" href="https://github.com/thermal-label/labelmanager/issues/new?template=hardware_verification.yml&title=Broken%3A+%5BDevice+name%5D&labels=hardware%2Cbroken" target="_blank" rel="noopener">❌ Doesn't work</a>
   </div>
 </div>
 
