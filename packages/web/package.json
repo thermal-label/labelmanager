@@ -1,0 +1,51 @@
+{
+  "name": "@thermal-label/labelmanager-web",
+  "version": "0.0.0",
+  "description": "WebHID browser driver for DYMO LabelManager printers",
+  "type": "module",
+  "author": "Mannes Brak",
+  "license": "MIT",
+  "homepage": "https://github.com/thermal-label/labelmanager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thermal-label/labelmanager.git",
+    "directory": "packages/web"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/mannes"
+    },
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/mannes"
+    }
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@thermal-label/labelmanager-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0"
+  },
+  "devDependencies": {
+    "@mbtech-nl/tsconfig": "^1.0.0",
+    "jsdom": "^26.1.0",
+    "typescript": "~5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

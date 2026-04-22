@@ -86,22 +86,22 @@
   - [x] `pnpm build` produces output
 
 ## Step 5: `@thermal-label/labelmanager-web`
-- [ ] Scaffold `packages/web` package metadata and tsconfig (browser config).
-- [ ] Add ambient WebHID type declaration (`src/webhid.d.ts`) as needed.
-- [ ] Implement WebHID APIs:
-  - [ ] `requestPrinter`
-  - [ ] `fromHIDDevice`
-  - [ ] `WebDymoPrinter` class methods
-- [ ] Implement `printImageURL` pipeline via `fetch` + bitmap decode path.
-- [ ] Add Web tests and mocks:
-  - [ ] `src/__tests__/webhid-mock.ts`
-  - [ ] `src/__tests__/request.test.ts`
-  - [ ] `src/__tests__/printer.test.ts`
-- [ ] Gate checks for Step 5:
-  - [ ] `pnpm typecheck` passes
-  - [ ] `pnpm lint` passes
-  - [ ] `pnpm test` passes
-  - [ ] `pnpm build` produces output
+- [x] Scaffold `packages/web` package metadata and tsconfig (browser config).
+- [x] Add ambient WebHID type declaration (`src/webhid.d.ts`) as needed.
+- [x] Implement WebHID APIs:
+  - [x] `requestPrinter`
+  - [x] `fromHIDDevice`
+  - [x] `WebDymoPrinter` class methods
+- [x] Implement `printImageURL` pipeline via `fetch` + bitmap decode path.
+- [x] Add Web tests and mocks:
+  - [x] `src/__tests__/webhid-mock.ts`
+  - [x] `src/__tests__/request.test.ts`
+  - [x] `src/__tests__/printer.test.ts`
+- [x] Gate checks for Step 5:
+  - [x] `pnpm typecheck` passes
+  - [x] `pnpm lint` passes
+  - [x] `pnpm test` passes
+  - [x] `pnpm build` produces output
 
 ## Step 6: Docs
 - [ ] Scaffold VitePress docs structure.
