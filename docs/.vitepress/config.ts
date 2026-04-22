@@ -5,6 +5,11 @@ export default defineConfig({
   title: "labelmanager-ts",
   description: "TypeScript driver for DYMO D1 label printers",
   base: "/labelmanager-ts/",
+  ignoreDeadLinks: [
+    /^\.\/LICENSE$/,
+    /^\.\/(cli|core|node|web)\/dist\/README$/,
+    /^\.\/(cli|core|node|web)\/dist\/src\/README$/
+  ],
   themeConfig: {
     nav: [
       { text: "Guide", link: "/guide/introduction" },
