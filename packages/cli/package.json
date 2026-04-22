@@ -5,11 +5,22 @@
   "type": "module",
   "author": "Mannes Brak",
   "license": "MIT",
-  "homepage": "https://github.com/thermal-label/labelmanager",
+  "homepage": "https://thermal-label.github.io/labelmanager/",
+  "keywords": [
+    "dymo",
+    "labelmanager",
+    "label-printer",
+    "thermal-label",
+    "cli",
+    "node-hid"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/thermal-label/labelmanager.git",
     "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/thermal-label/labelmanager/issues"
   },
   "funding": [
     {
@@ -21,6 +32,17 @@
       "url": "https://ko-fi.com/mannes"
     }
   ],
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": false,
   "bin": {
     "dymo": "./bin/dymo.js"
