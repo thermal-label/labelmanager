@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   title: "labelmanager-ts",
   description: "TypeScript driver for DYMO D1 label printers",
-  base: "/labelmanager-ts/",
+  base: "/labelmanager/",
   ignoreDeadLinks: [
     /^\.\/LICENSE$/,
     /^\.\/(cli|core|node|web)\/dist\/README$/,
