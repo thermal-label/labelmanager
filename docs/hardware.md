@@ -15,8 +15,14 @@ supported tape widths and USB product IDs.
 | LabelPoint 350            | `0x1003` | 6, 9, 12 mm     | 🔲 Expected |
 | MobileLabeler             | `0x1009` | 6, 9, 12 mm     | 🔲 Expected |
 
-**Verified** — tested on real hardware. **Expected** — same VID/protocol family,
-untested. If you confirm a device works (or doesn't), please open an issue.
+::: tip Got one of the expected devices?
+Five models on this list are untested. If you own one, a two-minute test helps
+everyone — just run `dymo list` and `dymo print text "test"` and let us know
+what happens.
+
+**It works** · **Partially works** · **Doesn't work** — all three are useful.
+[Open a compatibility report →](https://github.com/thermal-label/labelmanager/issues/new?template=compatibility.md&title=Hardware+report%3A+%5BDevice+name%5D)
+:::
 
 ## USB identifiers
 
