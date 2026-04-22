@@ -45,9 +45,9 @@ describe('printer', () => {
     await printer.printText('HELLO', { tapeWidth: 12, invert: true });
 
     expect(write).toHaveBeenCalled();
-    const [firstCall] = write.mock.calls as unknown as [[Buffer]];
-    expect(firstCall).toBeDefined();
-    expect(firstCall).toBeInstanceOf(Buffer);
+    const [[firstArg]] = write.mock.calls as unknown as [[Buffer]];
+    expect(firstArg).toBeDefined();
+    expect(firstArg).toBeInstanceOf(Buffer);
   });
 
   it('prints pre-decoded image data', async () => {

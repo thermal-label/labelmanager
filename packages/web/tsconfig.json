@@ -4,5 +4,6 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"]
+  "files": ["src/types/webusb.d.ts"],
+  "include": ["src/**/*.ts"]
 }
