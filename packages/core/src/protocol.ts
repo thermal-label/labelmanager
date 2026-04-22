@@ -15,6 +15,44 @@ function toReport(payload: number[]): Uint8Array {
   return report;
 }
 
+function fitToHeadHeight(bitmap: LabelBitmap, targetHeight = 64): LabelBitmap {
+  if (bitmap.heightPx === targetHeight) {
+    return bitmap;
+  }
+
+  const bytesPerRow = Math.ceil(bitmap.widthPx / 8);
+  const fittedData = new Uint8Array(bytesPerRow * targetHeight);
+
+  if (bitmap.heightPx < targetHeight) {
+    const topPadding = Math.floor((targetHeight - bitmap.heightPx) / 2);
+    for (let row = 0; row < bitmap.heightPx; row += 1) {
+      const srcStart = row * bytesPerRow;
+      const srcEnd = srcStart + bytesPerRow;
+      const dstStart = (row + topPadding) * bytesPerRow;
+      fittedData.set(bitmap.data.slice(srcStart, srcEnd), dstStart);
+    }
+    return {
+      widthPx: bitmap.widthPx,
+      heightPx: targetHeight,
+      data: fittedData,
+    };
+  }
+
+  const cropStart = Math.floor((bitmap.heightPx - targetHeight) / 2);
+  for (let row = 0; row < targetHeight; row += 1) {
+    const srcStart = (row + cropStart) * bytesPerRow;
+    const srcEnd = srcStart + bytesPerRow;
+    const dstStart = row * bytesPerRow;
+    fittedData.set(bitmap.data.slice(srcStart, srcEnd), dstStart);
+  }
+
+  return {
+    widthPx: bitmap.widthPx,
+    heightPx: targetHeight,
+    data: fittedData,
+  };
+}
+
 export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
   const density = options?.density ?? 'normal';
   const densityByte = density === 'high' ? 0x01 : 0x00;
@@ -34,16 +72,17 @@ export function buildResetSequence(options?: PrintOptions): Uint8Array[] {
  */
 export function buildBitmapRows(bitmap: LabelBitmap): Uint8Array[] {
   const rotated = bitmap.heightPx === 64 ? bitmap : rotateBitmap(bitmap, 90);
+  const fitted = fitToHeadHeight(rotated, 64);
 
-  if (rotated.heightPx !== 64) {
+  if (fitted.heightPx !== 64) {
     throw new Error(
-      `Bitmap height must be 64 dots after rotation. Received ${String(rotated.heightPx)}.`,
+      `Bitmap height must be 64 dots after fit. Received ${String(fitted.heightPx)}.`,
     );
   }
 
   const reports: Uint8Array[] = [];
-  for (let y = 0; y < rotated.heightPx; y += 1) {
-    const row = getRow(rotated, y);
+  for (let y = 0; y < fitted.heightPx; y += 1) {
+    const row = getRow(fitted, y);
     const payload = [0x16, ...Array.from(row)];
     reports.push(toReport(payload));
   }

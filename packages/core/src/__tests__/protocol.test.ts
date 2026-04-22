@@ -38,6 +38,15 @@ describe('protocol', () => {
     expect(first[63]).toBe(0x00);
   });
 
+  it('fits non-64-height bitmap by centering to 64 rows', () => {
+    const bitmap = makeBitmap(64, 53);
+    const reports = buildBitmapRows(bitmap);
+
+    expect(reports).toHaveLength(64);
+    expect(reports[0]).toHaveLength(64);
+    expect(reports[63]).toHaveLength(64);
+  });
+
   it('creates form feed command', () => {
     const reports = buildFormFeed();
     const formFeed = reports[0]!;
