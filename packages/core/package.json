@@ -1,0 +1,48 @@
+{
+  "name": "@thermal-label/labelmanager-core",
+  "version": "0.0.0",
+  "description": "Core protocol and bitmap helpers for DYMO LabelManager printers",
+  "type": "module",
+  "author": "Mannes Brak",
+  "license": "MIT",
+  "homepage": "https://github.com/thermal-label/labelmanager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thermal-label/labelmanager.git",
+    "directory": "packages/core"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/mannes"
+    },
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/mannes"
+    }
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@mbtech-nl/bitmap": "^1.0.0"
+  },
+  "devDependencies": {
+    "@mbtech-nl/tsconfig": "^1.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
