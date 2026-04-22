@@ -5,8 +5,8 @@ coverage
 .claude
 .pnpm-store
 .turbo
-.vitepress/cache
-.vitepress/dist
+**/.vitepress/cache
+**/.vitepress/dist
 *.log
 PLAN.md
 packages/*/src/*.d.ts
