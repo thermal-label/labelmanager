@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-cli",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "CLI for DYMO LabelManager printers",
   "type": "module",
   "author": "Mannes Brak",

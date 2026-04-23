@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-web",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "WebUSB browser driver for DYMO LabelManager printers",
   "type": "module",
   "author": "Mannes Brak",
