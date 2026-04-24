@@ -1,10 +1,44 @@
+/**
+ * Minimal `USBDevice` mock covering the surface that `WebUsbTransport`
+ * touches: configuration/interface claiming, endpoint enumeration, and
+ * transfer in/out.
+ */
 export interface MockUSBDevice extends USBDevice {
   __transfers: { endpointNumber: number; data: Uint8Array }[];
 }
 
-export function createMockUSBDevice(vendorId = 0x0922, productId = 0x1002): MockUSBDevice {
+export function createMockUSBDevice(
+  vendorId = 0x0922,
+  productId = 0x1002,
+  statusByte = 0,
+): MockUSBDevice {
   const transfers: { endpointNumber: number; data: Uint8Array }[] = [];
   let opened = false;
+
+  const endpoints = [
+    { endpointNumber: 5, direction: 'out' },
+    { endpointNumber: 5, direction: 'in' },
+  ] as unknown as USBEndpoint[];
+
+  const configuration: USBConfiguration = {
+    configurationValue: 1,
+    configurationName: null,
+    interfaces: [
+      {
+        interfaceNumber: 0,
+        alternate: {
+          alternateSetting: 0,
+          interfaceClass: 7,
+          interfaceSubclass: 1,
+          interfaceProtocol: 2,
+          interfaceName: null,
+          endpoints,
+        },
+        alternates: [],
+        claimed: false,
+      },
+    ],
+  };
 
   return {
     vendorId,
@@ -13,6 +47,7 @@ export function createMockUSBDevice(vendorId = 0x0922, productId = 0x1002): Mock
     get opened() {
       return opened;
     },
+    configuration,
     open() {
       opened = true;
       return Promise.resolve();
@@ -37,10 +72,10 @@ export function createMockUSBDevice(vendorId = 0x0922, productId = 0x1002): Mock
     },
     transferIn() {
       return Promise.resolve({
-        data: new DataView(new Uint8Array([0]).buffer),
+        data: new DataView(new Uint8Array([statusByte]).buffer),
         status: 'ok' as const,
       });
     },
     __transfers: transfers,
-  };
+  } as unknown as MockUSBDevice;
 }

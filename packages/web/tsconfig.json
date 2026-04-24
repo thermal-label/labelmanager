@@ -2,8 +2,8 @@
   "extends": "@mbtech-nl/tsconfig/browser",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["w3c-web-usb"]
   },
-  "files": ["src/types/webusb.d.ts"],
   "include": ["src/**/*.ts"]
 }

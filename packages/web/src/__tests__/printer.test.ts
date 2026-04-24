@@ -1,173 +1,80 @@
-import { describe, expect, it, vi } from 'vitest';
-import { fromUSBDevice } from '../index.js';
+import { describe, expect, it } from 'vitest';
+import { MediaNotSpecifiedError } from '@thermal-label/contracts';
+import { MEDIA } from '@thermal-label/labelmanager-core';
+import { fromUSBDevice } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
 
+function solidRgba(width: number, height: number): {
+  width: number;
+  height: number;
+  data: Uint8Array;
+} {
+  return {
+    width,
+    height,
+    data: new Uint8Array(width * height * 4).fill(0),
+  };
+}
+
 describe('WebDymoPrinter', () => {
-  it('sends USB transfers for text prints', async () => {
+  it('sends WebUSB transfers for print()', async () => {
     const device = createMockUSBDevice();
-    await device.open();
-    await device.selectConfiguration(1);
-    await device.claimInterface(0);
-    const printer = fromUSBDevice(device);
+    const printer = await fromUSBDevice(device);
 
-    await printer.printText('HELLO', { invert: true, tapeWidth: 12 });
+    await printer.print(solidRgba(8, 8), MEDIA.TAPE_12MM);
 
     expect(device.__transfers.length).toBeGreaterThan(0);
     expect(device.__transfers[0]!.endpointNumber).toBe(5);
   });
 
-  it('sends USB transfers for image prints', async () => {
+  it('first transfer starts with ESC C 0 (tape type)', async () => {
     const device = createMockUSBDevice();
-    await device.open();
-    await device.selectConfiguration(1);
-    await device.claimInterface(0);
-    const printer = fromUSBDevice(device);
-    const imageData = {
-      width: 64,
-      height: 64,
-      data: new Uint8ClampedArray(64 * 64 * 4).fill(255),
-    } as unknown as ImageData;
+    const printer = await fromUSBDevice(device);
 
-    await printer.printImage(imageData);
-
-    expect(device.__transfers.length).toBeGreaterThan(0);
-    expect(device.__transfers[0]!.endpointNumber).toBe(5);
-  });
-
-  it('first transfer starts with ESC C 0 (tape type command)', async () => {
-    const device = createMockUSBDevice();
-    await device.open();
-    await device.selectConfiguration(1);
-    await device.claimInterface(0);
-    const printer = fromUSBDevice(device);
-
-    await printer.printText('HI', { tapeWidth: 12 });
+    await printer.print(solidRgba(8, 8), MEDIA.TAPE_12MM);
 
     const firstChunk = device.__transfers[0]!.data;
-    expect(firstChunk[0]).toBe(0x1b); // ESC
-    expect(firstChunk[1]).toBe(0x43); // C
-    expect(firstChunk[2]).toBe(0x00); // 0
+    expect(firstChunk[0]).toBe(0x1b);
+    expect(firstChunk[1]).toBe(0x43);
+    expect(firstChunk[2]).toBe(0x00);
   });
 
-  it('disconnects cleanly', async () => {
+  it('print() throws MediaNotSpecifiedError without media', async () => {
     const device = createMockUSBDevice();
-    await device.open();
-    await device.selectConfiguration(1);
-    await device.claimInterface(0);
-    const printer = fromUSBDevice(device);
+    const printer = await fromUSBDevice(device);
 
-    await printer.disconnect();
-    expect(printer.isConnected()).toBe(false);
+    await expect(printer.print(solidRgba(8, 8))).rejects.toBeInstanceOf(MediaNotSpecifiedError);
   });
 
-  it('prints image from URL when fetch and canvas decode succeed', async () => {
+  it('getStatus sends ESC A and returns the contracts shape', async () => {
     const device = createMockUSBDevice();
-    await device.open();
-    await device.selectConfiguration(1);
-    await device.claimInterface(0);
-    const printer = fromUSBDevice(device);
-
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['img'])),
-      }),
-    );
-    Object.defineProperty(globalThis, 'fetch', { value: fetchMock, configurable: true });
-    Object.defineProperty(globalThis, 'createImageBitmap', {
-      value: vi.fn(() => Promise.resolve({ width: 2, height: 2 })),
-      configurable: true,
-    });
-    Object.defineProperty(globalThis, 'OffscreenCanvas', {
-      value: class {
-        public getContext(): {
-          drawImage: ReturnType<typeof vi.fn>;
-          getImageData: ReturnType<typeof vi.fn>;
-        } {
-          return {
-            drawImage: vi.fn(),
-            getImageData: vi.fn(() => ({
-              width: 2,
-              height: 2,
-              data: new Uint8ClampedArray(2 * 2 * 4).fill(255),
-            })),
-          };
-        }
-      },
-      configurable: true,
-    });
-
-    await printer.printImageURL('https://example.test/label.png');
-
-    expect(fetchMock).toHaveBeenCalledWith('https://example.test/label.png');
-    expect(device.__transfers.length).toBeGreaterThan(0);
-  });
-
-  it('throws when image URL fetch fails', async () => {
-    const device = createMockUSBDevice();
-    await device.open();
-    const printer = fromUSBDevice(device);
-
-    Object.defineProperty(globalThis, 'fetch', {
-      value: vi.fn(() =>
-        Promise.resolve({
-          ok: false,
-          blob: () => Promise.resolve(new Blob()),
-        }),
-      ),
-      configurable: true,
-    });
-
-    await expect(printer.printImageURL('https://example.test/missing.png')).rejects.toThrow(
-      'Failed to fetch image URL: https://example.test/missing.png',
-    );
-  });
-
-  it('throws when offscreen canvas context is unavailable', async () => {
-    const device = createMockUSBDevice();
-    await device.open();
-    const printer = fromUSBDevice(device);
-
-    Object.defineProperty(globalThis, 'fetch', {
-      value: vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          blob: () => Promise.resolve(new Blob(['img'])),
-        }),
-      ),
-      configurable: true,
-    });
-    Object.defineProperty(globalThis, 'createImageBitmap', {
-      value: vi.fn(() => Promise.resolve({ width: 2, height: 2 })),
-      configurable: true,
-    });
-    Object.defineProperty(globalThis, 'OffscreenCanvas', {
-      value: class {
-        public getContext(): null {
-          return null;
-        }
-      },
-      configurable: true,
-    });
-
-    await expect(printer.printImageURL('https://example.test/no-context.png')).rejects.toThrow(
-      'Could not create OffscreenCanvas 2D context.',
-    );
-  });
-
-  it('getStatus sends ESC A and parses response byte', async () => {
-    const device = createMockUSBDevice();
-    await device.open();
-    const printer = fromUSBDevice(device);
+    const printer = await fromUSBDevice(device);
 
     const status = await printer.getStatus();
-
-    // mock returns 0x00 → ready, tape inserted, not low
     expect(status.ready).toBe(true);
-    expect(status.tapeInserted).toBe(true);
-    expect(status.labelLow).toBe(false);
+    expect(status.mediaLoaded).toBe(true);
+    expect(status.detectedMedia).toBeUndefined();
+    expect(status.errors).toEqual([]);
 
     const statusQuery = device.__transfers.find(t => t.data[0] === 0x1b && t.data[1] === 0x41);
     expect(statusQuery).toBeDefined();
+  });
+
+  it('close() disconnects the underlying device', async () => {
+    const device = createMockUSBDevice();
+    const printer = await fromUSBDevice(device);
+
+    await printer.close();
+    expect(device.opened).toBe(false);
+    expect(printer.connected).toBe(false);
+  });
+
+  it('exposes adapter metadata', async () => {
+    const device = createMockUSBDevice();
+    const printer = await fromUSBDevice(device);
+
+    expect(printer.family).toBe('labelmanager');
+    expect(printer.model).toBe('LabelManager PnP');
+    expect(printer.device.family).toBe('labelmanager');
   });
 });

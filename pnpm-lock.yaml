@@ -151,6 +151,9 @@ importers:
       '@mbtech-nl/tsconfig':
         specifier: ^1.0.0
         version: 1.0.0
+      '@types/w3c-web-usb':
+        specifier: ^1.0.0
+        version: 1.0.14
       '@vitest/coverage-v8':
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(jsdom@26.1.0))

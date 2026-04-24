@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fromUSBDevice, requestPrinter } from '../index.js';
+import { fromUSBDevice, requestPrinter } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
 
 describe('requestPrinter', () => {
@@ -18,7 +18,7 @@ describe('requestPrinter', () => {
       requestDevice.mock.calls as unknown as [{ filters: USBDeviceFilter[] }][]
     )[0]![0];
     expect(callArg.filters.some(f => f.vendorId === 0x0922)).toBe(true);
-    expect(printer.isConnected()).toBe(true);
+    expect(printer.connected).toBe(true);
   });
 
   it('passes custom filters when provided', async () => {
@@ -38,9 +38,9 @@ describe('requestPrinter', () => {
     expect(callArg.filters[0]!.productId).toBe(0x1002);
   });
 
-  it('throws for unsupported USB device', () => {
+  it('throws for unsupported USB device', async () => {
     const unsupported = createMockUSBDevice(0x1234, 0x5678);
-    expect(() => fromUSBDevice(unsupported)).toThrow(
+    await expect(fromUSBDevice(unsupported)).rejects.toThrow(
       'Unsupported USB device for DYMO LabelManager protocol.',
     );
   });
