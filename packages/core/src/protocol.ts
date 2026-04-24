@@ -52,7 +52,10 @@ export function buildResetSequence(options?: LabelManagerPrintOptions): Uint8Arr
  * @param bitmap Input monochrome bitmap.
  * @returns Zero-padded HID payload reports.
  */
-export function buildBitmapRows(bitmap: LabelBitmap, options?: LabelManagerPrintOptions): Uint8Array[] {
+export function buildBitmapRows(
+  bitmap: LabelBitmap,
+  options?: LabelManagerPrintOptions,
+): Uint8Array[] {
   const targetHeight = tapeWidthToTargetHeight(options?.tapeWidth);
   const scaled = scaleBitmap(bitmap, targetHeight);
   const padded = padBitmap(scaled, { left: FEED_MARGIN_PX, right: FEED_MARGIN_PX });
@@ -87,7 +90,10 @@ export function buildFormFeed(): Uint8Array[] {
  * @param options Print options (tapeWidth, copies).
  * @returns Raw byte stream ready for bulk transfer.
  */
-export function buildPrinterStream(bitmap: LabelBitmap, options: LabelManagerPrintOptions = {}): Uint8Array {
+export function buildPrinterStream(
+  bitmap: LabelBitmap,
+  options: LabelManagerPrintOptions = {},
+): Uint8Array {
   const copies = Math.max(1, options.copies ?? 1);
   const targetHeight = tapeWidthToTargetHeight(options.tapeWidth);
   const scaled = scaleBitmap(bitmap, targetHeight);
@@ -119,7 +125,10 @@ export function buildPrinterStream(bitmap: LabelBitmap, options: LabelManagerPri
  * @param options Density/copies options.
  * @returns Full report list for one or more copies.
  */
-export function encodeLabel(bitmap: LabelBitmap, options: LabelManagerPrintOptions = {}): Uint8Array[] {
+export function encodeLabel(
+  bitmap: LabelBitmap,
+  options: LabelManagerPrintOptions = {},
+): Uint8Array[] {
   const copies = Math.max(1, options.copies ?? 1);
   const reports: Uint8Array[] = [];
 

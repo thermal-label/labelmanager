@@ -12,10 +12,7 @@ import type { LabelManagerMedia } from './types.js';
  * path); the preview consumer is responsible for scaling and cropping
  * to match the selected tape width.
  */
-export function createPreviewOffline(
-  image: RawImageData,
-  media: LabelManagerMedia,
-): PreviewResult {
+export function createPreviewOffline(image: RawImageData, media: LabelManagerMedia): PreviewResult {
   const bitmap = renderImage(image, { dither: true });
   return {
     planes: [{ name: 'black', bitmap, displayColor: '#000000' }],

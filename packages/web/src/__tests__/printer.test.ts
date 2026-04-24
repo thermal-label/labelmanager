@@ -4,7 +4,10 @@ import { MEDIA } from '@thermal-label/labelmanager-core';
 import { fromUSBDevice } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
 
-function solidRgba(width: number, height: number): {
+function solidRgba(
+  width: number,
+  height: number,
+): {
   width: number;
   height: number;
   data: Uint8Array;

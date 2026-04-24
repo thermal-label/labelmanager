@@ -25,7 +25,10 @@ function makeTransport(statusByte = 0): {
 
 const device = DEVICES.LABELMANAGER_PNP;
 
-function solidRgba(width: number, height: number): {
+function solidRgba(
+  width: number,
+  height: number,
+): {
   width: number;
   height: number;
   data: Uint8Array;

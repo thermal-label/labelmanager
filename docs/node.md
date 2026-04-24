@@ -55,13 +55,13 @@ async function printTo(printer: PrinterAdapter, image: RawImageData, media) {
 
 Surface:
 
-| Method                                   | Description                                       |
-| ---------------------------------------- | ------------------------------------------------- |
-| `print(image, media?, options?)`         | Print one label; accepts full RGBA                |
-| `createPreview(image, options?)`         | Render separated 1bpp planes for UI previews      |
-| `getStatus()`                            | Query ready / media-loaded / errors / raw bytes   |
-| `close()`                                | Release the USB interface                         |
-| `family` / `model` / `device` / `connected` | Identification                                 |
+| Method                                      | Description                                     |
+| ------------------------------------------- | ----------------------------------------------- |
+| `print(image, media?, options?)`            | Print one label; accepts full RGBA              |
+| `createPreview(image, options?)`            | Render separated 1bpp planes for UI previews    |
+| `getStatus()`                               | Query ready / media-loaded / errors / raw bytes |
+| `close()`                                   | Release the USB interface                       |
+| `family` / `model` / `device` / `connected` | Identification                                  |
 
 ---
 
@@ -73,10 +73,10 @@ the media descriptor explicitly:
 ```ts
 import { MEDIA, type LabelManagerMedia } from '@thermal-label/labelmanager-core';
 
-MEDIA.TAPE_6MM;   // 6 mm tape
-MEDIA.TAPE_9MM;   // 9 mm tape
-MEDIA.TAPE_12MM;  // 12 mm tape — DEFAULT_MEDIA for previews
-MEDIA.TAPE_19MM;  // 19 mm tape
+MEDIA.TAPE_6MM; // 6 mm tape
+MEDIA.TAPE_9MM; // 9 mm tape
+MEDIA.TAPE_12MM; // 12 mm tape — DEFAULT_MEDIA for previews
+MEDIA.TAPE_19MM; // 19 mm tape
 ```
 
 `print()` throws `MediaNotSpecifiedError` if you call it without media
@@ -121,20 +121,20 @@ interface, so `thermal-label-cli` picks it up automatically.
 ```ts
 const status = await printer.getStatus();
 
-status.ready;          // boolean — printer is idle and error-free
-status.mediaLoaded;    // boolean — tape cartridge is inserted
-status.detectedMedia;  // always undefined — LabelManager can't report width
-status.errors;         // PrinterError[] — { code, message } per error
-status.rawBytes;       // Uint8Array — raw response for diagnostics
+status.ready; // boolean — printer is idle and error-free
+status.mediaLoaded; // boolean — tape cartridge is inserted
+status.detectedMedia; // always undefined — LabelManager can't report width
+status.errors; // PrinterError[] — { code, message } per error
+status.rawBytes; // Uint8Array — raw response for diagnostics
 ```
 
 Error codes surfaced by LabelManager:
 
-| Code          | Meaning                    |
-| ------------- | -------------------------- |
-| `not_ready`   | Printer is busy            |
-| `no_media`    | No tape cartridge inserted |
-| `low_media`   | Tape supply is low         |
+| Code        | Meaning                    |
+| ----------- | -------------------------- |
+| `not_ready` | Printer is busy            |
+| `no_media`  | No tape cartridge inserted |
+| `low_media` | Tape supply is low         |
 
 ---
 
@@ -146,7 +146,7 @@ would actually produce for the given media:
 ```ts
 const preview = await printer.createPreview(image, { media: MEDIA.TAPE_9MM });
 preview.planes[0]; // { name: 'black', bitmap, displayColor: '#000000' }
-preview.assumed;   // true if media was not passed and no status was available
+preview.assumed; // true if media was not passed and no status was available
 ```
 
 Without a printer connection, use `createPreviewOffline()` from core:
@@ -171,10 +171,10 @@ See [Getting Started](/getting-started) for the full Linux setup steps.
 
 ## API summary
 
-| Export                        | Description                                    |
-| ----------------------------- | ---------------------------------------------- |
-| `discovery`                   | `PrinterDiscovery` singleton — enumerate & open |
-| `DymoPrinter`                 | Adapter class; consumed directly or via `discovery` |
-| `LabelManagerDiscovery`       | Class form, in case you want a second instance |
-| `DEFAULT_FILTERS`             | WebUSB filters for browser callers             |
-| `generateUdevRules()`         | Linux udev rule text                           |
+| Export                  | Description                                         |
+| ----------------------- | --------------------------------------------------- |
+| `discovery`             | `PrinterDiscovery` singleton — enumerate & open     |
+| `DymoPrinter`           | Adapter class; consumed directly or via `discovery` |
+| `LabelManagerDiscovery` | Class form, in case you want a second instance      |
+| `DEFAULT_FILTERS`       | WebUSB filters for browser callers                  |
+| `generateUdevRules()`   | Linux udev rule text                                |

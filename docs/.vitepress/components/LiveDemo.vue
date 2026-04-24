@@ -71,7 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { getPixel, renderText, scaleBitmap, type LabelBitmap, type RawImageData } from '@mbtech-nl/bitmap';
+import {
+  getPixel,
+  renderText,
+  scaleBitmap,
+  type LabelBitmap,
+  type RawImageData,
+} from '@mbtech-nl/bitmap';
 import { MEDIA, type LabelManagerMedia } from '@thermal-label/labelmanager-core';
 import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
 import { computed, onMounted, ref, watch } from 'vue';

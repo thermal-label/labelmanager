@@ -61,9 +61,9 @@ const image = { width, height, data: new Uint8Array(data.buffer) };
 ```ts
 const status = await printer.getStatus();
 
-status.ready;          // printer is idle and error-free
-status.mediaLoaded;    // tape cartridge is inserted
-status.errors;         // structured PrinterError[] — { code, message }
+status.ready; // printer is idle and error-free
+status.mediaLoaded; // tape cartridge is inserted
+status.errors; // structured PrinterError[] — { code, message }
 ```
 
 Error codes are the same as the Node.js driver — `not_ready`,
@@ -92,7 +92,11 @@ import { useState } from 'react';
 import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
 import { MEDIA } from '@thermal-label/labelmanager-core';
 
-export function PrintButton({ image }: { image: { width: number; height: number; data: Uint8Array } }) {
+export function PrintButton({
+  image,
+}: {
+  image: { width: number; height: number; data: Uint8Array };
+}) {
   const [printer, setPrinter] = useState<WebDymoPrinter | null>(null);
 
   async function connect() {
@@ -112,9 +116,15 @@ export function PrintButton({ image }: { image: { width: number; height: number;
 
   return (
     <div>
-      <button onClick={connect} disabled={!!printer}>Connect</button>
-      <button onClick={print} disabled={!printer}>Print</button>
-      <button onClick={disconnect} disabled={!printer}>Disconnect</button>
+      <button onClick={connect} disabled={!!printer}>
+        Connect
+      </button>
+      <button onClick={print} disabled={!printer}>
+        Print
+      </button>
+      <button onClick={disconnect} disabled={!printer}>
+        Disconnect
+      </button>
     </div>
   );
 }
@@ -146,12 +156,12 @@ driver) and sends in 64-byte chunks via `transferOut`.
 
 ## API summary
 
-| Export                   | Description                                  |
-| ------------------------ | -------------------------------------------- |
-| `requestPrinter(opts?)`  | Show USB permission prompt and open a device |
-| `fromUSBDevice(device)`  | Wrap a pre-paired `USBDevice` (from `navigator.usb.getDevices()`) |
-| `WebDymoPrinter`         | Adapter class                                |
-| `DEFAULT_FILTERS`        | LabelManager VID/PID filter set              |
+| Export                  | Description                                                       |
+| ----------------------- | ----------------------------------------------------------------- |
+| `requestPrinter(opts?)` | Show USB permission prompt and open a device                      |
+| `fromUSBDevice(device)` | Wrap a pre-paired `USBDevice` (from `navigator.usb.getDevices()`) |
+| `WebDymoPrinter`        | Adapter class                                                     |
+| `DEFAULT_FILTERS`       | LabelManager VID/PID filter set                                   |
 
 `WebDymoPrinter` implements `PrinterAdapter` from
 [`@thermal-label/contracts`](https://www.npmjs.com/package/@thermal-label/contracts) —

@@ -13,24 +13,24 @@ or offline preview without a live printer.
 
 ## Core API
 
-| Export                              | Description                                                          |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| `DEVICES` / `findDevice`            | Device registry (VID, PID, family, supported tapes)                  |
-| `MEDIA` / `DEFAULT_MEDIA`           | Media registry and the 12 mm fallback for assumed previews           |
-| `findMediaByTapeWidth(widthMm)`     | Lookup helper                                                        |
-| `STATUS_REQUEST`                    | `ESC A` byte sequence                                                |
-| `parseStatus(bytes)`                | Parse the status byte into `PrinterStatus` (contracts shape)         |
-| `createPreviewOffline(image, media)`| Render `PreviewResult` without a live printer connection             |
-| `buildPrinterStream(bitmap, opts)`  | Encode a full label job as a raw USB byte stream                     |
-| `buildBitmapRows(bitmap, opts)`     | Encode a bitmap as HID-style row reports                             |
-| `buildResetSequence(opts)`          | ESC reset + media type + density                                     |
-| `buildFormFeed()`                   | Form-feed / cut                                                      |
-| `encodeLabel(bitmap, opts)`         | Full HID report sequence for one or more copies                      |
-| `LabelManagerDevice`                | Device descriptor type (extends contracts `DeviceDescriptor`)        |
-| `LabelManagerMedia`                 | Media descriptor type (extends contracts `MediaDescriptor`)          |
-| `LabelManagerPrintOptions`          | Protocol options (`density`, `copies`, `tapeWidth`)                  |
-| `TapeWidth`                         | `6 \| 9 \| 12 \| 19`                                                 |
-| `PrinterAdapter`, `MediaDescriptor`, `PrinterStatus`, `Transport`, … | Re-exported from `@thermal-label/contracts` |
+| Export                                                               | Description                                                   |
+| -------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `DEVICES` / `findDevice`                                             | Device registry (VID, PID, family, supported tapes)           |
+| `MEDIA` / `DEFAULT_MEDIA`                                            | Media registry and the 12 mm fallback for assumed previews    |
+| `findMediaByTapeWidth(widthMm)`                                      | Lookup helper                                                 |
+| `STATUS_REQUEST`                                                     | `ESC A` byte sequence                                         |
+| `parseStatus(bytes)`                                                 | Parse the status byte into `PrinterStatus` (contracts shape)  |
+| `createPreviewOffline(image, media)`                                 | Render `PreviewResult` without a live printer connection      |
+| `buildPrinterStream(bitmap, opts)`                                   | Encode a full label job as a raw USB byte stream              |
+| `buildBitmapRows(bitmap, opts)`                                      | Encode a bitmap as HID-style row reports                      |
+| `buildResetSequence(opts)`                                           | ESC reset + media type + density                              |
+| `buildFormFeed()`                                                    | Form-feed / cut                                               |
+| `encodeLabel(bitmap, opts)`                                          | Full HID report sequence for one or more copies               |
+| `LabelManagerDevice`                                                 | Device descriptor type (extends contracts `DeviceDescriptor`) |
+| `LabelManagerMedia`                                                  | Media descriptor type (extends contracts `MediaDescriptor`)   |
+| `LabelManagerPrintOptions`                                           | Protocol options (`density`, `copies`, `tapeWidth`)           |
+| `TapeWidth`                                                          | `6 \| 9 \| 12 \| 19`                                          |
+| `PrinterAdapter`, `MediaDescriptor`, `PrinterStatus`, `Transport`, … | Re-exported from `@thermal-label/contracts`                   |
 
 ---
 
