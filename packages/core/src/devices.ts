@@ -1,3 +1,4 @@
+/* eslint-disable import-x/consistent-type-specifier-style */
 import type { LabelManagerDevice } from './types.js';
 
 export const DEVICES = {

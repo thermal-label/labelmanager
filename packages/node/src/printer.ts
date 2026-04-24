@@ -74,16 +74,19 @@ export class DymoPrinter implements PrinterAdapter {
     await this.writeStream(stream);
   }
 
-  async createPreview(image: RawImageData, options?: PreviewOptions): Promise<PreviewResult> {
+  createPreview(image: RawImageData, options?: PreviewOptions): Promise<PreviewResult> {
     const override = options?.media as LabelManagerMedia | undefined;
     const detected = this.lastStatus?.detectedMedia as LabelManagerMedia | undefined;
     if (override) {
-      return createPreviewOffline(image, override);
+      return Promise.resolve(createPreviewOffline(image, override));
     }
     if (detected) {
-      return createPreviewOffline(image, detected);
+      return Promise.resolve(createPreviewOffline(image, detected));
     }
-    return { ...createPreviewOffline(image, DEFAULT_MEDIA), assumed: true };
+    return Promise.resolve({
+      ...createPreviewOffline(image, DEFAULT_MEDIA),
+      assumed: true,
+    });
   }
 
   async getStatus(): Promise<PrinterStatus> {

@@ -1,3 +1,4 @@
+/* eslint-disable import-x/consistent-type-specifier-style */
 import type { PrinterError, PrinterStatus } from '@thermal-label/contracts';
 
 /**

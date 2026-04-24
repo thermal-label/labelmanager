@@ -1,8 +1,5 @@
-import {
-  DEVICES,
-  findDevice,
-  type LabelManagerDevice,
-} from '@thermal-label/labelmanager-core';
+import { DEVICES, findDevice, type LabelManagerDevice } from '@thermal-label/labelmanager-core';
+/* eslint-disable import-x/consistent-type-specifier-style */
 import type {
   DiscoveredPrinter,
   OpenOptions,

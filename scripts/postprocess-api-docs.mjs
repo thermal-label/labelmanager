@@ -14,11 +14,6 @@ const apiIndexPages = [
     pkg: "@thermal-label/labelmanager-node"
   },
   {
-    name: "cli",
-    title: "CLI API",
-    pkg: "@thermal-label/labelmanager-cli"
-  },
-  {
     name: "web",
     title: "Web API",
     pkg: "@thermal-label/labelmanager-web"
@@ -44,7 +39,6 @@ async function patchModules() {
     "",
     "- [Core](core.md)",
     "- [Node](node.md)",
-    "- [CLI](cli.md)",
     "- [Web](web.md)",
     ""
   ].join("\n");

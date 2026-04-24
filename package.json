@@ -14,7 +14,6 @@
     "lint": "eslint packages --no-error-on-unmatched-pattern",
     "format": "prettier --write packages docs",
     "typecheck": "pnpm -r run typecheck",
-    "dymo": "node packages/cli/bin/dymo.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:api": "typedoc --skipErrorChecking --plugin typedoc-plugin-markdown --out docs/api packages/*/dist/index.d.ts && node scripts/postprocess-api-docs.mjs",

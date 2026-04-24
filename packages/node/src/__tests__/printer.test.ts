@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-import type { Transport } from '@thermal-label/contracts';
+import { MediaNotSpecifiedError, type Transport } from '@thermal-label/contracts';
 import { DEVICES, MEDIA } from '@thermal-label/labelmanager-core';
 import { DymoPrinter } from '../printer.js';
 
