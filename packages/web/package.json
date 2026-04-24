@@ -58,7 +58,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@thermal-label/contracts": "^0.1.0",
+    "@thermal-label/contracts": "^0.1.1",
     "@thermal-label/labelmanager-core": "workspace:*",
     "@thermal-label/transport": "^0.1.0"
   },

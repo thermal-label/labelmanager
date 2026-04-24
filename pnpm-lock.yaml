@@ -82,8 +82,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@thermal-label/contracts':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
     devDependencies:
       '@mbtech-nl/tsconfig':
         specifier: ^1.0.0
@@ -104,8 +104,8 @@ importers:
   packages/node:
     dependencies:
       '@thermal-label/contracts':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@thermal-label/labelmanager-core':
         specifier: workspace:*
         version: link:../core
@@ -139,8 +139,8 @@ importers:
   packages/web:
     dependencies:
       '@thermal-label/contracts':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@thermal-label/labelmanager-core':
         specifier: workspace:*
         version: link:../core
@@ -907,8 +907,8 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
-  '@thermal-label/contracts@0.1.0':
-    resolution: {integrity: sha512-lsOANRR2/YLNO92dfJqypuc8sIkKFg3IELgcetF8S/dGNIuGwQstfuCa/Xqp+h1Nh1LtSuMiEzw+xdHN5Ix+oQ==}
+  '@thermal-label/contracts@0.1.1':
+    resolution: {integrity: sha512-WpPeduIZWCpKQzzDVTDEK94R80aqyaJ21gZnzHD2Aw1rs96lukrES8NaqcyjLorZ9p3E7OQYKe3r6MVVJaPKiQ==}
 
   '@thermal-label/transport@0.1.0':
     resolution: {integrity: sha512-bBXuGg7yrOuGm1VWpM6PuutMmCDmt/Vh/0zWxuEkzmEKa5ywyoipnn2LxZ60qKniCzn1d2/fYS/8Pth1nybO+g==}
@@ -3502,13 +3502,13 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@thermal-label/contracts@0.1.0':
+  '@thermal-label/contracts@0.1.1':
     dependencies:
       '@mbtech-nl/bitmap': 1.0.1
 
   '@thermal-label/transport@0.1.0(usb@2.17.0)':
     dependencies:
-      '@thermal-label/contracts': 0.1.0
+      '@thermal-label/contracts': 0.1.1
     optionalDependencies:
       usb: 2.17.0
 

@@ -1,11 +1,21 @@
-import { DEVICES, findDevice } from '@thermal-label/labelmanager-core';
+import {
+  DEVICES,
+  findDevice,
+  type LabelManagerDevice,
+} from '@thermal-label/labelmanager-core';
+import type {
+  DiscoveredPrinter,
+  OpenOptions,
+  PrinterDiscovery,
+} from '@thermal-label/contracts';
+import { UsbTransport } from '@thermal-label/transport/node';
 import * as usb from 'usb';
-import { DymoPrinter, type PrinterTransport } from './printer.js';
-/* eslint-disable import-x/consistent-type-specifier-style */
-import type { OpenOptions, PrinterInfo } from './types.js';
+import { DymoPrinter } from './printer.js';
 
 /**
- * Default WebUSB filters derived from known devices.
+ * WebUSB filters for any supported LabelManager. Useful for browser
+ * code that wants to request a device through the LabelManager family's
+ * USB VID/PIDs without depending on the browser package.
  */
 export const DEFAULT_FILTERS = Object.values(DEVICES).map(device => ({
   vendorId: device.vid,
@@ -22,11 +32,16 @@ async function readSerialNumber(device: usb.Device): Promise<string | undefined>
   });
 }
 
-export async function listPrinters(): Promise<PrinterInfo[]> {
-  const devices = usb.getDeviceList();
-  const results: PrinterInfo[] = [];
+async function enumerateDymoDevices(): Promise<
+  { device: usb.Device; descriptor: LabelManagerDevice; serialNumber: string | undefined }[]
+> {
+  const results: {
+    device: usb.Device;
+    descriptor: LabelManagerDevice;
+    serialNumber: string | undefined;
+  }[] = [];
 
-  for (const device of devices) {
+  for (const device of usb.getDeviceList()) {
     const { idVendor, idProduct, iSerialNumber } = device.deviceDescriptor;
     const descriptor = findDevice(idVendor, idProduct);
     if (!descriptor) continue;
@@ -41,97 +56,52 @@ export async function listPrinters(): Promise<PrinterInfo[]> {
       }
     }
 
-    results.push({
-      device: descriptor,
-      serialNumber,
-      path: `${String(device.busNumber)}:${String(device.deviceAddress)}`,
-    });
+    results.push({ device, descriptor, serialNumber });
   }
 
   return results;
 }
 
-class UsbTransport implements PrinterTransport {
-  public constructor(
-    private readonly device: usb.Device,
-    private readonly iface: usb.Interface,
-    private readonly out: usb.OutEndpoint,
-    private readonly inp: usb.InEndpoint,
-  ) {}
+/**
+ * `PrinterDiscovery` implementation for DYMO LabelManager printers.
+ *
+ * Enumerates the USB bus via `node-usb`, matches against the
+ * LabelManager `DEVICES` registry, and opens matching devices through
+ * the shared `UsbTransport` from `@thermal-label/transport/node`.
+ */
+export class LabelManagerDiscovery implements PrinterDiscovery {
+  readonly family = 'labelmanager';
 
-  public write(data: Buffer): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.out.transfer(data, err => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+  async listPrinters(): Promise<DiscoveredPrinter[]> {
+    const found = await enumerateDymoDevices();
+    return found.map(({ device, descriptor, serialNumber }) => ({
+      device: descriptor,
+      ...(serialNumber === undefined ? {} : { serialNumber }),
+      transport: 'usb' as const,
+      connectionId: `${String(device.busNumber)}:${String(device.deviceAddress)}`,
+    }));
   }
 
-  public read(length: number): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      this.inp.transfer(length, (err, data) => {
-        if (err) reject(err);
-        else resolve(data ?? Buffer.alloc(0));
-      });
+  async openPrinter(options: OpenOptions = {}): Promise<DymoPrinter> {
+    const found = await enumerateDymoDevices();
+    const candidates = found.filter(entry => {
+      if (options.vid !== undefined && entry.descriptor.vid !== options.vid) return false;
+      if (options.pid !== undefined && entry.descriptor.pid !== options.pid) return false;
+      if (options.serialNumber !== undefined && entry.serialNumber !== options.serialNumber)
+        return false;
+      return true;
     });
-  }
 
-  public close(): void {
-    this.iface.release(() => {
-      this.device.close();
-    });
+    const match = candidates[0];
+    if (!match) throw new Error('No compatible DYMO LabelManager printer found.');
+
+    const transport = await UsbTransport.open(match.descriptor.vid, match.descriptor.pid);
+    return new DymoPrinter(match.descriptor, transport);
   }
 }
-
-const PRINTER_INTERFACE = 0;
-const EP_OUT = 0x05;
-const EP_IN = 0x85;
 
 /**
- * Open a connected printer matching optional filters.
- *
- * @param options Optional VID/PID/serial filtering.
- * @returns An opened `DymoPrinter` instance.
- * @throws When no compatible device matches.
+ * Named export discovered by the unified `thermal-label-cli` — the CLI
+ * walks installed drivers looking for `mod.discovery`.
  */
-export async function openPrinter(options: OpenOptions = {}): Promise<DymoPrinter> {
-  const devices = usb.getDeviceList();
-
-  for (const device of devices) {
-    const { idVendor, idProduct } = device.deviceDescriptor;
-    const descriptor = findDevice(idVendor, idProduct);
-    if (!descriptor) continue;
-    if (options.vid !== undefined && idVendor !== options.vid) continue;
-    if (options.pid !== undefined && idProduct !== options.pid) continue;
-
-    device.open();
-
-    if (options.serialNumber !== undefined) {
-      const serial = await readSerialNumber(device);
-      if (serial !== options.serialNumber) {
-        device.close();
-        continue;
-      }
-    }
-
-    try {
-      const iface = device.interface(PRINTER_INTERFACE);
-      if (process.platform === 'linux' && iface.isKernelDriverActive()) {
-        iface.detachKernelDriver();
-      }
-      iface.claim();
-
-      const out = iface.endpoint(EP_OUT) as usb.OutEndpoint;
-      const inp = iface.endpoint(EP_IN) as usb.InEndpoint;
-      const transport = new UsbTransport(device, iface, out, inp);
-
-      return new DymoPrinter(descriptor, transport);
-    } catch (err) {
-      device.close();
-      throw err;
-    }
-  }
-
-  throw new Error('No compatible DYMO LabelManager printer found.');
-}
+export const discovery = new LabelManagerDiscovery();
