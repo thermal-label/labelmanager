@@ -34,6 +34,9 @@ export default defineConfig({
         '@thermal-label/labelmanager-web': fileURLToPath(
           new URL('../../packages/web/src/index.ts', import.meta.url),
         ),
+        '@thermal-label/labelmanager-core': fileURLToPath(
+          new URL('../../packages/core/src/index.ts', import.meta.url),
+        ),
       },
     },
   },
