@@ -81,6 +81,9 @@ importers:
       '@mbtech-nl/bitmap':
         specifier: ^1.0.1
         version: 1.0.1
+      '@thermal-label/contracts':
+        specifier: ^0.1.0
+        version: 0.1.0
     devDependencies:
       '@mbtech-nl/tsconfig':
         specifier: ^1.0.0
@@ -100,9 +103,15 @@ importers:
 
   packages/node:
     dependencies:
+      '@thermal-label/contracts':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@thermal-label/labelmanager-core':
         specifier: workspace:*
         version: link:../core
+      '@thermal-label/transport':
+        specifier: ^0.1.0
+        version: 0.1.0(usb@2.17.0)
       usb:
         specifier: ^2.17.0
         version: 2.17.0
@@ -129,9 +138,15 @@ importers:
 
   packages/web:
     dependencies:
+      '@thermal-label/contracts':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@thermal-label/labelmanager-core':
         specifier: workspace:*
         version: link:../core
+      '@thermal-label/transport':
+        specifier: ^0.1.0
+        version: 0.1.0(usb@2.17.0)
     devDependencies:
       '@mbtech-nl/tsconfig':
         specifier: ^1.0.0
@@ -891,6 +906,18 @@ packages:
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
+
+  '@thermal-label/contracts@0.1.0':
+    resolution: {integrity: sha512-lsOANRR2/YLNO92dfJqypuc8sIkKFg3IELgcetF8S/dGNIuGwQstfuCa/Xqp+h1Nh1LtSuMiEzw+xdHN5Ix+oQ==}
+
+  '@thermal-label/transport@0.1.0':
+    resolution: {integrity: sha512-bBXuGg7yrOuGm1VWpM6PuutMmCDmt/Vh/0zWxuEkzmEKa5ywyoipnn2LxZ60qKniCzn1d2/fYS/8Pth1nybO+g==}
+    engines: {node: '>=24.0.0'}
+    peerDependencies:
+      usb: '>=2.14.0'
+    peerDependenciesMeta:
+      usb:
+        optional: true
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -3474,6 +3501,16 @@ snapshots:
       '@types/hast': 3.0.4
 
   '@shikijs/vscode-textmate@10.0.2': {}
+
+  '@thermal-label/contracts@0.1.0':
+    dependencies:
+      '@mbtech-nl/bitmap': 1.0.1
+
+  '@thermal-label/transport@0.1.0(usb@2.17.0)':
+    dependencies:
+      '@thermal-label/contracts': 0.1.0
+    optionalDependencies:
+      usb: 2.17.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
