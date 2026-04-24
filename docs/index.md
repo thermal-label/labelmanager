@@ -4,7 +4,7 @@ layout: home
 hero:
   name: '@thermal-label/labelmanager'
   text: DYMO D1 label printing without the bloat
-  tagline: No vendor software. No proprietary drivers. Just USB, TypeScript, and a clean API — from Node.js, the CLI, or the browser.
+  tagline: No vendor software. No proprietary drivers. Just USB, TypeScript, and a clean API — from Node.js or the browser.
   actions:
     - theme: brand
       text: Get started
@@ -22,16 +22,16 @@ features:
     details: Direct USB bulk-transfer printing from Node.js servers and desktop apps. Zero native dependencies beyond the usb package.
     link: /node
     linkText: Node.js guide
-  - icon: ⌨️
-    title: CLI
-    details: One-line label printing from the terminal. Great for scripting, cron jobs, ad-hoc labels, and Linux udev setup.
-    link: /cli
-    linkText: CLI guide
   - icon: 🌐
     title: Browser
     details: WebUSB printing directly from Chrome or Edge — no server, no install, no driver swap required.
     link: /web
     linkText: Web guide
+  - icon: 🔌
+    title: PrinterAdapter
+    details: The node and web packages share the same PrinterAdapter interface. Wire once, swap transports without changing call sites.
+    link: /core
+    linkText: Core & protocol
 ---
 
 <div class="home-extra">

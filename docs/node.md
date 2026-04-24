@@ -1,7 +1,11 @@
 # Node.js
 
-`@thermal-label/labelmanager-node` is the production package for server or desktop
-Node.js applications that need direct USB access to DYMO LabelManager printers.
+`@thermal-label/labelmanager-node` is the production package for server
+or desktop Node.js applications that need direct USB access to DYMO
+LabelManager printers. It implements the `PrinterAdapter` interface
+from [`@thermal-label/contracts`](https://www.npmjs.com/package/@thermal-label/contracts)
+and opens the USB port through
+[`@thermal-label/transport`](https://www.npmjs.com/package/@thermal-label/transport).
 
 ## Install
 
@@ -12,131 +16,165 @@ pnpm add @thermal-label/labelmanager-node
 ## Quick example
 
 ```ts
-import { openPrinter } from '@thermal-label/labelmanager-node';
+import { discovery } from '@thermal-label/labelmanager-node';
+import { MEDIA } from '@thermal-label/labelmanager-core';
 
-const printer = await openPrinter();
-await printer.printText('Warehouse A-12');
-printer.close();
+const printer = await discovery.openPrinter();
+try {
+  await printer.print(image, MEDIA.TAPE_12MM);
+} finally {
+  await printer.close();
+}
 ```
+
+`image` is `RawImageData` — `{ width, height, data }` where `data` is a
+`Uint8Array` of RGBA pixels. Any source that can produce RGBA works:
+`@napi-rs/canvas` for PNG/JPEG decoding, `node-canvas` for server-side
+rendering, or your own image pipeline.
 
 ---
 
-## Printing text
+## The adapter interface
 
-Text is rendered using the built-in bitmap font pipeline from `@mbtech-nl/bitmap`.
+`DymoPrinter` implements
+[`PrinterAdapter`](https://www.npmjs.com/package/@thermal-label/contracts) —
+the same shape every `@thermal-label/*-node` driver exports. Code that
+programs against the interface works with any family without branching:
 
 ```ts
-import { openPrinter } from '@thermal-label/labelmanager-node';
+import type { PrinterAdapter } from '@thermal-label/contracts';
 
-const printer = await openPrinter();
-await printer.printText('Fragile', {
-  tapeWidth: 12, // mm — 6, 9, 12, or 19
-  density: 'high',
-  copies: 2,
-  invert: false, // white-on-black
-});
-printer.close();
+async function printTo(printer: PrinterAdapter, image: RawImageData, media) {
+  try {
+    await printer.print(image, media);
+  } finally {
+    await printer.close();
+  }
+}
 ```
 
-### Text options
+Surface:
 
-| Option      | Type                 | Default    | Description               |
-| ----------- | -------------------- | ---------- | ------------------------- |
-| `tapeWidth` | `6 \| 9 \| 12 \| 19` | `12`       | Tape width in mm          |
-| `density`   | `"normal" \| "high"` | `"normal"` | Print density             |
-| `copies`    | `number`             | `1`        | Number of copies to print |
-| `invert`    | `boolean`            | `false`    | White-on-black rendering  |
+| Method                                   | Description                                       |
+| ---------------------------------------- | ------------------------------------------------- |
+| `print(image, media?, options?)`         | Print one label; accepts full RGBA                |
+| `createPreview(image, options?)`         | Render separated 1bpp planes for UI previews      |
+| `getStatus()`                            | Query ready / media-loaded / errors / raw bytes   |
+| `close()`                                | Release the USB interface                         |
+| `family` / `model` / `device` / `connected` | Identification                                 |
 
 ---
 
-## Printing images
+## Media
 
-`printImage` accepts file paths, image buffers, or pre-decoded raw image data.
-File path and buffer decoding requires optional `@napi-rs/canvas`.
-
-```ts
-import { openPrinter } from '@thermal-label/labelmanager-node';
-
-const printer = await openPrinter();
-await printer.printImage('./logo.png', {
-  tapeWidth: 12,
-  dither: true,
-  threshold: 140,
-  density: 'normal',
-});
-printer.close();
-```
-
-If `@napi-rs/canvas` is not installed, pass pre-decoded raw image data directly:
+LabelManager printers cannot detect tape width over USB. Always pass
+the media descriptor explicitly:
 
 ```ts
-await printer.printImage({
-  width: 200,
-  height: 64,
-  data: rawRgbaBuffer, // Uint8ClampedArray, RGBA
-});
+import { MEDIA, type LabelManagerMedia } from '@thermal-label/labelmanager-core';
+
+MEDIA.TAPE_6MM;   // 6 mm tape
+MEDIA.TAPE_9MM;   // 9 mm tape
+MEDIA.TAPE_12MM;  // 12 mm tape — DEFAULT_MEDIA for previews
+MEDIA.TAPE_19MM;  // 19 mm tape
 ```
 
-### Image options
-
-| Option      | Type                 | Default    | Description                    |
-| ----------- | -------------------- | ---------- | ------------------------------ |
-| `tapeWidth` | `6 \| 9 \| 12 \| 19` | `12`       | Tape width in mm               |
-| `density`   | `"normal" \| "high"` | `"normal"` | Print density                  |
-| `copies`    | `number`             | `1`        | Number of copies               |
-| `dither`    | `boolean`            | `false`    | Floyd-Steinberg dithering      |
-| `threshold` | `number`             | `128`      | Binarization threshold (0–255) |
+`print()` throws `MediaNotSpecifiedError` if you call it without media
+and `getStatus()` hasn't been called (or returned no detection).
 
 ---
 
-## Multi-printer setups
-
-Use `serialNumber` in `openPrinter` when multiple DYMO devices are connected.
-
-### Discover serial numbers
+## Discovery
 
 ```ts
-import { listPrinters } from '@thermal-label/labelmanager-node';
+import { discovery } from '@thermal-label/labelmanager-node';
 
-const printers = await listPrinters();
-console.log(printers);
-// [{ serialNumber: 'ABC12345', name: 'LabelManager PnP', ... }, ...]
+const printers = await discovery.listPrinters();
+// [
+//   {
+//     device: { name: 'LabelManager PnP', family: 'labelmanager', ... },
+//     serialNumber: 'ABC12345',
+//     transport: 'usb',
+//     connectionId: '1:2',
+//   },
+//   ...
+// ]
+
+// Open the first match
+const printer = await discovery.openPrinter();
+
+// Target a specific unit when multiple are attached
+const labeler = await discovery.openPrinter({ serialNumber: 'ABC12345' });
+
+// Or filter by VID/PID
+const pnp = await discovery.openPrinter({ vid: 0x0922, pid: 0x1002 });
 ```
 
-### Target a specific printer
-
-```ts
-import { openPrinter } from '@thermal-label/labelmanager-node';
-
-const printer = await openPrinter({ serialNumber: 'ABC12345' });
-await printer.printText('Station 3');
-printer.close();
-```
-
-Targeting by serial number avoids race conditions in production systems with
-shared USB hubs.
+`discovery` conforms to the
+[`PrinterDiscovery`](https://www.npmjs.com/package/@thermal-label/contracts)
+interface, so `thermal-label-cli` picks it up automatically.
 
 ---
 
-## Status checks
+## Status
 
 ```ts
 const status = await printer.getStatus();
-console.log(status.ready); // false if printer is busy
-console.log(status.tapeInserted); // false if no tape loaded
-console.log(status.labelLow); // true when tape is almost out
+
+status.ready;          // boolean — printer is idle and error-free
+status.mediaLoaded;    // boolean — tape cartridge is inserted
+status.detectedMedia;  // always undefined — LabelManager can't report width
+status.errors;         // PrinterError[] — { code, message } per error
+status.rawBytes;       // Uint8Array — raw response for diagnostics
 ```
+
+Error codes surfaced by LabelManager:
+
+| Code          | Meaning                    |
+| ------------- | -------------------------- |
+| `not_ready`   | Printer is busy            |
+| `no_media`    | No tape cartridge inserted |
+| `low_media`   | Tape supply is low         |
+
+---
+
+## Previewing before printing
+
+`createPreview()` returns a single black 1bpp plane — what the printer
+would actually produce for the given media:
+
+```ts
+const preview = await printer.createPreview(image, { media: MEDIA.TAPE_9MM });
+preview.planes[0]; // { name: 'black', bitmap, displayColor: '#000000' }
+preview.assumed;   // true if media was not passed and no status was available
+```
+
+Without a printer connection, use `createPreviewOffline()` from core:
+
+```ts
+import { createPreviewOffline, MEDIA } from '@thermal-label/labelmanager-core';
+const preview = createPreviewOffline(image, MEDIA.TAPE_12MM);
+```
+
+---
+
+## Linux udev rules
+
+```ts
+import { generateUdevRules } from '@thermal-label/labelmanager-node';
+console.log(generateUdevRules()); // write into /etc/udev/rules.d/
+```
+
+See [Getting Started](/getting-started) for the full Linux setup steps.
 
 ---
 
 ## API summary
 
-| Function / Method                | Description                           |
-| -------------------------------- | ------------------------------------- |
-| `listPrinters()`                 | List all connected compatible devices |
-| `openPrinter(opts?)`             | Connect and return a `DymoPrinter`    |
-| `printer.printText(text, opts?)` | Print a text label                    |
-| `printer.printImage(src, opts?)` | Print an image label                  |
-| `printer.getStatus()`            | Read status flags                     |
-| `printer.close()`                | Close the USB device                  |
-| `generateUdevRules()`            | Return udev rule strings for Linux    |
+| Export                        | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `discovery`                   | `PrinterDiscovery` singleton — enumerate & open |
+| `DymoPrinter`                 | Adapter class; consumed directly or via `discovery` |
+| `LabelManagerDiscovery`       | Class form, in case you want a second instance |
+| `DEFAULT_FILTERS`             | WebUSB filters for browser callers             |
+| `generateUdevRules()`         | Linux udev rule text                           |

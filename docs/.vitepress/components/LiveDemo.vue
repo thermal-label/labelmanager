@@ -71,12 +71,37 @@
 </template>
 
 <script setup lang="ts">
-import { getPixel, renderText, scaleBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
+import { getPixel, renderText, scaleBitmap, type LabelBitmap, type RawImageData } from '@mbtech-nl/bitmap';
+import { MEDIA, type LabelManagerMedia } from '@thermal-label/labelmanager-core';
 import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
 import { computed, onMounted, ref, watch } from 'vue';
 
 type TapeWidth = 6 | 9 | 12;
 type Density = 'normal' | 'high';
+
+const tapeToMedia: Record<TapeWidth, LabelManagerMedia> = {
+  6: MEDIA.TAPE_6MM,
+  9: MEDIA.TAPE_9MM,
+  12: MEDIA.TAPE_12MM,
+};
+
+function bitmapToRawImage(bitmap: LabelBitmap, inverted: boolean): RawImageData {
+  const { widthPx, heightPx } = bitmap;
+  const data = new Uint8Array(widthPx * heightPx * 4);
+  for (let y = 0; y < heightPx; y += 1) {
+    for (let x = 0; x < widthPx; x += 1) {
+      const bit = getPixel(bitmap, x, y);
+      const isInk = inverted ? !bit : bit;
+      const offset = (y * widthPx + x) * 4;
+      const value = isInk ? 0 : 255;
+      data[offset] = value;
+      data[offset + 1] = value;
+      data[offset + 2] = value;
+      data[offset + 3] = 255;
+    }
+  }
+  return { width: widthPx, height: heightPx, data };
+}
 
 const PREVIEW_SCALE = 4;
 const tapeToTargetHeight: Record<TapeWidth, number> = { 6: 32, 9: 48, 12: 64 };
@@ -180,7 +205,7 @@ async function connect(): Promise<void> {
 async function disconnect(): Promise<void> {
   if (!printer.value) return;
   try {
-    await printer.value.disconnect();
+    await printer.value.close();
   } catch {
     // ignore
   }
@@ -203,10 +228,10 @@ async function print(): Promise<void> {
   statusMessage.value = 'Sending to printer…';
   statusType.value = 'idle';
   try {
-    await printer.value.printText(trimmed, {
+    const bitmap = renderText(trimmed, { invert: invert.value });
+    const image = bitmapToRawImage(bitmap, invert.value);
+    await printer.value.print(image, tapeToMedia[tapeWidth.value], {
       density: density.value,
-      invert: invert.value,
-      tapeWidth: tapeWidth.value,
     });
     statusType.value = 'ok';
     statusMessage.value = 'Label sent ✓';

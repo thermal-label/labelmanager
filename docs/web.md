@@ -2,9 +2,10 @@
 
 `@thermal-label/labelmanager-web` uses the browser
 [WebUSB API](https://developer.mozilla.org/en-US/docs/Web/API/WebUSB_API)
-to communicate directly with the printer over USB Interface 0 (Printer class).
-It uses the same `buildPrinterStream` encoding as the Node.js driver — no server
-or native dependencies required.
+to talk to the printer over USB Interface 0 (Printer class). It
+implements the same `PrinterAdapter` interface the Node.js driver does,
+built on `WebUsbTransport` from `@thermal-label/transport/web`. No
+server or native dependencies.
 
 ## Browser support
 
@@ -15,7 +16,8 @@ or native dependencies required.
 | Firefox    | ❌ No WebUSB |
 | Safari     | ❌ No WebUSB |
 
-WebUSB requires a **secure context** (`https://` or `localhost`).
+WebUSB requires a **secure context** (`https://` or `localhost`) and a
+**user gesture** (click, keypress) for the initial pairing prompt.
 
 ## Install
 
@@ -25,29 +27,61 @@ pnpm add @thermal-label/labelmanager-web
 
 ---
 
-## Vanilla JS quick start
+## Quick start
 
 ```ts
 import { requestPrinter } from '@thermal-label/labelmanager-web';
+import { MEDIA } from '@thermal-label/labelmanager-core';
 
-// Must be called from a user gesture (button click, etc.)
+// Must run from a user gesture.
 const printer = await requestPrinter();
-await printer.printText('Hello from the browser', { tapeWidth: 12 });
-await printer.disconnect();
+try {
+  await printer.print(image, MEDIA.TAPE_12MM);
+} finally {
+  await printer.close();
+}
 ```
 
-### Print an image from a URL
+`image` is `RawImageData` — typically produced from an `ImageData`
+canvas read or an `<img>` drawn to an `OffscreenCanvas`:
 
 ```ts
-await printer.printImageURL('/assets/logo.png', { dither: true });
+const bmp = await createImageBitmap(file);
+const canvas = new OffscreenCanvas(bmp.width, bmp.height);
+const ctx = canvas.getContext('2d')!;
+ctx.drawImage(bmp, 0, 0);
+const { data, width, height } = ctx.getImageData(0, 0, bmp.width, bmp.height);
+const image = { width, height, data: new Uint8Array(data.buffer) };
 ```
 
-### Status check
+---
+
+## Status
 
 ```ts
 const status = await printer.getStatus();
-console.log(status.ready, status.tapeInserted, status.labelLow);
+
+status.ready;          // printer is idle and error-free
+status.mediaLoaded;    // tape cartridge is inserted
+status.errors;         // structured PrinterError[] — { code, message }
 ```
+
+Error codes are the same as the Node.js driver — `not_ready`,
+`no_media`, `low_media`. `status.detectedMedia` is always `undefined`
+because LabelManager has no media-detection protocol.
+
+---
+
+## Previewing
+
+```ts
+const preview = await printer.createPreview(image, { media: MEDIA.TAPE_9MM });
+// preview.planes[0].bitmap is the 1bpp LabelBitmap the printer would produce
+// preview.planes[0].displayColor is '#000000' — useful when rendering to a canvas
+```
+
+For offline previews without a live connection, import
+`createPreviewOffline` from `@thermal-label/labelmanager-core`.
 
 ---
 
@@ -56,8 +90,9 @@ console.log(status.ready, status.tapeInserted, status.labelLow);
 ```tsx
 import { useState } from 'react';
 import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
+import { MEDIA } from '@thermal-label/labelmanager-core';
 
-export function PrintButton() {
+export function PrintButton({ image }: { image: { width: number; height: number; data: Uint8Array } }) {
   const [printer, setPrinter] = useState<WebDymoPrinter | null>(null);
 
   async function connect() {
@@ -66,64 +101,64 @@ export function PrintButton() {
 
   async function print() {
     if (!printer) return;
-    await printer.printText('React label', { tapeWidth: 12 });
+    await printer.print(image, MEDIA.TAPE_12MM);
   }
 
   async function disconnect() {
     if (!printer) return;
-    await printer.disconnect();
+    await printer.close();
     setPrinter(null);
   }
 
   return (
     <div>
-      <button onClick={connect} disabled={!!printer}>
-        Connect
-      </button>
-      <button onClick={print} disabled={!printer}>
-        Print
-      </button>
-      <button onClick={disconnect} disabled={!printer}>
-        Disconnect
-      </button>
+      <button onClick={connect} disabled={!!printer}>Connect</button>
+      <button onClick={print} disabled={!printer}>Print</button>
+      <button onClick={disconnect} disabled={!printer}>Disconnect</button>
     </div>
   );
 }
 ```
 
-Keep the printer reference in component state. Call `disconnect()` when the
-component unmounts or the user is done printing — it releases USB Interface 0
-and closes the device.
+Keep the printer reference in component state. Call `close()` on
+unmount (or when the user is done) — it releases USB Interface 0 and
+closes the device.
 
 ---
 
 ## How it works
 
-`requestPrinter()` calls `navigator.usb.requestDevice()`, then:
+`requestPrinter()` calls `navigator.usb.requestDevice({ filters })`
+with the LabelManager VID/PIDs, then hands the `USBDevice` to
+`WebUsbTransport.fromDevice()`, which:
 
-1. `open()` — opens the USB device
-2. `selectConfiguration(1)` — selects the active configuration
-3. `claimInterface(0)` — claims Interface 0 (Printer class, EP 5 OUT)
+1. `device.open()`
+2. `device.selectConfiguration(1)` (if not already configured)
+3. `device.claimInterface(0)` (Printer class)
+4. Resolves the bulk IN / OUT endpoint numbers from the interface
+   descriptor — no hard-coded EP numbers.
 
-Print data is encoded with `buildPrinterStream` (same function as the Node.js
-package) and sent via `device.transferOut(5, chunk)` in 64-byte chunks.
-
-Status is read actively via `getStatus()` → `transferOut(ESC A)` +
-`transferIn(5, 64)`, rather than passively listening to HID input reports.
+`print()` encodes via `buildPrinterStream` (identical to the Node.js
+driver) and sends in 64-byte chunks via `transferOut`.
+`getStatus()` writes `ESC A` and reads the single-byte response.
 
 ---
 
 ## API summary
 
-| Function / Method                   | Description                            |
-| ----------------------------------- | -------------------------------------- |
-| `requestPrinter(opts?)`             | Show USB permission prompt and connect |
-| `fromHIDDevice(device)`             | Wrap an already-opened `USBDevice`     |
-| `printer.printText(text, opts?)`    | Print a text label                     |
-| `printer.printImageURL(url, opts?)` | Fetch and print an image from a URL    |
-| `printer.getStatus()`               | Read status flags                      |
-| `printer.disconnect()`              | Release interface and close device     |
+| Export                   | Description                                  |
+| ------------------------ | -------------------------------------------- |
+| `requestPrinter(opts?)`  | Show USB permission prompt and open a device |
+| `fromUSBDevice(device)`  | Wrap a pre-paired `USBDevice` (from `navigator.usb.getDevices()`) |
+| `WebDymoPrinter`         | Adapter class                                |
+| `DEFAULT_FILTERS`        | LabelManager VID/PID filter set              |
+
+`WebDymoPrinter` implements `PrinterAdapter` from
+[`@thermal-label/contracts`](https://www.npmjs.com/package/@thermal-label/contracts) —
+`print`, `createPreview`, `getStatus`, `close`, plus the `family`,
+`model`, `device`, `connected` getters.
 
 ## Live demo
 
-→ [Open the interactive demo](/demo) to preview and print a label from your browser.
+→ [Open the interactive demo](/demo) to preview and print a label from
+your browser.
