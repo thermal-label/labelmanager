@@ -89,3 +89,6 @@ discrepancies.
 
 For the full USB protocol details — byte sequences, flow control, and porting
 notes — see [Core](./core#usb-protocol).
+
+
+<!--@include: ./_status-fragment.md-->
