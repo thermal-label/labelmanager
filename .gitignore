@@ -8,7 +8,6 @@ coverage
 **/.vitepress/cache
 **/.vitepress/dist
 *.log
-PLAN.md
 packages/*/src/*.d.ts
 packages/*/src/*.d.ts.map
 packages/*/src/*.js
