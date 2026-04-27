@@ -6,6 +6,17 @@ import type { LabelManagerMedia } from './types.js';
  * LabelManager cannot detect tape width via status query — the user must
  * select from this registry and pass the chosen media to
  * `DymoPrinter.print()` / `createPreview()`.
+ *
+ * Every tape entry declares `defaultOrientation: 'horizontal'`: callers
+ * author labels with the long axis horizontal (left-to-right reading),
+ * and the driver rotates 90° CW so the visual reads along the tape feed
+ * direction. This preserves the long-standing pre-retrofit behaviour
+ * — the protocol layer used to apply the rotation unconditionally;
+ * now the driver picks it via `pickRotation`, and callers can opt out
+ * per-print via `options.rotate`.
+ *
+ * `printMargins` reflects the ~3 mm tape-start/end feed each label gets
+ * — design-tool hint only; the protocol path is unaffected.
  */
 export const MEDIA = {
   TAPE_6MM: {
@@ -13,7 +24,8 @@ export const MEDIA = {
     name: '6mm tape',
     widthMm: 6,
     type: 'tape',
-    colorCapable: false,
+    defaultOrientation: 'horizontal',
+    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
     tapeWidthMm: 6,
     printableDots: 32,
     bytesPerLine: 4,
@@ -23,7 +35,8 @@ export const MEDIA = {
     name: '9mm tape',
     widthMm: 9,
     type: 'tape',
-    colorCapable: false,
+    defaultOrientation: 'horizontal',
+    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
     tapeWidthMm: 9,
     printableDots: 48,
     bytesPerLine: 6,
@@ -33,7 +46,8 @@ export const MEDIA = {
     name: '12mm tape',
     widthMm: 12,
     type: 'tape',
-    colorCapable: false,
+    defaultOrientation: 'horizontal',
+    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
     tapeWidthMm: 12,
     printableDots: 64,
     bytesPerLine: 8,
@@ -43,7 +57,8 @@ export const MEDIA = {
     name: '19mm tape',
     widthMm: 19,
     type: 'tape',
-    colorCapable: false,
+    defaultOrientation: 'horizontal',
+    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
     tapeWidthMm: 19,
     printableDots: 64,
     bytesPerLine: 8,

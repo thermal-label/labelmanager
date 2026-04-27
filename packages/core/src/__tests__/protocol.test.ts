@@ -8,6 +8,15 @@ import {
 } from '../protocol.js';
 import type { LabelBitmap } from '@mbtech-nl/bitmap';
 
+/**
+ * Make a head-aligned bitmap fixture.
+ *
+ * The protocol expects bitmaps in head-aligned orientation:
+ * `widthPx` is the head-perpendicular dimension (across the tape) and
+ * `heightPx` is the feed direction (along the tape). The driver layer
+ * is responsible for getting the user's input there via `pickRotation`
+ * + `renderImage`'s `rotate` option.
+ */
 function makeBitmap(widthPx: number, heightPx: number): LabelBitmap {
   const bytesPerRow = Math.ceil(widthPx / 8);
   const data = new Uint8Array(bytesPerRow * heightPx);
@@ -35,42 +44,45 @@ describe('protocol', () => {
     expect(highDensity.slice(0, 3)).toEqual(new Uint8Array([0x1b, 0x65, 0x01]));
   });
 
-  it('scales bitmap to head height and adds feed margin', () => {
-    // 64×64 already at target height; scaled width stays 64, margin adds 2×57 = 114.
+  it('scales head-perpendicular dimension to head dots and adds feed margin', () => {
+    // 64×64 head-aligned: widthPx=head-perp=64 (already at 12mm head), heightPx=feed=64.
+    // Scale leaves widthPx at 64; pad adds 2×57 to heightPx → 178 rows.
     const bitmap = makeBitmap(64, 64);
     const reports = buildBitmapRows(bitmap);
     const first = reports[0]!;
 
     expect(reports).toHaveLength(64 + 2 * FEED_MARGIN_PX); // 178
-    expect(first).toHaveLength(64);
+    expect(first).toHaveLength(64); // 64-byte HID frame
     expect(first[0]).toBe(0x16);
     expect(first[63]).toBe(0x00);
   });
 
-  it('scales non-target-height bitmap to fill head and adds feed margin', () => {
-    // 64×53 scaled proportionally to height 64: width = round(64*64/53) = 77
-    const bitmap = makeBitmap(64, 53);
-    const scaledWidth = Math.round(64 * (64 / 53)); // 77
+  it('upscales head-perpendicular and grows feed length proportionally', () => {
+    // Head-aligned: widthPx=53 (head-perp), heightPx=64 (feed).
+    // Scale widthPx 53→64 (12mm head): heightPx grows 64*(64/53)=77.
+    const bitmap = makeBitmap(53, 64);
+    const scaledFeed = Math.round(64 * (64 / 53)); // 77
     const reports = buildBitmapRows(bitmap);
 
-    expect(reports).toHaveLength(scaledWidth + 2 * FEED_MARGIN_PX);
+    expect(reports).toHaveLength(scaledFeed + 2 * FEED_MARGIN_PX);
     expect(reports[0]).toHaveLength(64);
   });
 
-  it('scales bitmap to match tape head height for each tape width', () => {
-    // 40×8 input — scaled to head height, so width grows proportionally.
-    const bitmap = makeBitmap(40, 8);
-    const scaledW6 = Math.round(40 * (32 / 8)); // 160
-    const scaledW9 = Math.round(40 * (48 / 8)); // 240
-    const scaledW12 = Math.round(40 * (64 / 8)); // 320
+  it('scales head-perpendicular to head dot count for each tape width', () => {
+    // 8×40 head-aligned input. Scale widthPx 8 → headDots; heightPx
+    // grows by (headDots / 8).
+    const bitmap = makeBitmap(8, 40);
+    const scaledFeed6 = Math.round(40 * (32 / 8)); // 160
+    const scaledFeed9 = Math.round(40 * (48 / 8)); // 240
+    const scaledFeed12 = Math.round(40 * (64 / 8)); // 320
 
     const reports6 = buildBitmapRows(bitmap, { tapeWidth: 6 });
     const reports9 = buildBitmapRows(bitmap, { tapeWidth: 9 });
     const reports12 = buildBitmapRows(bitmap, { tapeWidth: 12 });
 
-    expect(reports6).toHaveLength(scaledW6 + 2 * FEED_MARGIN_PX);
-    expect(reports9).toHaveLength(scaledW9 + 2 * FEED_MARGIN_PX);
-    expect(reports12).toHaveLength(scaledW12 + 2 * FEED_MARGIN_PX);
+    expect(reports6).toHaveLength(scaledFeed6 + 2 * FEED_MARGIN_PX);
+    expect(reports9).toHaveLength(scaledFeed9 + 2 * FEED_MARGIN_PX);
+    expect(reports12).toHaveLength(scaledFeed12 + 2 * FEED_MARGIN_PX);
 
     // Each report is still a full 64-byte HID packet
     expect(reports6[0]).toHaveLength(64);
@@ -86,8 +98,7 @@ describe('protocol', () => {
   });
 
   it('encodes complete report sequence and copies', () => {
-    // 64×64 scaled to 64: width stays 64, padded → 178 columns → 178 bitmap rows.
-    // Per copy: 3 reset + 178 bitmap + 1 form feed = 182; ×2 = 364.
+    // 64×64 → 64+114=178 bitmap rows. Per copy: 3 reset + 178 + 1 ff = 182; ×2 = 364.
     const bitmap = makeBitmap(64, 64);
     const reportsPerCopy = 3 + (64 + 2 * FEED_MARGIN_PX) + 1; // 182
     const reports = encodeLabel(bitmap, { copies: 2, density: 'high' });
@@ -102,12 +113,11 @@ describe('protocol', () => {
   });
 
   it('buildPrinterStream produces labelle-compatible raw byte stream', () => {
-    // 40×8 scaled to 64 (12mm) → width 320, padded → 434 columns → 434 rows.
-    // Each row: SYN (1) + 8 bytes = 9; 434×9 = 3906.
-    // Total: 3 (ESC C 0) + 3 (ESC D 8) + 3906 + 2 (ESC A) = 3914.
-    const scaledWidth = Math.round(40 * (64 / 8)); // 320
-    const rows = scaledWidth + 2 * FEED_MARGIN_PX; // 434
-    const bitmap = makeBitmap(40, 8);
+    // 8×40 head-aligned → scaled feed 320, padded 434. Each row: SYN+8 = 9.
+    // Total: 3 (ESC C 0) + 3 (ESC D 8) + 434×9 + 2 (ESC A) = 3914.
+    const scaledFeed = Math.round(40 * (64 / 8)); // 320
+    const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 434
+    const bitmap = makeBitmap(8, 40);
     const stream = buildPrinterStream(bitmap, { tapeWidth: 12 });
 
     // Starts with ESC C 0 (tape type)
@@ -129,12 +139,11 @@ describe('protocol', () => {
   });
 
   it('buildPrinterStream uses correct bytes per line for 6mm tape', () => {
-    // 10×8 scaled to 32 (6mm) → width 40, padded → 154 columns → 154 rows.
-    // Each row: SYN (1) + 4 bytes = 5; 154×5 = 770.
-    // Total: 3 + 3 + 770 + 2 = 778.
-    const scaledWidth = Math.round(10 * (32 / 8)); // 40
-    const rows = scaledWidth + 2 * FEED_MARGIN_PX; // 154
-    const bitmap = makeBitmap(10, 8);
+    // 8×10 head-aligned → scaled feed 40 (32/8 ratio), padded 154.
+    // Each row: SYN+4 = 5. Total: 3 + 3 + 154×5 + 2 = 778.
+    const scaledFeed = Math.round(10 * (32 / 8)); // 40
+    const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 154
+    const bitmap = makeBitmap(8, 10);
     const stream = buildPrinterStream(bitmap, { tapeWidth: 6 });
 
     // ESC D 4 (4 bytes per line for 6mm / 32 dots)
@@ -146,11 +155,11 @@ describe('protocol', () => {
   });
 
   it('encodes one column report per label column for narrower tape', () => {
-    // 40×8 scaled to 32 (6mm) → width 160, padded → 274 bitmap rows.
+    // 8×40 head-aligned + 6mm: scaled feed 160, padded 274.
     // Per copy: 3 reset + 274 bitmap + 1 form feed = 278.
-    const bitmap = makeBitmap(40, 8);
-    const scaledWidth = Math.round(40 * (32 / 8)); // 160
-    const bitmapRows = scaledWidth + 2 * FEED_MARGIN_PX; // 274
+    const bitmap = makeBitmap(8, 40);
+    const scaledFeed = Math.round(40 * (32 / 8)); // 160
+    const bitmapRows = scaledFeed + 2 * FEED_MARGIN_PX; // 274
     const reports = encodeLabel(bitmap, { tapeWidth: 6 });
     const first = reports[0]!;
     const formFeed = reports[3 + bitmapRows]!; // index 277

@@ -84,6 +84,30 @@ describe('DymoPrinter', () => {
     expect(firstArg).toBeInstanceOf(Uint8Array);
   });
 
+  it('print() with explicit rotate: 0 bypasses the auto-rotate heuristic', async () => {
+    // 'horizontal' tape + landscape input would auto-rotate 90° via
+    // pickRotation. `rotate: 0` overrides — the encoded job should
+    // differ from the auto path because the bitmap reaches the
+    // protocol with a different shape.
+    const { transport: autoTransport, write: autoWrite } = makeTransport();
+    const autoPrinter = new DymoPrinter(device, autoTransport);
+    await autoPrinter.print(solidRgba(80, 20), MEDIA.TAPE_12MM);
+
+    const { transport: bypassTransport, write: bypassWrite } = makeTransport();
+    const bypassPrinter = new DymoPrinter(device, bypassTransport);
+    await bypassPrinter.print(solidRgba(80, 20), MEDIA.TAPE_12MM, { rotate: 0 });
+
+    const autoBytes = (autoWrite.mock.calls as unknown as [Uint8Array][]).reduce(
+      (acc, [c]) => acc + c.length,
+      0,
+    );
+    const bypassBytes = (bypassWrite.mock.calls as unknown as [Uint8Array][]).reduce(
+      (acc, [c]) => acc + c.length,
+      0,
+    );
+    expect(autoBytes).not.toBe(bypassBytes);
+  });
+
   it('print() throws MediaNotSpecifiedError without media and without status', async () => {
     const { transport } = makeTransport();
     const printer = new DymoPrinter(device, transport);

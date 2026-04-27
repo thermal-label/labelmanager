@@ -2,8 +2,10 @@ import {
   buildPrinterStream,
   renderImage,
   DEFAULT_MEDIA,
+  ROTATE_DIRECTION,
   STATUS_REQUEST,
   parseStatus,
+  pickRotation,
   createPreviewOffline,
   type LabelManagerDevice,
   type LabelManagerMedia,
@@ -33,6 +35,11 @@ async function sleep(ms: number): Promise<void> {
  * production this is typically `UsbTransport` from
  * `@thermal-label/transport/node`, obtained via the `discovery`
  * singleton exported by this package.
+ *
+ * Orientation is auto-decided via `pickRotation`: every tape entry
+ * carries `defaultOrientation: 'horizontal'`, so the driver rotates
+ * landscape input 90° CW (matches the long-standing pre-retrofit
+ * unconditional rotate). Override per-call with `options.rotate`.
  */
 export class DymoPrinter implements PrinterAdapter {
   readonly family = 'labelmanager' as const;
@@ -66,7 +73,8 @@ export class DymoPrinter implements PrinterAdapter {
       throw new MediaNotSpecifiedError();
     }
 
-    const bitmap = renderImage(image, { dither: true });
+    const rotate = pickRotation(image, resolvedMedia, ROTATE_DIRECTION, options?.rotate);
+    const bitmap = renderImage(image, { dither: true, rotate });
     const stream = buildPrinterStream(bitmap, {
       ...options,
       tapeWidth: resolvedMedia.tapeWidthMm,

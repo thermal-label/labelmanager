@@ -3,10 +3,12 @@ import {
   renderImage,
   DEFAULT_MEDIA,
   DEVICES,
+  ROTATE_DIRECTION,
   STATUS_REQUEST,
   createPreviewOffline,
   findDevice,
   parseStatus,
+  pickRotation,
   type LabelManagerDevice,
   type LabelManagerMedia,
   type LabelManagerPrintOptions,
@@ -34,7 +36,8 @@ export interface RequestOptions {
  *
  * Thin wrapper over `WebUsbTransport` from `@thermal-label/transport/web`.
  * Shares `DymoPrinter`'s rendering path — callers pass full RGBA and the
- * driver thresholds/dithers to 1bpp internally.
+ * driver thresholds/dithers to 1bpp internally, with the same
+ * `pickRotation` heuristic.
  */
 export class WebDymoPrinter implements PrinterAdapter {
   readonly family = 'labelmanager' as const;
@@ -68,7 +71,8 @@ export class WebDymoPrinter implements PrinterAdapter {
       throw new MediaNotSpecifiedError();
     }
 
-    const bitmap = renderImage(image, { dither: true });
+    const rotate = pickRotation(image, resolvedMedia, ROTATE_DIRECTION, options?.rotate);
+    const bitmap = renderImage(image, { dither: true, rotate });
     const stream = buildPrinterStream(bitmap, {
       ...options,
       tapeWidth: resolvedMedia.tapeWidthMm,

@@ -18,7 +18,7 @@ function toReport(payload: number[]): Uint8Array {
   return report;
 }
 
-function tapeWidthToTargetHeight(tapeWidth?: TapeWidth): number {
+function tapeWidthToHeadDots(tapeWidth?: TapeWidth): number {
   switch (tapeWidth) {
     case 6:
       return 32;
@@ -46,23 +46,47 @@ export function buildResetSequence(options?: LabelManagerPrintOptions): Uint8Arr
 }
 
 /**
- * Convert a bitmap to printer row reports.
+ * Scale and pad a head-aligned bitmap to the printer's emission shape.
  *
- * @param bitmap Input monochrome bitmap.
- * @returns Zero-padded HID payload reports.
+ * **Input contract** — the bitmap is in head-aligned orientation:
+ * `widthPx` is the head-perpendicular dimension (across the tape) and
+ * `heightPx` is the feed direction (along the tape). The caller (the
+ * driver layer, via `pickRotation` + `renderImage`'s `rotate` option)
+ * is responsible for getting it into this orientation.
+ *
+ * **Transformations** —
+ *   1. Scale `widthPx` to the head dot count (preserving aspect).
+ *      `scaleBitmap` only targets `heightPx`, so we swap-scale-swap.
+ *   2. Pad top/bottom by `FEED_MARGIN_PX` so the printed area can be
+ *      cut cleanly on both leading and trailing edges.
+ *
+ * Each output row carries one head-line of dots — exactly
+ * `Math.ceil(headDots / 8)` bytes per row.
+ */
+function prepareForEmission(bitmap: LabelBitmap, headDots: number): LabelBitmap {
+  const swapped = rotateBitmap(bitmap, 90);
+  const scaled = scaleBitmap(swapped, headDots);
+  const headAligned = rotateBitmap(scaled, 270);
+  return padBitmap(headAligned, { top: FEED_MARGIN_PX, bottom: FEED_MARGIN_PX });
+}
+
+/**
+ * Convert a head-aligned bitmap to printer row reports.
+ *
+ * Input is in head-aligned orientation (see `prepareForEmission`). The
+ * driver applies `pickRotation` to put landscape input there before
+ * calling.
  */
 export function buildBitmapRows(
   bitmap: LabelBitmap,
   options?: LabelManagerPrintOptions,
 ): Uint8Array[] {
-  const targetHeight = tapeWidthToTargetHeight(options?.tapeWidth);
-  const scaled = scaleBitmap(bitmap, targetHeight);
-  const padded = padBitmap(scaled, { left: FEED_MARGIN_PX, right: FEED_MARGIN_PX });
-  const rotated = rotateBitmap(padded, 90);
+  const headDots = tapeWidthToHeadDots(options?.tapeWidth);
+  const padded = prepareForEmission(bitmap, headDots);
 
   const reports: Uint8Array[] = [];
-  for (let y = 0; y < rotated.heightPx; y += 1) {
-    const row = getRow(rotated, y);
+  for (let y = 0; y < padded.heightPx; y += 1) {
+    const row = getRow(padded, y);
     const payload = [0x16, ...Array.from(row)];
     reports.push(toReport(payload));
   }
@@ -85,20 +109,16 @@ export function buildFormFeed(): Uint8Array[] {
  * Uses the labelle-compatible protocol: ESC C 0, ESC D N, SYN + row, ESC A.
  * No HID report framing — send directly to EP 5 OUT.
  *
- * @param bitmap Bitmap to print.
- * @param options Print options (tapeWidth, copies).
- * @returns Raw byte stream ready for bulk transfer.
+ * Input is head-aligned (see `prepareForEmission`).
  */
 export function buildPrinterStream(
   bitmap: LabelBitmap,
   options: LabelManagerPrintOptions = {},
 ): Uint8Array {
   const copies = Math.max(1, options.copies ?? 1);
-  const targetHeight = tapeWidthToTargetHeight(options.tapeWidth);
-  const scaled = scaleBitmap(bitmap, targetHeight);
-  const padded = padBitmap(scaled, { left: FEED_MARGIN_PX, right: FEED_MARGIN_PX });
-  const rotated = rotateBitmap(padded, 90);
-  const bytesPerLine = Math.ceil(targetHeight / 8);
+  const headDots = tapeWidthToHeadDots(options.tapeWidth);
+  const padded = prepareForEmission(bitmap, headDots);
+  const bytesPerLine = Math.ceil(headDots / 8);
 
   const chunks: number[] = [];
 
@@ -106,8 +126,8 @@ export function buildPrinterStream(
     chunks.push(0x1b, 0x43, 0x00); // ESC C 0 — tape type
     chunks.push(0x1b, 0x44, bytesPerLine); // ESC D N — bytes per line
 
-    for (let y = 0; y < rotated.heightPx; y += 1) {
-      const row = getRow(rotated, y);
+    for (let y = 0; y < padded.heightPx; y += 1) {
+      const row = getRow(padded, y);
       chunks.push(0x16, ...Array.from(row)); // SYN + row bytes
     }
 
@@ -120,7 +140,7 @@ export function buildPrinterStream(
 /**
  * Encode a complete label job into HID report payloads.
  *
- * @param bitmap Bitmap to print.
+ * @param bitmap Bitmap to print (head-aligned, see `prepareForEmission`).
  * @param options Density/copies options.
  * @returns Full report list for one or more copies.
  */

@@ -156,3 +156,20 @@
 
 ## Finalization
 - [x] Ensure every checkbox above is ticked.
+
+## Step N — MediaDescriptor refactor + orientation
+
+> Plan: [../brother-ql/MEDIA_DESCRIPTOR_REFACTOR.md](../brother-ql/MEDIA_DESCRIPTOR_REFACTOR.md)
+
+- [x] Bump `@thermal-label/contracts` to `^0.2.0` in all packages
+- [x] `LabelManagerMedia` drops `colorCapable`; `LabelManagerPrintOptions` adds `rotate`
+- [x] MEDIA registry: every tape entry tagged `defaultOrientation: "horizontal"` + `printMargins` (3 mm tape-start/end)
+- [x] `orientation.ts` (new) — `ROTATE_DIRECTION = 90` (matches the pre-retrofit hard-coded direction)
+- [x] `protocol.ts` — `rotateBitmap(padded, 90)` removed from `buildBitmapRows` and `buildPrinterStream`. Bitmaps now arrive head-aligned (driver pre-rotates via `pickRotation`); a new `prepareForEmission` helper scales `widthPx` to head dot count via swap-scale-swap and pads top/bottom for feed margins. Net byte output preserved for the common landscape-on-horizontal case.
+- [x] `index.ts` re-exports `pickRotation` + `ROTATE_DIRECTION`
+- [x] Node + Web printers: wire `pickRotation` into `print()`
+- [x] Protocol tests: fixtures transposed to head-aligned orientation; expected counts unchanged
+- [x] Node printer test: explicit `rotate: 0` bypass differs from auto path
+- [x] Gates green (typecheck, lint, format, test, build)
+- [ ] Hardware verification print with landscape RGBA (plan §6 step 1)
+
