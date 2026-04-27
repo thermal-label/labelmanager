@@ -15,6 +15,7 @@
     "format": "prettier --write packages docs",
     "typecheck": "pnpm -r run typecheck",
     "docs:api": "typedoc --skipErrorChecking --plugin typedoc-plugin-markdown --out docs/api packages/*/dist/index.d.ts && node scripts/postprocess-api-docs.mjs",
+    "validate:hardware-status": "node scripts/validate-hardware-status.mjs",
     "prepare": "node -e \"try{require('node:child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\"",
     "changeset": "changeset",
     "version": "changeset version",
@@ -31,6 +32,7 @@
     "typedoc": "^0.28.0",
     "typedoc-plugin-markdown": "^4.0.0",
     "typescript": "~5.5.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "yaml": "^2.8.3"
   }
 }
