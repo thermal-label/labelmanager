@@ -165,7 +165,7 @@ import { generateUdevRules } from '@thermal-label/labelmanager-node';
 console.log(generateUdevRules()); // write into /etc/udev/rules.d/
 ```
 
-See [Getting Started](/getting-started) for the full Linux setup steps.
+See [Getting Started](./getting-started) for the full Linux setup steps.
 
 ---
 

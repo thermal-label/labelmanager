@@ -25,7 +25,7 @@ try {
 }
 ```
 
-→ [Full Node.js guide](/node) — discovery, media, status, options.
+→ [Full Node.js guide](./node) — discovery, media, status, options.
 
 ## Browser (WebUSB)
 
@@ -48,7 +48,7 @@ try {
 }
 ```
 
-→ [Full Web guide](/web) — vanilla JS, React, status checks.
+→ [Full Web guide](./web) — vanilla JS, React, status checks.
 
 ## Unified CLI
 

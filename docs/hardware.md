@@ -88,4 +88,4 @@ Full `lsusb -v -d 0922:1002` output is the canonical reference for any
 discrepancies.
 
 For the full USB protocol details — byte sequences, flow control, and porting
-notes — see [Core](/core#usb-protocol).
+notes — see [Core](./core#usb-protocol).

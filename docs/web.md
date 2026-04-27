@@ -170,5 +170,5 @@ driver) and sends in 64-byte chunks via `transferOut`.
 
 ## Live demo
 
-→ [Open the interactive demo](/demo) to preview and print a label from
+→ [Open the interactive demo](/demo/labelmanager) to preview and print a label from
 your browser.
