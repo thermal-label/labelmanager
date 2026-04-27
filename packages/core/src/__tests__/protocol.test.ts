@@ -6,7 +6,6 @@ import {
   buildResetSequence,
   encodeLabel,
 } from '../protocol.js';
-/* eslint-disable import-x/consistent-type-specifier-style */
 import type { LabelBitmap } from '@mbtech-nl/bitmap';
 
 function makeBitmap(widthPx: number, heightPx: number): LabelBitmap {

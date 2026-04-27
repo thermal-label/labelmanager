@@ -1,5 +1,4 @@
 import { getRow, padBitmap, rotateBitmap, scaleBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
-/* eslint-disable import-x/consistent-type-specifier-style */
 import type { LabelManagerPrintOptions, TapeWidth } from './types.js';
 
 const REPORT_SIZE = 64;

@@ -67,7 +67,7 @@
     "@napi-rs/canvas": "^0.1.74"
   },
   "devDependencies": {
-    "@mbtech-nl/tsconfig": "^1.0.0",
+    "@mbtech-nl/tsconfig": "^1.0.1",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "typescript": "~5.5.0",

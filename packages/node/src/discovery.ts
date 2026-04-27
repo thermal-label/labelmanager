@@ -1,5 +1,4 @@
 import { DEVICES, findDevice, type LabelManagerDevice } from '@thermal-label/labelmanager-core';
-/* eslint-disable import-x/consistent-type-specifier-style */
 import type { DiscoveredPrinter, OpenOptions, PrinterDiscovery } from '@thermal-label/contracts';
 import { UsbTransport } from '@thermal-label/transport/node';
 import * as usb from 'usb';

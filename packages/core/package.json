@@ -58,11 +58,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@mbtech-nl/bitmap": "^1.0.1",
+    "@mbtech-nl/bitmap": "^1.2.0",
     "@thermal-label/contracts": "^0.1.2"
   },
   "devDependencies": {
-    "@mbtech-nl/tsconfig": "^1.0.0",
+    "@mbtech-nl/tsconfig": "^1.0.1",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "typescript": "~5.5.0",
