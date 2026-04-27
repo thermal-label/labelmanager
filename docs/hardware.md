@@ -15,6 +15,10 @@ supported tape widths and USB product IDs.
 | LabelPoint 350            | `0x1003` | 6, 9, 12 mm     | 🔲 Expected |
 | MobileLabeler             | `0x1009` | 6, 9, 12 mm     | 🔲 Expected |
 
+> Going further than the two-step CTA below? Follow the full
+> [verification checklist](./verification-checklist) — it covers TCP,
+> the tape-width matrix, and the LabelManager PC mode-switch flow.
+
 <div class="hw-cta">
   <div class="hw-cta-header">
     <span class="hw-cta-icon">🔌</span>
