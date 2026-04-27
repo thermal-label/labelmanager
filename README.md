@@ -1,89 +1,90 @@
+# @thermal-label/labelmanager
+
+> TypeScript-first DYMO D1 LabelManager driver — Node USB and browser WebUSB.
+
 [![CI](https://github.com/thermal-label/labelmanager/actions/workflows/ci.yml/badge.svg)](https://github.com/thermal-label/labelmanager/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/thermal-label/labelmanager/branch/main/graph/badge.svg)](https://codecov.io/gh/thermal-label/labelmanager)
-[![npm core](https://img.shields.io/npm/v/@thermal-label/labelmanager-core)](https://npmjs.com/package/@thermal-label/labelmanager-core)
-[![npm node](https://img.shields.io/npm/v/@thermal-label/labelmanager-node)](https://npmjs.com/package/@thermal-label/labelmanager-node)
-[![npm web](https://img.shields.io/npm/v/@thermal-label/labelmanager-web)](https://npmjs.com/package/@thermal-label/labelmanager-web)
-[![npm cli](https://img.shields.io/npm/v/@thermal-label/labelmanager-cli)](https://npmjs.com/package/@thermal-label/labelmanager-cli)
+[![npm core](https://img.shields.io/npm/v/@thermal-label/labelmanager-core.svg?label=core)](https://npmjs.com/package/@thermal-label/labelmanager-core)
+[![npm node](https://img.shields.io/npm/v/@thermal-label/labelmanager-node.svg?label=node)](https://npmjs.com/package/@thermal-label/labelmanager-node)
+[![npm web](https://img.shields.io/npm/v/@thermal-label/labelmanager-web.svg?label=web)](https://npmjs.com/package/@thermal-label/labelmanager-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-# labelmanager
-
-TypeScript-first DYMO D1 LabelManager driver suite for Node.js, browser WebHID, and CLI workflows.
-
-- Project website: https://thermal-label.github.io/labelmanager/
-- Repository: https://github.com/thermal-label/labelmanager
-- Issues: https://github.com/thermal-label/labelmanager/issues
 
 ## Install
 
-Install only what you need:
-
 ```bash
-pnpm add @thermal-label/labelmanager-node
+pnpm add @thermal-label/labelmanager-node    # Node USB
+pnpm add @thermal-label/labelmanager-web     # Browser WebUSB
 ```
 
-```bash
-npm install @thermal-label/labelmanager-node
-```
+For ad-hoc printing from the terminal, install
+[`thermal-label-cli`](https://www.npmjs.com/package/thermal-label-cli) — it
+auto-detects every installed driver, no per-driver CLI needed.
 
-For browser-only usage:
-
-```bash
-pnpm add @thermal-label/labelmanager-web
-```
-
-For CLI usage:
-
-```bash
-npm install -g @thermal-label/labelmanager-cli
-```
-
-## Quick Start
-
-### Node.js
+## Quick example (Node)
 
 ```ts
-import { openPrinter } from "@thermal-label/labelmanager-node";
+import { discovery } from '@thermal-label/labelmanager-node';
+import { MEDIA } from '@thermal-label/labelmanager-core';
 
-const printer = await openPrinter();
-await printer.printText("Hello DYMO");
-printer.close();
+const printer = await discovery.openPrinter();
+try {
+  // image is RawImageData — { width, height, data } where data is RGBA bytes.
+  await printer.print(image, MEDIA.TAPE_12MM);
+} finally {
+  await printer.close();
+}
 ```
 
-### Browser (WebHID)
+## Quick example (Browser)
 
 ```ts
-import { requestPrinter } from "@thermal-label/labelmanager-web";
+import { requestPrinter } from '@thermal-label/labelmanager-web';
+import { MEDIA } from '@thermal-label/labelmanager-core';
 
-const printer = await requestPrinter();
-await printer.printText("Hello WebHID");
+const printer = await requestPrinter(); // call from a user gesture
+try {
+  await printer.print(image, MEDIA.TAPE_12MM);
+} finally {
+  await printer.close();
+}
 ```
 
-### CLI
+## Documentation
 
-```bash
-dymo list
-dymo print text "Hello DYMO" --tape 12
-```
+Full docs at **<https://thermal-label.github.io/labelmanager/>**.
+
+- [Getting started](https://thermal-label.github.io/labelmanager/getting-started)
+- [Hardware list](https://thermal-label.github.io/labelmanager/hardware)
+- [Node guide](https://thermal-label.github.io/labelmanager/node)
+- [Web guide](https://thermal-label.github.io/labelmanager/web)
+- [API reference](https://thermal-label.github.io/labelmanager/api/)
+- [Live demo](https://thermal-label.github.io/demo/labelmanager)
 
 ## Packages
 
-- `@thermal-label/labelmanager-core`: shared bitmap rendering and protocol encoding primitives.
-- `@thermal-label/labelmanager-node`: Node.js HID transport and printer APIs.
-- `@thermal-label/labelmanager-web`: browser WebHID transport and printer APIs.
-- `@thermal-label/labelmanager-cli`: command-line tool (`dymo`) for listing, printing, status, and Linux setup.
+| Package | Role |
+|---|---|
+| `@thermal-label/labelmanager-core` | Protocol encoding, device + media registries. Browser + Node. |
+| `@thermal-label/labelmanager-node` | Node USB transport. |
+| `@thermal-label/labelmanager-web` | Browser WebUSB transport. |
 
-## Supported Devices
+The per-driver `*-cli` package was retired — use the unified
+[`thermal-label-cli`](https://www.npmjs.com/package/thermal-label-cli) instead.
 
-This project targets DYMO LabelManager-family devices. Verified and expected models are listed on the project website:
-https://thermal-label.github.io/labelmanager/
+## Compatibility
 
-## Platform Notes
+| | |
+|---|---|
+| Node | ≥ 24 |
+| Browsers | Chrome / Edge 89+, secure context (`https://` or `localhost`) |
+| Linux | typically needs a `udev` rule for `0922:*`; `usb_modeswitch` may be required for first-run config |
+| Devices | DYMO LabelManager (D1 tape) — see hardware list |
+| Peers | `@thermal-label/contracts`, `@thermal-label/transport`, `@mbtech-nl/bitmap` |
+| License | MIT |
 
-- Node packages require Node.js `>=24`.
-- Browser package requires WebHID-compatible browsers and secure contexts (`https://` or `localhost`).
-- Linux users typically need `udev` rules and `usb_modeswitch` for reliable USB access.
+Not affiliated with DYMO. Trademarks belong to their owners.
 
-## License
+## Contributing
 
-MIT
+See [`CONTRIBUTING/`](https://github.com/thermal-label/.github/tree/main/CONTRIBUTING)
+on the org `.github` repo.
