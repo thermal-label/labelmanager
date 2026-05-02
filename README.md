@@ -75,7 +75,7 @@ The per-driver `*-cli` package was retired — use the unified
 
 | | |
 |---|---|
-| Node | ≥ 24 |
+| Node | ≥ 20.9 (Node 24 LTS recommended) |
 | Browsers | Chrome / Edge 89+, secure context (`https://` or `localhost`) |
 | Linux | typically needs a `udev` rule for `0922:*`; `usb_modeswitch` may be required for first-run config |
 | Devices | DYMO LabelManager (D1 tape) — see hardware list |
