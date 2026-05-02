@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-node",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Node.js USB driver for DYMO LabelManager label printers",
   "type": "module",
   "author": "Mannes Brak",
@@ -58,16 +58,16 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@thermal-label/contracts": "^0.3.0",
+    "@thermal-label/contracts": "^0.3.1",
     "@thermal-label/labelmanager-core": "workspace:*",
-    "@thermal-label/transport": "^0.2.1",
+    "@thermal-label/transport": "^0.3.0",
     "usb": "^2.17.0"
   },
   "optionalDependencies": {
     "@napi-rs/canvas": "^0.1.74"
   },
   "devDependencies": {
-    "@mbtech-nl/tsconfig": "^1.0.1",
+    "@mbtech-nl/tsconfig": "^1.1.0",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "typescript": "~5.5.0",
