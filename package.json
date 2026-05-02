@@ -28,11 +28,11 @@
     "@mbtech-nl/prettier-config": "^1.0.1",
     "@mbtech-nl/tsconfig": "^1.0.1",
     "eslint": "^9.0.0",
+    "json5": "^2.2.3",
     "prettier": "^3.0.0",
     "typedoc": "^0.28.0",
     "typedoc-plugin-markdown": "^4.0.0",
     "typescript": "~5.5.0",
-    "vitest": "^2.0.0",
-    "yaml": "^2.8.3"
+    "vitest": "^2.0.0"
   }
 }

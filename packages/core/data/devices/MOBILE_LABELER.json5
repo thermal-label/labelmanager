@@ -1,0 +1,21 @@
+{
+  key: 'MOBILE_LABELER',
+  name: 'MobileLabeler',
+  family: 'labelmanager',
+  transports: {
+    usb: { vid: '0x0922', pid: '0x1009' },
+  },
+  engines: [
+    {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+      mediaCompatibility: ['d1'],
+    },
+  ],
+  support: {
+    status: 'broken',
+    quirks: 'labelle reports "no success yet" driving this device over USB; left in the registry so the docs page surfaces it as known-but-broken rather than silently absent. No protocol work has landed.',
+  },
+}

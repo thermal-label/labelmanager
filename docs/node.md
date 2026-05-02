@@ -71,12 +71,25 @@ LabelManager printers cannot detect tape width over USB. Always pass
 the media descriptor explicitly:
 
 ```ts
-import { MEDIA, type LabelManagerMedia } from '@thermal-label/labelmanager-core';
+import {
+  TAPE_6MM,
+  TAPE_9MM,
+  TAPE_12MM,
+  TAPE_19MM,
+  MEDIA,
+  MEDIA_LIST,
+  type LabelManagerMedia,
+} from '@thermal-label/labelmanager-core';
 
-MEDIA.TAPE_6MM; // 6 mm tape
-MEDIA.TAPE_9MM; // 9 mm tape
-MEDIA.TAPE_12MM; // 12 mm tape — DEFAULT_MEDIA for previews
-MEDIA.TAPE_19MM; // 19 mm tape
+TAPE_6MM; // 6 mm Black on White (D1)
+TAPE_9MM; // 9 mm Black on White (D1)
+TAPE_12MM; // 12 mm Black on White (D1) — DEFAULT_MEDIA for previews
+TAPE_19MM; // 19 mm Black on White (D1)
+
+// Coloured / specialty cartridges live in MEDIA, keyed by id.
+// Iterate MEDIA_LIST in your picker UI.
+MEDIA['d1-standard-by-12']; // 12 mm Black on Yellow
+MEDIA['d1-durable-wbk-12']; // 12 mm Durable White on Black
 ```
 
 `print()` throws `MediaNotSpecifiedError` if you call it without media
@@ -144,7 +157,7 @@ Error codes surfaced by LabelManager:
 would actually produce for the given media:
 
 ```ts
-const preview = await printer.createPreview(image, { media: MEDIA.TAPE_9MM });
+const preview = await printer.createPreview(image, { media: TAPE_9MM });
 preview.planes[0]; // { name: 'black', bitmap, displayColor: '#000000' }
 preview.assumed; // true if media was not passed and no status was available
 ```
@@ -152,8 +165,8 @@ preview.assumed; // true if media was not passed and no status was available
 Without a printer connection, use `createPreviewOffline()` from core:
 
 ```ts
-import { createPreviewOffline, MEDIA } from '@thermal-label/labelmanager-core';
-const preview = createPreviewOffline(image, MEDIA.TAPE_12MM);
+import { createPreviewOffline, TAPE_12MM } from '@thermal-label/labelmanager-core';
+const preview = createPreviewOffline(image, TAPE_12MM);
 ```
 
 ---

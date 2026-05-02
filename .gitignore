@@ -16,3 +16,8 @@ packages/*/vitest.config.d.ts
 packages/*/vitest.config.d.ts.map
 packages/*/vitest.config.js
 packages/*/vitest.config.js.map
+
+# Build artifacts emitted by scripts/compile-data.mjs
+packages/*/src/*.generated.ts
+packages/*/data/devices.json
+packages/*/data/media.json

@@ -7,19 +7,34 @@ describe('devices', () => {
     expect(device?.name).toBe('LabelManager 420P');
   });
 
+  it('finds the LabelManager PC by its corrected PID 0x0011', () => {
+    expect(findDevice(0x0922, 0x0011)?.key).toBe('LM_PC');
+  });
+
   it('returns undefined for unknown devices', () => {
     const device = findDevice(0xffff, 0xffff);
     expect(device).toBeUndefined();
   });
 
   it('contains all expected registry keys', () => {
-    expect(Object.keys(DEVICES)).toEqual([
-      'LABELMANAGER_PNP',
-      'LABELMANAGER_420P',
-      'LABELMANAGER_WIRELESS_PNP',
-      'LABELMANAGER_PC',
-      'LABELPOINT_350',
-      'MOBILE_LABELER',
-    ]);
+    expect(new Set(Object.keys(DEVICES))).toEqual(
+      new Set([
+        'LM_PNP',
+        'LM_420P',
+        'LM_WIRELESS_PNP',
+        'LM_PC',
+        'LABELPOINT_350',
+        'MOBILE_LABELER',
+        'LM_280',
+        'LM_400',
+      ]),
+    );
+  });
+
+  it('has no duplicate USB printer-mode PIDs after the §3 fixes', () => {
+    const pids = Object.values(DEVICES)
+      .map(d => d.transports.usb?.pid)
+      .filter((p): p is string => p !== undefined);
+    expect(new Set(pids).size).toBe(pids.length);
   });
 });

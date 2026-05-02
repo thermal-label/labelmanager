@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MediaNotSpecifiedError, type Transport } from '@thermal-label/contracts';
-import { DEVICES, MEDIA } from '@thermal-label/labelmanager-core';
+import { DEVICES, TAPE_9MM, TAPE_12MM } from '@thermal-label/labelmanager-core';
 import { DymoPrinter } from '../printer.js';
 
 function makeTransport(statusByte = 0): {
@@ -23,7 +23,7 @@ function makeTransport(statusByte = 0): {
   return { transport, write, read, close };
 }
 
-const device = DEVICES.LABELMANAGER_PNP;
+const device = DEVICES.LM_PNP;
 
 function solidRgba(
   width: number,
@@ -77,7 +77,7 @@ describe('DymoPrinter', () => {
     const { transport, write } = makeTransport();
     const printer = new DymoPrinter(device, transport);
 
-    await printer.print(solidRgba(8, 8), MEDIA.TAPE_12MM);
+    await printer.print(solidRgba(8, 8), TAPE_12MM);
 
     expect(write).toHaveBeenCalled();
     const [[firstArg]] = write.mock.calls as unknown as [[Uint8Array]];
@@ -91,11 +91,11 @@ describe('DymoPrinter', () => {
     // protocol with a different shape.
     const { transport: autoTransport, write: autoWrite } = makeTransport();
     const autoPrinter = new DymoPrinter(device, autoTransport);
-    await autoPrinter.print(solidRgba(80, 20), MEDIA.TAPE_12MM);
+    await autoPrinter.print(solidRgba(80, 20), TAPE_12MM);
 
     const { transport: bypassTransport, write: bypassWrite } = makeTransport();
     const bypassPrinter = new DymoPrinter(device, bypassTransport);
-    await bypassPrinter.print(solidRgba(80, 20), MEDIA.TAPE_12MM, { rotate: 0 });
+    await bypassPrinter.print(solidRgba(80, 20), TAPE_12MM, { rotate: 0 });
 
     const autoBytes = (autoWrite.mock.calls as unknown as [Uint8Array][]).reduce(
       (acc, [c]) => acc + c.length,
@@ -119,10 +119,10 @@ describe('DymoPrinter', () => {
     const { transport } = makeTransport();
     const printer = new DymoPrinter(device, transport);
 
-    const preview = await printer.createPreview(solidRgba(8, 8), { media: MEDIA.TAPE_9MM });
+    const preview = await printer.createPreview(solidRgba(8, 8), { media: TAPE_9MM });
     expect(preview.planes).toHaveLength(1);
     expect(preview.planes[0]!.name).toBe('black');
-    expect(preview.media).toBe(MEDIA.TAPE_9MM);
+    expect(preview.media).toBe(TAPE_9MM);
     expect(preview.assumed).toBe(false);
   });
 
@@ -132,7 +132,7 @@ describe('DymoPrinter', () => {
 
     const preview = await printer.createPreview(solidRgba(8, 8));
     expect(preview.assumed).toBe(true);
-    expect(preview.media).toBe(MEDIA.TAPE_12MM);
+    expect(preview.media).toBe(TAPE_12MM);
   });
 
   it('close() awaits the transport', async () => {

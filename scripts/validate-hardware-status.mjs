@@ -1,31 +1,38 @@
 #!/usr/bin/env node
-// Validates docs/hardware-status.yaml against the schema documented at
+// Validates the per-device JSON5 entries under
+// `packages/core/data/devices/` against the contracts `DeviceRegistry`
+// shape and the editorial conventions documented at
 // https://github.com/thermal-label/.github/blob/main/CONTRIBUTING/hardware-status-schema.md
 //
 // Run via `pnpm validate:hardware-status`. The pre-push hook also runs
-// this when the YAML changes. A clean run prints
+// this when any device JSON5 changes. A clean run prints
 // `OK — N devices, M reports` and exits 0.
 
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parse } from 'yaml';
+import JSON5 from 'json5';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
-const YAML_PATH = resolve(REPO_ROOT, 'docs/hardware-status.yaml');
-const CORE_DIST = resolve(REPO_ROOT, 'packages/core/dist/index.js');
+const DEVICES_DIR = resolve(REPO_ROOT, 'packages/core/data/devices');
+const MEDIA_FILE = resolve(REPO_ROOT, 'packages/core/data/media.json5');
 
-const EXPECTED_DRIVER = 'labelmanager';
-const STATUS_VALUES = new Set(['verified', 'partial', 'broken']);
-const REPORT_RESULT_VALUES = new Set(['verified', 'partial', 'broken', 'untested']);
-const TRANSPORT_VALUES = new Set(['usb', 'tcp', 'webusb', 'web-bluetooth', 'web-serial', 'serial']);
+const DRIVER = 'labelmanager';
+const STATUS_VALUES = new Set(['verified', 'partial', 'broken', 'untested']);
+const TRANSPORT_KEYS = new Set(['usb', 'tcp', 'serial', 'bluetooth-spp', 'bluetooth-gatt']);
+const KNOWN_PROTOCOLS = new Set(['d1-tape']);
+// LabelManager substrate tags. `d1` is the only tier shipping today;
+// `d1-wide` is reserved for the future 24mm rasterizer cap-lift (see
+// plans/backlog/wide-tier-media-compatibility.md).
+const KNOWN_SUBSTRATES = new Set(['d1', 'd1-wide']);
 const OS_VALUES = new Set(['Linux', 'macOS', 'Windows']);
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-[\w.-]+)?(?:\+[\w.-]+)?$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const HEX = /^0x[0-9a-fA-F]+$/;
 
 const errors = [];
-function fail(msg) { errors.push(msg); }
+const fail = msg => errors.push(msg);
 
 function parseDate(s) {
   if (typeof s !== 'string' || !ISO_DATE.test(s)) return null;
@@ -33,146 +40,207 @@ function parseDate(s) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-const { DEVICES } = await import(CORE_DIST);
-// One PID may map to multiple device entries (e.g. labelmanager PnP/PC
-// collide on 0x1002). The YAML's `name` only needs to match one of them.
-const devicesByPid = new Map();
-for (const dev of Object.values(DEVICES)) {
-  const list = devicesByPid.get(dev.pid);
-  if (list) list.push(dev); else devicesByPid.set(dev.pid, [dev]);
-}
+const files = readdirSync(DEVICES_DIR)
+  .filter(f => f.endsWith('.json5'))
+  .sort();
 
-let raw;
-try {
-  raw = readFileSync(YAML_PATH, 'utf8');
-} catch (err) {
-  console.error(`[validate-hardware-status] cannot read ${YAML_PATH}: ${err.message}`);
-  process.exit(1);
-}
-
-let doc;
-try {
-  doc = parse(raw);
-} catch (err) {
-  console.error(`[validate-hardware-status] YAML parse error: ${err.message}`);
-  process.exit(1);
-}
-
-if (doc?.schemaVersion !== 1) {
-  fail(`schemaVersion must be 1 (got ${JSON.stringify(doc?.schemaVersion)})`);
-}
-if (doc?.driver !== EXPECTED_DRIVER) {
-  fail(`driver must be "${EXPECTED_DRIVER}" (got ${JSON.stringify(doc?.driver)})`);
-}
-if (!Array.isArray(doc?.devices)) {
-  fail('devices must be a list');
-  console.error(errors.map(e => '  - ' + e).join('\n'));
-  process.exit(1);
-}
-
-const seenPids = new Set();
-const seenIssues = new Map(); // issue -> first device name where seen
+const seenKeys = new Map();
+const seenUsbPids = new Map();
+const seenIssues = new Map();
 let totalReports = 0;
 
-for (const [i, entry] of doc.devices.entries()) {
-  const where = `devices[${i}] (pid=${entry?.pid != null ? '0x' + Number(entry.pid).toString(16) : '?'})`;
+for (const filename of files) {
+  const path = join(DEVICES_DIR, filename);
+  const where = filename;
 
-  if (typeof entry?.pid !== 'number') {
-    fail(`${where}: pid must be a number`);
+  let entry;
+  try {
+    entry = JSON5.parse(readFileSync(path, 'utf8'));
+  } catch (err) {
+    fail(`${where}: parse error — ${err.message}`);
     continue;
   }
-  if (seenPids.has(entry.pid)) {
-    fail(`${where}: duplicate pid`);
-    continue;
-  }
-  seenPids.add(entry.pid);
 
-  const candidates = devicesByPid.get(entry.pid);
-  if (!candidates) {
-    fail(`${where}: pid not found in DEVICES`);
-    continue;
-  }
-  const dev = candidates.find(c => c.name === entry.name) ?? candidates[0];
-  if (!candidates.some(c => c.name === entry.name)) {
-    fail(`${where}: name "${entry.name}" does not match any DEVICES entry for pid 0x${entry.pid.toString(16)} (candidates: ${candidates.map(c => c.name).join(', ')})`);
+  if (typeof entry?.key !== 'string') {
+    fail(`${where}: \`key\` must be a string`);
+  } else if (seenKeys.has(entry.key)) {
+    fail(`${where}: duplicate \`key\` "${entry.key}" already used by ${seenKeys.get(entry.key)}`);
+  } else {
+    seenKeys.set(entry.key, filename);
   }
 
-  if (!STATUS_VALUES.has(entry.status)) {
-    fail(`${where}: status must be one of ${[...STATUS_VALUES].join('|')} (got ${JSON.stringify(entry.status)})`);
+  if (typeof entry?.name !== 'string') fail(`${where}: \`name\` must be a string`);
+  if (entry?.family !== DRIVER) {
+    fail(`${where}: \`family\` must be "${DRIVER}" (got ${JSON.stringify(entry?.family)})`);
   }
 
-  if (entry.transports != null) {
-    if (typeof entry.transports !== 'object' || Array.isArray(entry.transports)) {
-      fail(`${where}: transports must be a mapping`);
-    } else {
-      const allowed = new Set(dev.transports);
-      for (const [k, v] of Object.entries(entry.transports)) {
-        if (!TRANSPORT_VALUES.has(k)) {
-          fail(`${where}: transport "${k}" is not a known transport`);
-        } else if (!allowed.has(k)) {
-          fail(`${where}: transport "${k}" not declared in DEVICES[].transports (allowed: ${[...allowed].join(', ')})`);
-        }
-        if (!STATUS_VALUES.has(v)) {
-          fail(`${where}: transport "${k}" status must be one of ${[...STATUS_VALUES].join('|')} (got ${JSON.stringify(v)})`);
+  const transports = entry?.transports;
+  if (!transports || typeof transports !== 'object' || Array.isArray(transports)) {
+    fail(`${where}: \`transports\` must be a keyed object`);
+  } else {
+    for (const k of Object.keys(transports)) {
+      if (!TRANSPORT_KEYS.has(k)) fail(`${where}: unknown transport key "${k}"`);
+    }
+    if (transports.usb) {
+      const { vid, pid } = transports.usb;
+      if (typeof vid !== 'string' || !HEX.test(vid)) {
+        fail(`${where}: transports.usb.vid must be a hex string (got ${JSON.stringify(vid)})`);
+      }
+      if (typeof pid !== 'string' || !HEX.test(pid)) {
+        fail(`${where}: transports.usb.pid must be a hex string (got ${JSON.stringify(pid)})`);
+      }
+      const collision = seenUsbPids.get(pid);
+      if (collision) {
+        fail(`${where}: USB pid ${pid} already used by ${collision}`);
+      } else if (typeof pid === 'string') {
+        seenUsbPids.set(pid, filename);
+      }
+    }
+  }
+
+  if (!Array.isArray(entry?.engines) || entry.engines.length === 0) {
+    fail(`${where}: \`engines\` must be a non-empty array`);
+  } else {
+    for (const [i, eng] of entry.engines.entries()) {
+      const ewhere = `${where} engines[${i}]`;
+      if (typeof eng?.role !== 'string') fail(`${ewhere}: role must be a string`);
+      if (typeof eng?.protocol !== 'string' || !KNOWN_PROTOCOLS.has(eng.protocol)) {
+        fail(
+          `${ewhere}: protocol must be one of ${[...KNOWN_PROTOCOLS].join('|')} (got ${JSON.stringify(eng?.protocol)})`,
+        );
+      }
+      if (typeof eng?.dpi !== 'number') fail(`${ewhere}: dpi must be a number`);
+      if (typeof eng?.headDots !== 'number') fail(`${ewhere}: headDots must be a number`);
+
+      if (Array.isArray(eng?.mediaCompatibility)) {
+        if (eng.mediaCompatibility.includes('d1-wide') && !eng.mediaCompatibility.includes('d1')) {
+          fail(
+            `${ewhere}: mediaCompatibility includes 'd1-wide' but not 'd1' — wide-capable engines must also accept the base substrate`,
+          );
         }
       }
     }
   }
 
-  const lastVerified = parseDate(entry.lastVerified);
-  if (!lastVerified) {
-    fail(`${where}: lastVerified must be YYYY-MM-DD (got ${JSON.stringify(entry.lastVerified)})`);
+  const support = entry?.support;
+  if (!support || typeof support !== 'object') {
+    fail(`${where}: \`support\` must be an object`);
+  } else {
+    if (!STATUS_VALUES.has(support.status)) {
+      fail(
+        `${where}: support.status must be one of ${[...STATUS_VALUES].join('|')} (got ${JSON.stringify(support.status)})`,
+      );
+    }
+
+    if (support.transports != null) {
+      if (typeof support.transports !== 'object' || Array.isArray(support.transports)) {
+        fail(`${where}: support.transports must be a mapping`);
+      } else {
+        const declared = new Set(Object.keys(transports ?? {}));
+        for (const [k, v] of Object.entries(support.transports)) {
+          if (!declared.has(k)) {
+            fail(`${where}: support.transports.${k} not declared in transports`);
+          }
+          if (!STATUS_VALUES.has(v)) {
+            fail(
+              `${where}: support.transports.${k} must be a status value (got ${JSON.stringify(v)})`,
+            );
+          }
+        }
+      }
+    }
+
+    if (support.lastVerified != null && !parseDate(support.lastVerified)) {
+      fail(
+        `${where}: support.lastVerified must be YYYY-MM-DD (got ${JSON.stringify(support.lastVerified)})`,
+      );
+    }
+    if (
+      support.packageVersion != null &&
+      (typeof support.packageVersion !== 'string' || !SEMVER.test(support.packageVersion))
+    ) {
+      fail(
+        `${where}: support.packageVersion must be semver (got ${JSON.stringify(support.packageVersion)})`,
+      );
+    }
+
+    if (support.reports != null) {
+      if (!Array.isArray(support.reports)) {
+        fail(`${where}: support.reports must be an array`);
+      } else {
+        let latestReportDate = null;
+        for (const [j, rep] of support.reports.entries()) {
+          const rwhere = `${where} support.reports[${j}]`;
+          totalReports++;
+
+          if (typeof rep?.issue !== 'number') {
+            fail(`${rwhere}: issue must be a number`);
+          } else if (seenIssues.has(rep.issue)) {
+            fail(`${rwhere}: issue #${rep.issue} already used by ${seenIssues.get(rep.issue)}`);
+          } else {
+            seenIssues.set(rep.issue, `${filename}:${entry.key}`);
+          }
+
+          if (typeof rep?.reporter !== 'string' || !rep.reporter.startsWith('@')) {
+            fail(`${rwhere}: reporter must be a "@handle" string`);
+          }
+
+          const repDate = parseDate(rep?.date);
+          if (!repDate) {
+            fail(`${rwhere}: date must be YYYY-MM-DD`);
+          } else if (!latestReportDate || repDate > latestReportDate) {
+            latestReportDate = repDate;
+          }
+
+          if (!STATUS_VALUES.has(rep?.result)) {
+            fail(`${rwhere}: result must be one of ${[...STATUS_VALUES].join('|')}`);
+          }
+
+          if (rep?.os != null && !OS_VALUES.has(rep.os)) {
+            fail(
+              `${rwhere}: os must be one of ${[...OS_VALUES].join('|')} (got ${JSON.stringify(rep.os)})`,
+            );
+          }
+
+          if (rep?.selfVerified != null && typeof rep.selfVerified !== 'boolean') {
+            fail(`${rwhere}: selfVerified must be a boolean`);
+          }
+        }
+
+        const lastVerified = parseDate(support.lastVerified);
+        if (lastVerified && latestReportDate && latestReportDate > lastVerified) {
+          fail(
+            `${where}: support.lastVerified ${support.lastVerified} precedes latest report date ${latestReportDate.toISOString().slice(0, 10)}`,
+          );
+        }
+      }
+    }
   }
+}
 
-  if (typeof entry.packageVersion !== 'string' || !SEMVER.test(entry.packageVersion)) {
-    fail(`${where}: packageVersion must be semver (got ${JSON.stringify(entry.packageVersion)})`);
-  }
-
-  if (!Array.isArray(entry.reports)) {
-    fail(`${where}: reports must be a list (use [] for none)`);
-    continue;
-  }
-
-  let latestReportDate = null;
-  for (const [j, rep] of entry.reports.entries()) {
-    const rwhere = `${where} reports[${j}]`;
-    totalReports++;
-
-    if (typeof rep?.issue !== 'number') {
-      fail(`${rwhere}: issue must be a number`);
-    } else if (seenIssues.has(rep.issue)) {
-      fail(`${rwhere}: issue #${rep.issue} already used by ${seenIssues.get(rep.issue)}`);
-    } else {
-      seenIssues.set(rep.issue, dev.name);
-    }
-
-    if (typeof rep?.reporter !== 'string' || !rep.reporter.startsWith('@')) {
-      fail(`${rwhere}: reporter must be a "@handle" string`);
-    }
-
-    const repDate = parseDate(rep?.date);
-    if (!repDate) {
-      fail(`${rwhere}: date must be YYYY-MM-DD`);
-    } else if (!latestReportDate || repDate > latestReportDate) {
-      latestReportDate = repDate;
-    }
-
-    if (!REPORT_RESULT_VALUES.has(rep?.result)) {
-      fail(`${rwhere}: result must be one of ${[...REPORT_RESULT_VALUES].join('|')}`);
-    }
-
-    if (rep?.os != null && !OS_VALUES.has(rep.os)) {
-      fail(`${rwhere}: os must be one of ${[...OS_VALUES].join('|')} (got ${JSON.stringify(rep.os)})`);
-    }
-
-    if (rep?.selfVerified != null && typeof rep.selfVerified !== 'boolean') {
-      fail(`${rwhere}: selfVerified must be a boolean`);
+let mediaCount = 0;
+try {
+  const mediaEntries = JSON5.parse(readFileSync(MEDIA_FILE, 'utf8'));
+  if (!Array.isArray(mediaEntries)) {
+    fail(`media.json5: top-level must be an array`);
+  } else {
+    mediaCount = mediaEntries.length;
+    for (const [i, m] of mediaEntries.entries()) {
+      const mwhere = `media.json5 [${i}${m?.id ? ` ${m.id}` : ''}]`;
+      if (!Array.isArray(m?.targetModels) || m.targetModels.length === 0) {
+        fail(`${mwhere}: targetModels must be a non-empty array`);
+        continue;
+      }
+      const hasSubstrate = m.targetModels.some(t => KNOWN_SUBSTRATES.has(t));
+      if (!hasSubstrate) {
+        fail(
+          `${mwhere}: targetModels must include one of ${[...KNOWN_SUBSTRATES].join('|')} (got ${JSON.stringify(m.targetModels)})`,
+        );
+      }
     }
   }
-
-  if (lastVerified && latestReportDate && latestReportDate > lastVerified) {
-    fail(`${where}: lastVerified ${entry.lastVerified} precedes latest report date ${latestReportDate.toISOString().slice(0, 10)}`);
-  }
+} catch (err) {
+  fail(`media.json5: parse error — ${err.message}`);
 }
 
 if (errors.length > 0) {
@@ -181,4 +249,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`OK — ${doc.devices.length} devices, ${totalReports} reports`);
+console.log(`OK — ${seenKeys.size} devices, ${mediaCount} media entries, ${totalReports} reports`);

@@ -1,0 +1,21 @@
+{
+  key: 'LM_PC',
+  name: 'LabelManager PC',
+  family: 'labelmanager',
+  transports: {
+    usb: { vid: '0x0922', pid: '0x0011' },
+  },
+  engines: [
+    {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+      mediaCompatibility: ['d1'],
+    },
+  ],
+  hardwareQuirks: 'No mass-storage decoy — presents a single PID directly. PID corrected from `0x1002` (which was a copy-paste from the PnP entry in the previous registry) to `0x0011` based on community sources (labelle constants + an `lsusb` capture in dymoprint#93).',
+  support: {
+    status: 'untested',
+  },
+}

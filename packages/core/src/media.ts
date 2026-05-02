@@ -1,7 +1,12 @@
-import type { LabelManagerMedia } from './types.js';
+import { MEDIA_LIST } from './media.generated.js';
+import type { LabelManagerMedia, TapeWidth } from './types.js';
 
 /**
  * Registry of supported LabelManager tape widths.
+ *
+ * Source of truth lives in `packages/core/data/media.json5`;
+ * `scripts/compile-data.mjs` aggregates it into the generated TS
+ * module imported here.
  *
  * LabelManager cannot detect tape width via status query — the user must
  * select from this registry and pass the chosen media to
@@ -18,52 +23,33 @@ import type { LabelManagerMedia } from './types.js';
  * `printMargins` reflects the ~3 mm tape-start/end feed each label gets
  * — design-tool hint only; the protocol path is unaffected.
  */
-export const MEDIA = {
-  TAPE_6MM: {
-    id: 'tape-6',
-    name: '6mm tape',
-    widthMm: 6,
-    type: 'tape',
-    defaultOrientation: 'horizontal',
-    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
-    tapeWidthMm: 6,
-    printableDots: 32,
-    bytesPerLine: 4,
-  },
-  TAPE_9MM: {
-    id: 'tape-9',
-    name: '9mm tape',
-    widthMm: 9,
-    type: 'tape',
-    defaultOrientation: 'horizontal',
-    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
-    tapeWidthMm: 9,
-    printableDots: 48,
-    bytesPerLine: 6,
-  },
-  TAPE_12MM: {
-    id: 'tape-12',
-    name: '12mm tape',
-    widthMm: 12,
-    type: 'tape',
-    defaultOrientation: 'horizontal',
-    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
-    tapeWidthMm: 12,
-    printableDots: 64,
-    bytesPerLine: 8,
-  },
-  TAPE_19MM: {
-    id: 'tape-19',
-    name: '19mm tape',
-    widthMm: 19,
-    type: 'tape',
-    defaultOrientation: 'horizontal',
-    printMargins: { leftMm: 3, rightMm: 3, topMm: 0, bottomMm: 0 },
-    tapeWidthMm: 19,
-    printableDots: 64,
-    bytesPerLine: 8,
-  },
-} as const satisfies Record<string, LabelManagerMedia>;
+type MediaId = (typeof MEDIA_LIST)[number]['id'];
+
+const MEDIA_BY_ID = Object.fromEntries(MEDIA_LIST.map(m => [m.id, m])) as unknown as Record<
+  MediaId,
+  LabelManagerMedia
+>;
+
+/**
+ * Indexed registry of every D1 cartridge SKU the driver knows about,
+ * keyed by entry id (e.g. `MEDIA['d1-standard-bw-12']`). Pickers should
+ * iterate `MEDIA_LIST` directly; the keyed lookup is for code paths
+ * that already have an id in hand.
+ */
+export const MEDIA = MEDIA_BY_ID;
+
+/**
+ * Black-on-White cartridge per supported tape width — the canonical
+ * default for each width. Pickers pre-select these; users who want a
+ * different colour or material reach into `MEDIA[id]` or iterate
+ * `MEDIA_LIST`.
+ */
+export const TAPE_6MM: LabelManagerMedia = MEDIA_BY_ID['d1-standard-bw-6'];
+export const TAPE_9MM: LabelManagerMedia = MEDIA_BY_ID['d1-standard-bw-9'];
+export const TAPE_12MM: LabelManagerMedia = MEDIA_BY_ID['d1-standard-bw-12'];
+export const TAPE_19MM: LabelManagerMedia = MEDIA_BY_ID['d1-standard-bw-19'];
+
+export { MEDIA_LIST };
 
 /**
  * Default media used when a caller invokes `createPreview()` without
@@ -73,11 +59,11 @@ export const MEDIA = {
  * Chosen as the middle supported width so previews at least approximate
  * the most common tape size.
  */
-export const DEFAULT_MEDIA: LabelManagerMedia = MEDIA.TAPE_12MM;
+export const DEFAULT_MEDIA: LabelManagerMedia = TAPE_12MM;
 
 /**
  * Find a media entry by physical tape width in mm.
  */
 export function findMediaByTapeWidth(tapeWidthMm: number): LabelManagerMedia | undefined {
-  return Object.values(MEDIA).find(m => m.tapeWidthMm === tapeWidthMm);
+  return MEDIA_LIST.find(m => m.tapeWidthMm === (tapeWidthMm as TapeWidth));
 }

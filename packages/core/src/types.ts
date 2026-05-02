@@ -1,20 +1,28 @@
-import type { DeviceDescriptor, MediaDescriptor, PrintOptions } from '@thermal-label/contracts';
+import type { DeviceEntry, MediaDescriptor, PrintOptions } from '@thermal-label/contracts';
 
 export type TapeWidth = 6 | 9 | 12 | 19;
 
 /**
- * DYMO LabelManager device descriptor.
+ * DYMO LabelManager device entry.
  *
- * Extends the contracts base `DeviceDescriptor` with LabelManager-specific
- * fields (supported tape widths and an `experimental` flag).
+ * Alias for the contracts `DeviceEntry` shape, narrowed to
+ * `family: 'labelmanager'`. The driver-side registry adds no
+ * LabelManager-specific top-level fields today — every previously
+ * driver-only field folds into the contracts shape: tape compatibility
+ * lives on `engines[].mediaCompatibility` + `MediaDescriptor.targetModels`,
+ * and the old `experimental?` flag collapses into `support.status`.
  */
-export interface LabelManagerDevice extends DeviceDescriptor {
-  family: 'labelmanager';
-  vid: number;
-  pid: number;
-  supportedTapes: TapeWidth[];
-  experimental?: boolean;
-}
+export type LabelManagerDevice = DeviceEntry & { family: 'labelmanager' };
+
+/**
+ * D1 cartridge substrate family. Picker / preview UX hint — the
+ * rasterizer does not branch on this.
+ */
+export type LabelManagerMaterial =
+  | 'standard'
+  | 'permanent-polyester'
+  | 'flexible-nylon'
+  | 'durable';
 
 /**
  * DYMO LabelManager media descriptor.
@@ -22,13 +30,21 @@ export interface LabelManagerDevice extends DeviceDescriptor {
  * Extends the contracts base `MediaDescriptor`. Tape is always
  * continuous — `heightMm` is omitted. `type` is the literal string
  * `'tape'` for structural matching. All LabelManager media is
- * single-ink, so the base `palette` field is left undefined.
+ * single-ink, so the base `palette` field is left undefined; the
+ * cartridge's printed colour and substrate colour live on the
+ * driver-side `text` and `background` fields below.
  */
 export interface LabelManagerMedia extends MediaDescriptor {
   type: 'tape';
   tapeWidthMm: TapeWidth;
   printableDots: number;
   bytesPerLine: number;
+  /** D1 substrate family. */
+  material?: LabelManagerMaterial;
+  /** Printed ink colour, named (the only ink the cartridge carries). */
+  text?: string;
+  /** Substrate colour, named. */
+  background?: string;
 }
 
 /**

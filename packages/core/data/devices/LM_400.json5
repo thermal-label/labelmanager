@@ -1,0 +1,21 @@
+{
+  key: 'LM_400',
+  name: 'LabelManager 400',
+  family: 'labelmanager',
+  transports: {
+    usb: { vid: '0x0922', pid: '0x0013' },
+  },
+  engines: [
+    {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+      mediaCompatibility: ['d1'],
+    },
+  ],
+  hardwareQuirks: 'No mass-storage decoy — older device, presents a single PID directly. PID single-sourced from labelle — needs hardware verification.',
+  support: {
+    status: 'untested',
+  },
+}

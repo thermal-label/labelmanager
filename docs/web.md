@@ -31,12 +31,12 @@ pnpm add @thermal-label/labelmanager-web
 
 ```ts
 import { requestPrinter } from '@thermal-label/labelmanager-web';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 // Must run from a user gesture.
 const printer = await requestPrinter();
 try {
-  await printer.print(image, MEDIA.TAPE_12MM);
+  await printer.print(image, TAPE_12MM);
 } finally {
   await printer.close();
 }
@@ -75,7 +75,7 @@ because LabelManager has no media-detection protocol.
 ## Previewing
 
 ```ts
-const preview = await printer.createPreview(image, { media: MEDIA.TAPE_9MM });
+const preview = await printer.createPreview(image, { media: TAPE_9MM });
 // preview.planes[0].bitmap is the 1bpp LabelBitmap the printer would produce
 // preview.planes[0].displayColor is '#000000' — useful when rendering to a canvas
 ```
@@ -90,7 +90,7 @@ For offline previews without a live connection, import
 ```tsx
 import { useState } from 'react';
 import { requestPrinter, type WebDymoPrinter } from '@thermal-label/labelmanager-web';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 export function PrintButton({
   image,
@@ -105,7 +105,7 @@ export function PrintButton({
 
   async function print() {
     if (!printer) return;
-    await printer.print(image, MEDIA.TAPE_12MM);
+    await printer.print(image, TAPE_12MM);
   }
 
   async function disconnect() {

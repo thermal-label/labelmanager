@@ -21,7 +21,6 @@ import {
   type Transport,
 } from '@thermal-label/labelmanager-core';
 import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-import { buildUsbFilters } from '@thermal-label/transport';
 import { WebUsbTransport } from '@thermal-label/transport/web';
 
 const CHUNK_SIZE = 64;
@@ -115,9 +114,13 @@ export class WebDymoPrinter implements PrinterAdapter {
  * WebUSB filter set matching every supported LabelManager VID/PID.
  *
  * Passed to `navigator.usb.requestDevice()` by default when the caller
- * does not supply their own filters.
+ * does not supply their own filters. Devices without a USB transport
+ * are skipped.
  */
-export const DEFAULT_FILTERS = buildUsbFilters(Object.values(DEVICES));
+export const DEFAULT_FILTERS: USBDeviceFilter[] = Object.values(DEVICES)
+  .map(d => d.transports.usb)
+  .filter((t): t is { vid: string; pid: string } => t !== undefined)
+  .map(t => ({ vendorId: parseInt(t.vid, 16), productId: parseInt(t.pid, 16) }));
 
 /**
  * Show the browser's USB picker and wrap the selected device.

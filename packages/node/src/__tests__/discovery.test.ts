@@ -80,12 +80,12 @@ describe('LabelManagerDiscovery', () => {
     });
 
     const printer = await discovery.openPrinter({ serialNumber: 'A2' });
-    expect(printer.device.pid).toBe(0x1002);
+    expect(printer.device.transports.usb?.pid).toBe('0x1002');
     expect(transportOpen).toHaveBeenCalledWith(0x0922, 0x1002);
   });
 
   it('openPrinter matches by VID/PID filters', async () => {
-    __setDevices([makeDevice(0x0922, 0x1002, 'A1'), makeDevice(0x0922, 0x1003, 'A2')]);
+    __setDevices([makeDevice(0x0922, 0x1002, 'A1'), makeDevice(0x0922, 0x1004, 'A2')]);
     transportOpen.mockResolvedValue({
       get connected() {
         return true;
@@ -95,9 +95,9 @@ describe('LabelManagerDiscovery', () => {
       close: vi.fn(),
     });
 
-    const printer = await discovery.openPrinter({ vid: 0x0922, pid: 0x1003 });
-    expect(printer.device.pid).toBe(0x1003);
-    expect(transportOpen).toHaveBeenCalledWith(0x0922, 0x1003);
+    const printer = await discovery.openPrinter({ vid: 0x0922, pid: 0x1004 });
+    expect(printer.device.transports.usb?.pid).toBe('0x1004');
+    expect(transportOpen).toHaveBeenCalledWith(0x0922, 0x1004);
   });
 
   it('throws when no compatible printer matches', async () => {

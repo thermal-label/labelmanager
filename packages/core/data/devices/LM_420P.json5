@@ -1,0 +1,21 @@
+{
+  key: 'LM_420P',
+  name: 'LabelManager 420P',
+  family: 'labelmanager',
+  transports: {
+    usb: { vid: '0x0922', pid: '0x1004' },
+  },
+  engines: [
+    {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+      mediaCompatibility: ['d1'],
+    },
+  ],
+  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1003`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1004`).',
+  support: {
+    status: 'untested',
+  },
+}

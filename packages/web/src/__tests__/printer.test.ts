@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 import { fromUSBDevice } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
 
@@ -24,7 +24,7 @@ describe('WebDymoPrinter', () => {
     const device = createMockUSBDevice();
     const printer = await fromUSBDevice(device);
 
-    await printer.print(solidRgba(8, 8), MEDIA.TAPE_12MM);
+    await printer.print(solidRgba(8, 8), TAPE_12MM);
 
     expect(device.__transfers.length).toBeGreaterThan(0);
     expect(device.__transfers[0]!.endpointNumber).toBe(5);
@@ -34,7 +34,7 @@ describe('WebDymoPrinter', () => {
     const device = createMockUSBDevice();
     const printer = await fromUSBDevice(device);
 
-    await printer.print(solidRgba(8, 8), MEDIA.TAPE_12MM);
+    await printer.print(solidRgba(8, 8), TAPE_12MM);
 
     const firstChunk = device.__transfers[0]!.data;
     expect(firstChunk[0]).toBe(0x1b);

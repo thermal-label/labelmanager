@@ -7,12 +7,17 @@ import { DymoPrinter } from './printer.js';
 /**
  * WebUSB filters for any supported LabelManager. Useful for browser
  * code that wants to request a device through the LabelManager family's
- * USB VID/PIDs without depending on the browser package.
+ * USB VID/PIDs without depending on the browser package. Devices
+ * without a USB transport are skipped.
+ *
+ * Typed as `{ vendorId: number; productId: number }[]` rather than
+ * the WebUSB-DOM `USBDeviceFilter[]` so this Node-side module does not
+ * pull in the WebUSB lib types.
  */
-export const DEFAULT_FILTERS = Object.values(DEVICES).map(device => ({
-  vendorId: device.vid,
-  productId: device.pid,
-}));
+export const DEFAULT_FILTERS: { vendorId: number; productId: number }[] = Object.values(DEVICES)
+  .map(device => device.transports.usb)
+  .filter((t): t is { vid: string; pid: string } => t !== undefined)
+  .map(t => ({ vendorId: parseInt(t.vid, 16), productId: parseInt(t.pid, 16) }));
 
 async function readSerialNumber(device: usb.Device): Promise<string | undefined> {
   const idx = device.deviceDescriptor.iSerialNumber;
@@ -77,8 +82,12 @@ export class LabelManagerDiscovery implements PrinterDiscovery {
   async openPrinter(options: OpenOptions = {}): Promise<DymoPrinter> {
     const found = await enumerateDymoDevices();
     const candidates = found.filter(entry => {
-      if (options.vid !== undefined && entry.descriptor.vid !== options.vid) return false;
-      if (options.pid !== undefined && entry.descriptor.pid !== options.pid) return false;
+      const usb = entry.descriptor.transports.usb;
+      if (!usb) return false;
+      const vid = parseInt(usb.vid, 16);
+      const pid = parseInt(usb.pid, 16);
+      if (options.vid !== undefined && vid !== options.vid) return false;
+      if (options.pid !== undefined && pid !== options.pid) return false;
       if (options.serialNumber !== undefined && entry.serialNumber !== options.serialNumber)
         return false;
       return true;
@@ -87,7 +96,12 @@ export class LabelManagerDiscovery implements PrinterDiscovery {
     const match = candidates[0];
     if (!match) throw new Error('No compatible DYMO LabelManager printer found.');
 
-    const transport = await UsbTransport.open(match.descriptor.vid, match.descriptor.pid);
+    const matchUsb = match.descriptor.transports.usb;
+    if (!matchUsb) throw new Error('Matched device has no USB transport.');
+    const transport = await UsbTransport.open(
+      parseInt(matchUsb.vid, 16),
+      parseInt(matchUsb.pid, 16),
+    );
     return new DymoPrinter(match.descriptor, transport);
   }
 }

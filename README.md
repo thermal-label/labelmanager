@@ -24,12 +24,12 @@ auto-detects every installed driver, no per-driver CLI needed.
 
 ```ts
 import { discovery } from '@thermal-label/labelmanager-node';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 const printer = await discovery.openPrinter();
 try {
   // image is RawImageData — { width, height, data } where data is RGBA bytes.
-  await printer.print(image, MEDIA.TAPE_12MM);
+  await printer.print(image, TAPE_12MM);
 } finally {
   await printer.close();
 }
@@ -39,11 +39,11 @@ try {
 
 ```ts
 import { requestPrinter } from '@thermal-label/labelmanager-web';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 const printer = await requestPrinter(); // call from a user gesture
 try {
-  await printer.print(image, MEDIA.TAPE_12MM);
+  await printer.print(image, TAPE_12MM);
 } finally {
   await printer.close();
 }

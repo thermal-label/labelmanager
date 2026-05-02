@@ -13,13 +13,13 @@ pnpm add @thermal-label/labelmanager-node
 
 ```ts
 import { discovery } from '@thermal-label/labelmanager-node';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 const printer = await discovery.openPrinter();
 try {
   // image is `RawImageData` from `@mbtech-nl/bitmap` — `{ width, height, data }`
   // where `data` is a `Uint8Array` of RGBA pixels.
-  await printer.print(image, MEDIA.TAPE_12MM);
+  await printer.print(image, TAPE_12MM);
 } finally {
   await printer.close();
 }
@@ -37,12 +37,12 @@ pnpm add @thermal-label/labelmanager-web
 
 ```ts
 import { requestPrinter } from '@thermal-label/labelmanager-web';
-import { MEDIA } from '@thermal-label/labelmanager-core';
+import { TAPE_12MM } from '@thermal-label/labelmanager-core';
 
 // Must be called from a user gesture (button click, etc.)
 const printer = await requestPrinter();
 try {
-  await printer.print(image, MEDIA.TAPE_12MM);
+  await printer.print(image, TAPE_12MM);
 } finally {
   await printer.close();
 }

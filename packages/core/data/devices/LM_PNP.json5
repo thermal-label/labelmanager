@@ -1,0 +1,36 @@
+{
+  key: 'LM_PNP',
+  name: 'LabelManager PnP',
+  family: 'labelmanager',
+  transports: {
+    usb: { vid: '0x0922', pid: '0x1002' },
+  },
+  engines: [
+    {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+      mediaCompatibility: ['d1'],
+    },
+  ],
+  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1001`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1002`). The printer-mode PID is the one stored here; the decoy is recognised by the discovery layer separately.',
+  support: {
+    status: 'verified',
+    transports: { usb: 'verified' },
+    lastVerified: '2026-04-27',
+    packageVersion: '0.2.0',
+    quirks: 'Reference test device for the LabelManager family. Text and image printing confirmed on 6/9/12 mm tape; auto-feed cut works.',
+    reports: [
+      {
+        issue: 0,
+        reporter: '@mannes',
+        date: '2026-04-27',
+        result: 'verified',
+        os: 'Linux',
+        selfVerified: true,
+        notes: 'Bench verification by the maintainer at the time of seeding this entry. Issue #0 is a placeholder — replace with the real issue number when a public verification report is filed.',
+      },
+    ],
+  },
+}

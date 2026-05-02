@@ -72,12 +72,12 @@ If your model supports multiple tape widths (e.g. 6 / 9 / 12 / 19 mm),
 swap each cassette and repeat steps 2–3. Capture the printed labels
 side-by-side so the report shows which widths print correctly.
 
-| Model | Widths to test |
-|---|---|
-| LabelManager PnP / PC / Wireless PnP | 6, 9, 12 mm |
-| LabelManager 420P | 6, 9, 12, 19 mm |
-| LabelPoint 350 | 6, 9, 12 mm |
-| MobileLabeler | 6, 9, 12 mm |
+| Model                                | Widths to test  |
+| ------------------------------------ | --------------- |
+| LabelManager PnP / PC / Wireless PnP | 6, 9, 12 mm     |
+| LabelManager 420P                    | 6, 9, 12, 19 mm |
+| LabelPoint 350                       | 6, 9, 12 mm     |
+| MobileLabeler                        | 6, 9, 12 mm     |
 
 If you only have one tape width on hand, that's fine — just say so in
 the notes.
