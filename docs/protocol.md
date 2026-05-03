@@ -18,6 +18,19 @@ the cut command and the status reply shape. See
 [LabelWriter Duo tape protocol](https://thermal-label.github.io/labelwriter/protocol/duo-tape).
 :::
 
+## Models and engines
+
+LabelManager / LabelPoint chassis sharing the D1 cassette and the same
+HID-printer-class wire protocol. All models share VID `0x0922` and a
+single 64-pin print head; printable region narrows to 32 / 48 / 64 dots
+by tape width. Per-model PIDs, mode-switch siblings, and verification
+status live on the [Hardware](./hardware) page.
+
+| Tape widths      | Models                                                     |
+| ---------------- | ---------------------------------------------------------- |
+| 6 / 9 / 12 mm    | LabelManager PnP, LabelManager PC, LabelManager Wireless PnP, LabelPoint 350, MobileLabeler |
+| 6 / 9 / 12 / 19 mm | LabelManager 420P                                        |
+
 ## USB topology
 
 All supported devices share Vendor ID **`0x0922`** (DYMO-CoStar Corp.).
@@ -70,7 +83,7 @@ The driver uses the LabelWriter-style `ESC @` only on LabelWriter
 devices, never on LabelManager.
 :::
 
-## Status request and response
+## Status
 
 Send the single-byte command `1B 41` (`ESC A`) to the OUT endpoint.
 The printer replies with **one byte** on the IN endpoint:
@@ -173,7 +186,7 @@ Terminates the job. The printer:
 1. Cuts the tape (D1 cassettes have a built-in cutter; LabelManager
    models trigger it on `ESC A`).
 2. Replies with a 1-byte status on the IN endpoint (see
-   [Status request and response](#status-request-and-response)).
+   [Status](#status)).
 
 The driver does not always read this mid-stream reply; it is consumed
 by the next `getStatus()` call.
@@ -280,41 +293,19 @@ is not possible from the browser — devices stuck in mass-storage mode
 are filtered out at discovery and surface a "set up via the desktop
 installer first" message.
 
-## Porting checklist
-
-If you're implementing the protocol in another language or runtime:
-
-- [ ] Use VID `0x0922` and the printer-class PIDs from
-      [Hardware](./hardware); claim Interface 0 via `libusb` or WebUSB.
-- [ ] On Linux, set up `usb_modeswitch` for models that present as
-      mass storage first; do **not** send the mode-switch message
-      yourself unless you've enumerated the mass-storage interface.
-- [ ] Send writes to EP `0x05` OUT in **64-byte chunks** with a small
-      delay between chunks (5 ms is what this driver uses).
-- [ ] Per copy: `ESC C 0` → `ESC D N` → repeated `SYN <row>` columns
-      → `ESC A` to flush + cut.
-- [ ] Each SYN row is `1 + N` bytes where `N = ceil(headDots / 8)`;
-      pixel data is MSB-first.
-- [ ] Pad the head-perpendicular axis to the head-dot count (32 / 48
-      / 64) by tape width; centre the bitmap with the per-tape top /
-      bottom margins from the table above.
-- [ ] Add 8 mm blank-feed (~57 px at 180 DPI) before and after the
-      bitmap so the cutter divides cleanly.
-- [ ] Read the 1-byte status reply on EP `0x85` IN — bit 0 = busy,
-      bit 1 = no tape, bit 2 = low tape.
-- [ ] Never send `ESC @` (`1B 40`) on the printer interface — it
-      corrupts firmware state until power-cycle.
-
-## Source references
+## References
 
 - [`labelle`](https://github.com/labelle-org/labelle) — Python driver
   for the same hardware family. Primary reference for the bulk-stream
-  command shape (`ESC C` / `ESC D` / `SYN` / `ESC A`).
-- [`dymo-print` (Rust)](https://github.com/computerlyrik/dymoprint) —
+  command shape (`ESC C` / `ESC D` / `SYN` / `ESC A`) and synwait
+  flow control.
+- [`dymoprint`](https://github.com/computerlyrik/dymoprint) — Rust
   secondary cross-reference for the HID-report path and tape-width
   margin geometry.
-- This driver's implementation:
+- Implementation in this driver:
   - `packages/core/src/protocol.ts` — encoder (both stream and HID
     variants).
-  - `packages/core/src/status.ts` — status-byte parsing.
+  - `packages/core/src/status.ts` — status-byte parser.
   - `packages/node/src/printer.ts` — chunked USB write loop.
+  - `packages/node/src/udev.ts` — Linux `usb_modeswitch` rule
+    generator.
