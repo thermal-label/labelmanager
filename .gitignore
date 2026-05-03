@@ -1,6 +1,12 @@
 node_modules
 dist
 coverage
+
+# typedoc-plugin-markdown mirrors the input path `packages/*/dist/index.d.ts`
+# in its output (`docs/api/<pkg>/dist/...`), so the broad `dist` rule above
+# would silently drop the generated API tree. Un-ignore it explicitly.
+!docs/api/**/dist
+!docs/api/**/dist/**
 .DS_Store
 .claude
 .pnpm-store

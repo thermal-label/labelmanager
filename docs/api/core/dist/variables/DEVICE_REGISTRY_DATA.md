@@ -1,0 +1,30 @@
+[**labelmanager**](../../../README.md)
+
+***
+
+[labelmanager](../../../modules.md) / [core/dist](../README.md) / DEVICE\_REGISTRY\_DATA
+
+# Variable: DEVICE\_REGISTRY\_DATA
+
+> `const` **DEVICE\_REGISTRY\_DATA**: `object`
+
+Compiled `DeviceRegistry` for the LabelManager driver.
+
+Source of truth lives in `packages/core/data/devices/<KEY>.json5`;
+`scripts/compile-data.mjs` aggregates them into the generated TS
+module imported here. Use `DEVICES` for the keyed-by-key map kept
+for source compatibility with prior consumers.
+
+## Type Declaration
+
+### devices
+
+> `readonly` **devices**: readonly \[\{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "No mass-storage decoy — presents a single PID directly. PID corrected from `0x1003` (which was the LabelManager 420P mass-storage decoy) to `0x0015` based on labelle constants. Single-source — needs hardware verification." ``; `key`: `"LABELPOINT_350"`; `name`: `"LabelPoint 350"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x0015"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "Enumerates as USB Mass Storage Class on first connect under PID `0x1005`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1006`). PID single-sourced from labelle — needs hardware verification." ``; `key`: `"LM_280"`; `name`: `"LabelManager 280"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x1006"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `"No mass-storage decoy — older device, presents a single PID directly. PID single-sourced from labelle — needs hardware verification."`; `key`: `"LM_400"`; `name`: `"LabelManager 400"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x0013"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "Enumerates as USB Mass Storage Class on first connect under PID `0x1003`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1004`)." ``; `key`: `"LM_420P"`; `name`: `"LabelManager 420P"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x1004"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "No mass-storage decoy — presents a single PID directly. PID corrected from `0x1002` (which was a copy-paste from the PnP entry in the previous registry) to `0x0011` based on community sources (labelle constants + an `lsusb` capture in dymoprint#93)." ``; `key`: `"LM_PC"`; `name`: `"LabelManager PC"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x0011"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "Enumerates as USB Mass Storage Class on first connect under PID `0x1001`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1002`). The printer-mode PID is the one stored here; the decoy is recognised by the discovery layer separately." ``; `key`: `"LM_PNP"`; `name`: `"LabelManager PnP"`; `support`: \{ `lastVerified`: `"2026-04-27"`; `packageVersion`: `"0.2.0"`; `quirks`: `"Reference test device for the LabelManager family. Text and image printing confirmed on 6/9/12 mm tape; auto-feed cut works."`; `reports`: readonly \[\{ `date`: `"2026-04-27"`; `issue`: `0`; `notes`: `"Bench verification by the maintainer at the time of seeding this entry. Issue #0 is a placeholder — replace with the real issue number when a public verification report is filed."`; `os`: `"Linux"`; `reporter`: `"@mannes"`; `result`: `"verified"`; `selfVerified`: `true`; \}\]; `status`: `"verified"`; `transports`: \{ `usb`: `"verified"`; \}; \}; `transports`: \{ `usb`: \{ `pid`: `"0x1002"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `hardwareQuirks`: `` "Enumerates as USB Mass Storage Class on first connect under PID `0x1007`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1008`). Wireless connectivity is not exposed by this driver — only the USB printer interface." ``; `key`: `"LM_WIRELESS_PNP"`; `name`: `"LabelManager Wireless PnP"`; `support`: \{ `status`: `"untested"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x1008"`; `vid`: `"0x0922"`; \}; \}; \}, \{ `engines`: readonly \[\{ `dpi`: `180`; `headDots`: `64`; `mediaCompatibility`: readonly \[`"d1"`\]; `protocol`: `"d1-tape"`; `role`: `"primary"`; \}\]; `family`: `"labelmanager"`; `key`: `"MOBILE_LABELER"`; `name`: `"MobileLabeler"`; `support`: \{ `quirks`: "labelle reports \"no success yet\" driving this device over USB; left in the registry so the docs page surfaces it as known-but-broken rather than silently absent. No protocol work has landed."; `status`: `"broken"`; \}; `transports`: \{ `usb`: \{ `pid`: `"0x1009"`; `vid`: `"0x0922"`; \}; \}; \}\]
+
+### driver
+
+> `readonly` **driver**: `"labelmanager"`
+
+### schemaVersion
+
+> `readonly` **schemaVersion**: `1`
