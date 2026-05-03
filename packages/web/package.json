@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-web",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "WebUSB browser driver for DYMO LabelManager printers",
   "type": "module",
   "author": "Mannes Brak",
@@ -58,9 +58,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@thermal-label/contracts": "^0.3.1",
+    "@thermal-label/contracts": "^0.5.0",
     "@thermal-label/labelmanager-core": "workspace:*",
-    "@thermal-label/transport": "^0.3.0"
+    "@thermal-label/transport": "^0.5.0"
   },
   "peerDependencies": {
     "typescript": ">=5.0"

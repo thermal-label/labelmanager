@@ -6,10 +6,11 @@ developers porting the driver to new languages, debugging hardware
 issues, or extending the package.
 
 ::: tip Related pages
+
 - [Core](./core) — TypeScript API (`buildPrinterStream`, `parseStatus`,
   …) that generates the byte streams described here.
 - [Hardware](./hardware) — supported devices, USB IDs, tape widths.
-:::
+  :::
 
 ::: info Cousin protocol
 The DYMO LabelWriter Duo's tape engine uses a closely related variant
@@ -26,10 +27,10 @@ single 64-pin print head; printable region narrows to 32 / 48 / 64 dots
 by tape width. Per-model PIDs, mode-switch siblings, and verification
 status live on the [Hardware](./hardware) page.
 
-| Tape widths      | Models                                                     |
-| ---------------- | ---------------------------------------------------------- |
-| 6 / 9 / 12 mm    | LabelManager PnP, LabelManager PC, LabelManager Wireless PnP, LabelPoint 350, MobileLabeler |
-| 6 / 9 / 12 / 19 mm | LabelManager 420P                                        |
+| Tape widths        | Models                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| 6 / 9 / 12 mm      | LabelManager PnP, LabelManager PC, LabelManager Wireless PnP, LabelPoint 350, MobileLabeler |
+| 6 / 9 / 12 / 19 mm | LabelManager 420P                                                                           |
 
 ## USB topology
 
@@ -46,7 +47,7 @@ Configuration 1
 ```
 
 Print data is sent **directly to the Printer-class interface** via raw
-USB bulk transfers — *not* via the HID interface. The HID interface
+USB bulk transfers — _not_ via the HID interface. The HID interface
 exists for the on-device keyboard input and is not used for printing.
 
 The Node driver chunks writes at **64 bytes** with a 5 ms delay between
@@ -88,11 +89,11 @@ devices, never on LabelManager.
 Send the single-byte command `1B 41` (`ESC A`) to the OUT endpoint.
 The printer replies with **one byte** on the IN endpoint:
 
-| Bit | Set means              |
-| --: | ---------------------- |
+| Bit | Set means                |
+| --: | ------------------------ |
 |   0 | Printer busy / not ready |
-|   1 | No tape inserted       |
-|   2 | Tape supply low        |
+|   1 | No tape inserted         |
+|   2 | Tape supply low          |
 
 All other bits are reserved and observed as zero.
 
@@ -227,10 +228,10 @@ fields about the loaded cassette. See
 
 The driver exposes two encoder entry points for different use cases:
 
-| Entry point          | Output            | Used by                                       |
-| -------------------- | ----------------- | --------------------------------------------- |
-| `buildPrinterStream` | `Uint8Array`      | Direct USB bulk transfer (Node + WebUSB)      |
-| `encodeLabel`        | `Uint8Array[]`    | HID report path (legacy / OS-paired flows)    |
+| Entry point          | Output         | Used by                                    |
+| -------------------- | -------------- | ------------------------------------------ |
+| `buildPrinterStream` | `Uint8Array`   | Direct USB bulk transfer (Node + WebUSB)   |
+| `encodeLabel`        | `Uint8Array[]` | HID report path (legacy / OS-paired flows) |
 
 The two share `prepareForEmission` (geometry pipeline) and emit the
 same opcodes; the HID variant wraps each command in a 64-byte report

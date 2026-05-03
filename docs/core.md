@@ -41,8 +41,7 @@ porting checklist for other languages or runtimes.
 ## Why we don't use the HID interface for printing
 
 Several DYMO LabelManager models present three USB interfaces — Printer
-class on Interface 0, Mass Storage on Interface 1, and HID on Interface
-2. The HID interface only describes the on-device keyboard and feature
+class on Interface 0, Mass Storage on Interface 1, and HID on Interface 2. The HID interface only describes the on-device keyboard and feature
 buttons; **no output report is defined**, so writing print data to it
 fails silently at the firmware level.
 
