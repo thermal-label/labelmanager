@@ -23,6 +23,14 @@ export type {
 export { MediaNotSpecifiedError, pickRotation } from '@thermal-label/contracts';
 
 export { DEVICE_REGISTRY_DATA, DEVICES, findDevice } from './devices.js';
+
+/**
+ * Protocols this core's encoder produces correct wire bytes for.
+ * Pair with `DEVICE_REGISTRY_DATA` and pass to
+ * `resolveSupportedDevices` from `@thermal-label/contracts` to filter
+ * a device list down to what this runtime can actually drive.
+ */
+export const PROTOCOLS: ReadonlySet<string> = new Set(['d1-tape']);
 export {
   DEFAULT_MEDIA,
   MEDIA,
