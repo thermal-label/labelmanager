@@ -55,6 +55,7 @@ Full docs at **<https://thermal-label.github.io/labelmanager/>**.
 
 - [Getting started](https://thermal-label.github.io/labelmanager/getting-started)
 - [Hardware list](https://thermal-label.github.io/labelmanager/hardware)
+- [D1 tape protocol](https://thermal-label.github.io/labelmanager/protocol)
 - [Node guide](https://thermal-label.github.io/labelmanager/node)
 - [Web guide](https://thermal-label.github.io/labelmanager/web)
 - [API reference](https://thermal-label.github.io/labelmanager/api/)

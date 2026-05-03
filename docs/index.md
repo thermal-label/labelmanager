@@ -45,11 +45,19 @@ features:
     </span>
     <span class="ref-arrow">→</span>
   </a>
-  <a href="./core.html" class="ref-link">
+  <a href="./protocol.html" class="ref-link">
     <span class="ref-icon">📡</span>
     <span class="ref-body">
-      <strong>Protocol & Core API</strong>
-      <span>ESC sequences, bitmap encoding, porting guide</span>
+      <strong>D1 tape protocol</strong>
+      <span>USB topology, ESC sequences, status bits, porting guide</span>
+    </span>
+    <span class="ref-arrow">→</span>
+  </a>
+  <a href="./core.html" class="ref-link">
+    <span class="ref-icon">🧰</span>
+    <span class="ref-body">
+      <strong>Core API</strong>
+      <span>Encoder, parser, types, registries</span>
     </span>
     <span class="ref-arrow">→</span>
   </a>
