@@ -11,10 +11,10 @@
       protocol: 'd1-tape',
       dpi: 180,
       headDots: 64,
-      mediaCompatibility: ['d1'],
+      mediaCompatibility: ['d1', 'd1-19', 'd1-wide'],
     },
   ],
-  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1007`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1008`). Wireless connectivity is not exposed by this driver — only the USB printer interface.',
+  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1007`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1008`). Wireless connectivity is not exposed by this driver — only the USB printer interface. Chassis accepts D1 cartridges in 6/9/12/19/24mm widths per the official Wireless PnP technical datasheet (download.dymo.com/dymo/user-guides/LabelManager/LMWirelessPnP/LabelManager_Wireless_PnP_Technical_Datasheet.pdf); the 24mm path is gated on the wide-tier rasterizer work — see plans/backlog/wide-tier-media-compatibility.md.',
   support: {
     status: 'untested',
   },

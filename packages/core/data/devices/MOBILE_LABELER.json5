@@ -11,9 +11,10 @@
       protocol: 'd1-tape',
       dpi: 180,
       headDots: 64,
-      mediaCompatibility: ['d1'],
+      mediaCompatibility: ['d1', 'd1-19', 'd1-wide'],
     },
   ],
+  hardwareQuirks: 'Chassis accepts D1 cartridges up to 24mm — flagged `d1-wide` so the per-device compat surface reflects the hardware. The 24mm rasterizer cap-lift has not landed yet (see plans/backlog/wide-tier-media-compatibility.md), so no 24mm media currently activates against this engine even where the chassis would physically take them.',
   support: {
     status: 'broken',
     quirks: 'labelle reports "no success yet" driving this device over USB; left in the registry so the docs page surfaces it as known-but-broken rather than silently absent. No protocol work has landed.',

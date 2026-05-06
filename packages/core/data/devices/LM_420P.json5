@@ -11,10 +11,10 @@
       protocol: 'd1-tape',
       dpi: 180,
       headDots: 64,
-      mediaCompatibility: ['d1'],
+      mediaCompatibility: ['d1', 'd1-19'],
     },
   ],
-  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1003`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1004`).',
+  hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1003`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1004`). Chassis accepts up to 19mm tape per the official LM 420P product page (https://www.dymo.com/label-makers-printers/labelmanager-label-makers/dymo-labelmanager-420p-high-performance-label-maker/SP_95482.html).',
   support: {
     status: 'untested',
   },

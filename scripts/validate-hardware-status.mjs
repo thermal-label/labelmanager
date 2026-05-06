@@ -22,10 +22,15 @@ const DRIVER = 'labelmanager';
 const STATUS_VALUES = new Set(['verified', 'partial', 'broken', 'untested']);
 const TRANSPORT_KEYS = new Set(['usb', 'tcp', 'serial', 'bluetooth-spp', 'bluetooth-gatt']);
 const KNOWN_PROTOCOLS = new Set(['d1-tape']);
-// LabelManager substrate tags. `d1` is the only tier shipping today;
-// `d1-wide` is reserved for the future 24mm rasterizer cap-lift (see
-// plans/backlog/wide-tier-media-compatibility.md).
-const KNOWN_SUBSTRATES = new Set(['d1', 'd1-wide']);
+// LabelManager substrate tags.
+// - `d1`        ≤12mm — universal D1 floor; every D1 chassis accepts.
+// - `d1-19`     19mm tier — chassis that physically accept a 19mm
+//                cartridge (LM 420P, Wireless PnP, MobileLabeler, …).
+//                Engines bearing `d1-19` MUST also include `d1`.
+// - `d1-wide`   24mm tier, reserved for the future rasterizer cap-lift
+//                (see plans/backlog/wide-tier-media-compatibility.md).
+//                Engines bearing `d1-wide` MUST also include `d1`.
+const KNOWN_SUBSTRATES = new Set(['d1', 'd1-19', 'd1-wide']);
 const OS_VALUES = new Set(['Linux', 'macOS', 'Windows']);
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-[\w.-]+)?(?:\+[\w.-]+)?$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -116,6 +121,11 @@ for (const filename of files) {
         if (eng.mediaCompatibility.includes('d1-wide') && !eng.mediaCompatibility.includes('d1')) {
           fail(
             `${ewhere}: mediaCompatibility includes 'd1-wide' but not 'd1' — wide-capable engines must also accept the base substrate`,
+          );
+        }
+        if (eng.mediaCompatibility.includes('d1-19') && !eng.mediaCompatibility.includes('d1')) {
+          fail(
+            `${ewhere}: mediaCompatibility includes 'd1-19' but not 'd1' — 19mm-capable engines must also accept the base substrate`,
           );
         }
       }
