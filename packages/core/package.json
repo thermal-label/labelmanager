@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-core",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Core protocol and bitmap helpers for DYMO LabelManager printers",
   "type": "module",
   "author": "Mannes Brak",

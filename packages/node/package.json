@@ -1,6 +1,6 @@
 {
   "name": "@thermal-label/labelmanager-node",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Node.js USB driver for DYMO LabelManager label printers",
   "type": "module",
   "author": "Mannes Brak",
