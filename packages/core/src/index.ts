@@ -42,9 +42,14 @@ export {
   findMediaByTapeWidth,
 } from './media.js';
 export { ROTATE_DIRECTION } from './orientation.js';
-export { buildPrinterStream } from './protocol.js';
-export { STATUS_REQUEST, parseStatus } from './status.js';
-export { TAPE_TYPE_DEFAULT, TAPE_TYPE_MAX, tapeTypeFor } from './tape-type.js';
+export {
+  STATUS_REQUEST,
+  TAPE_TYPE_DEFAULT,
+  TAPE_TYPE_MAX,
+  buildPrinterStream,
+  parseStatus,
+  tapeTypeFor,
+} from '@thermal-label/d1-core';
 export { createPreviewOffline } from './preview.js';
 export type {
   LabelManagerDevice,

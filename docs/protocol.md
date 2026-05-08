@@ -12,13 +12,6 @@ issues, or extending the package.
 - [Hardware](./hardware) — supported devices, USB IDs, tape widths.
   :::
 
-::: info Same protocol on LabelWriter Duo
-The DYMO LabelWriter Duo's tape engine speaks the same D1 wire
-protocol — same opcode set, same SYN-row framing. The status reply
-shape may differ on Duo (longer, additional cassette fields); the
-print path is otherwise identical.
-:::
-
 ## Models and engines
 
 LabelManager / LabelPoint chassis sharing the D1 cassette and the same
@@ -95,9 +88,7 @@ The printer replies with **one byte** on the IN endpoint:
 |   1 | No tape inserted         |
 |   2 | Tape supply low          |
 
-All other bits are reserved and observed as zero. LabelWriter Duo's
-status reply is longer and includes additional cassette fields — that
-is the only known divergence between the LM and Duo D1 implementations.
+All other bits are reserved and observed as zero.
 
 `ESC A` is a pure status query: it does not cut, it does not advance
 the tape, and it does not flush a buffer. LabelManager does **not**

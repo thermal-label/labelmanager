@@ -81,15 +81,7 @@ export class DymoPrinter implements PrinterAdapter {
       // engine. Guard so the encoder call below stays type-safe.
       throw new Error(`Device ${this.device.key} has no print engines`);
     }
-    const stream = buildPrinterStream(
-      bitmap,
-      engine,
-      {
-        ...options,
-        tapeWidth: resolvedMedia.tapeWidthMm,
-      },
-      resolvedMedia,
-    );
+    const stream = buildPrinterStream(bitmap, engine, options ?? {}, resolvedMedia);
     await this.writeStream(stream);
   }
 
