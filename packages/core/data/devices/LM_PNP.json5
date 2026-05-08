@@ -12,6 +12,17 @@
       dpi: 180,
       headDots: 64,
       mediaCompatibility: ['d1'],
+      // Hoisted from the encoder's pre-0.6.0 `FEED_MARGIN_PX = 57`
+      // constant. 8 mm × 180 dpi / 25.4 ≈ 56.69 → 57 dots, so byte
+      // parity with the prior encoder is preserved exactly. Same
+      // values on every D1 chassis today (re-validate per-device as
+      // measurements arrive — see plans/backlog/08-dead-zone-model.md
+      // §10 Q5 for provenance). Maintainer's PnP observation is
+      // ~15 mm total trailing feed; 8 mm of that is encoder-side
+      // (this field), the remaining ~7 mm is firmware-side `ESC G`
+      // and out of scope for `forcedTrailingFeedMm`.
+      printableArea: { leading: 8, trailing: 0, left: 0, right: 0 },
+      forcedTrailingFeedMm: 8,
     },
   ],
   hardwareQuirks: 'Enumerates as USB Mass Storage Class on first connect under PID `0x1001`; needs `usb_modeswitch` on Linux to switch to the printer interface (PID `0x1002`). The printer-mode PID is the one stored here; the decoy is recognised by the discovery layer separately.',

@@ -7,6 +7,7 @@ import {
   encodeLabel,
 } from '../protocol.js';
 import type { LabelBitmap } from '@mbtech-nl/bitmap';
+import type { PrintEngine } from '@thermal-label/contracts';
 
 /**
  * Make a head-aligned bitmap fixture.
@@ -27,7 +28,25 @@ function makeBitmap(widthPx: number, heightPx: number): LabelBitmap {
   return { widthPx, heightPx, data };
 }
 
-// Feed margin constant: ~8 mm at 180 DPI, added on each side.
+/**
+ * Reference engine fixture. Mirrors the values every D1 device entry
+ * ships today — `printableArea.leading: 8 mm` + `forcedTrailingFeedMm:
+ * 8 mm`, both rounding to 57 dots at 180 dpi to preserve byte parity
+ * with the pre-0.6.0 `FEED_MARGIN_PX = 57` constant.
+ */
+const ENGINE: PrintEngine = {
+  role: 'primary',
+  protocol: 'd1-tape',
+  dpi: 180,
+  headDots: 64,
+  mediaCompatibility: ['d1'],
+  printableArea: { leading: 8, trailing: 0, left: 0, right: 0 },
+  forcedTrailingFeedMm: 8,
+};
+
+// Resolved feed-margin dot count for the reference engine (8 mm @ 180 dpi
+// rounds to 57 — the same number the encoder used as a hard-coded
+// constant before the dead-zone-model migration).
 const FEED_MARGIN_PX = 57;
 
 describe('protocol', () => {
@@ -48,7 +67,7 @@ describe('protocol', () => {
     // 64×64 head-aligned: widthPx=head-perp=64 (already at 12mm head), heightPx=feed=64.
     // Scale leaves widthPx at 64; pad adds 2×57 to heightPx → 178 rows.
     const bitmap = makeBitmap(64, 64);
-    const reports = buildBitmapRows(bitmap);
+    const reports = buildBitmapRows(bitmap, ENGINE);
     const first = reports[0]!;
 
     expect(reports).toHaveLength(64 + 2 * FEED_MARGIN_PX); // 178
@@ -62,7 +81,7 @@ describe('protocol', () => {
     // Scale widthPx 53→64 (12mm head): heightPx grows 64*(64/53)=77.
     const bitmap = makeBitmap(53, 64);
     const scaledFeed = Math.round(64 * (64 / 53)); // 77
-    const reports = buildBitmapRows(bitmap);
+    const reports = buildBitmapRows(bitmap, ENGINE);
 
     expect(reports).toHaveLength(scaledFeed + 2 * FEED_MARGIN_PX);
     expect(reports[0]).toHaveLength(64);
@@ -76,9 +95,9 @@ describe('protocol', () => {
     const scaledFeed9 = Math.round(40 * (48 / 8)); // 240
     const scaledFeed12 = Math.round(40 * (64 / 8)); // 320
 
-    const reports6 = buildBitmapRows(bitmap, { tapeWidth: 6 });
-    const reports9 = buildBitmapRows(bitmap, { tapeWidth: 9 });
-    const reports12 = buildBitmapRows(bitmap, { tapeWidth: 12 });
+    const reports6 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 6 });
+    const reports9 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 9 });
+    const reports12 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 12 });
 
     expect(reports6).toHaveLength(scaledFeed6 + 2 * FEED_MARGIN_PX);
     expect(reports9).toHaveLength(scaledFeed9 + 2 * FEED_MARGIN_PX);
@@ -101,7 +120,7 @@ describe('protocol', () => {
     // 64×64 → 64+114=178 bitmap rows. Per copy: 3 reset + 178 + 1 ff = 182; ×2 = 364.
     const bitmap = makeBitmap(64, 64);
     const reportsPerCopy = 3 + (64 + 2 * FEED_MARGIN_PX) + 1; // 182
-    const reports = encodeLabel(bitmap, { copies: 2, density: 'high' });
+    const reports = encodeLabel(bitmap, ENGINE, { copies: 2, density: 'high' });
     const first = reports[0]!;
     const endOfFirstCopy = reports[reportsPerCopy - 1]!; // index 181
     const firstOfSecondCopy = reports[reportsPerCopy]!; // index 182
@@ -118,7 +137,7 @@ describe('protocol', () => {
     const scaledFeed = Math.round(40 * (64 / 8)); // 320
     const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 434
     const bitmap = makeBitmap(8, 40);
-    const stream = buildPrinterStream(bitmap, { tapeWidth: 12 });
+    const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12 });
 
     // Starts with ESC C 0 (tape type)
     expect(stream[0]).toBe(0x1b);
@@ -144,7 +163,7 @@ describe('protocol', () => {
     const scaledFeed = Math.round(10 * (32 / 8)); // 40
     const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 154
     const bitmap = makeBitmap(8, 10);
-    const stream = buildPrinterStream(bitmap, { tapeWidth: 6 });
+    const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 6 });
 
     // ESC D 4 (4 bytes per line for 6mm / 32 dots)
     expect(stream[3]).toBe(0x1b);
@@ -160,12 +179,45 @@ describe('protocol', () => {
     const bitmap = makeBitmap(8, 40);
     const scaledFeed = Math.round(40 * (32 / 8)); // 160
     const bitmapRows = scaledFeed + 2 * FEED_MARGIN_PX; // 274
-    const reports = encodeLabel(bitmap, { tapeWidth: 6 });
+    const reports = encodeLabel(bitmap, ENGINE, { tapeWidth: 6 });
     const first = reports[0]!;
     const formFeed = reports[3 + bitmapRows]!; // index 277
 
     expect(reports).toHaveLength(3 + bitmapRows + 1);
     expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
     expect(formFeed.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
+  });
+
+  it('reads leading pad from engine.printableArea and trailing from forcedTrailingFeedMm', () => {
+    // Asymmetric engine: 4 mm leading + 12 mm trailing — verifies the
+    // two halves are wired to separate engine fields, not a single
+    // shared constant.
+    const asymEngine: PrintEngine = {
+      ...ENGINE,
+      printableArea: { leading: 4, trailing: 0, left: 0, right: 0 },
+      forcedTrailingFeedMm: 12,
+    };
+    const leadingDots = Math.round((4 * 180) / 25.4); // 28
+    const trailingDots = Math.round((12 * 180) / 25.4); // 85
+
+    const bitmap = makeBitmap(64, 64);
+    const reports = buildBitmapRows(bitmap, asymEngine);
+
+    expect(reports).toHaveLength(64 + leadingDots + trailingDots);
+  });
+
+  it('treats absent printableArea / forcedTrailingFeedMm as zero pad', () => {
+    // Engine without dead-zone fields populated — encoder should emit
+    // exactly the scaled bitmap with no leading/trailing pad.
+    const bareEngine: PrintEngine = {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+    };
+    const bitmap = makeBitmap(64, 64);
+    const reports = buildBitmapRows(bitmap, bareEngine);
+
+    expect(reports).toHaveLength(64);
   });
 });

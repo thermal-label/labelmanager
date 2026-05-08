@@ -1,12 +1,25 @@
 import { getRow, padBitmap, rotateBitmap, scaleBitmap, type LabelBitmap } from '@mbtech-nl/bitmap';
+import {
+  getForcedTrailingFeedMm,
+  getPrintableArea,
+  type MediaDescriptor,
+  type PrintEngine,
+} from '@thermal-label/contracts';
 import type { LabelManagerPrintOptions, TapeWidth } from './types.js';
 
 const REPORT_SIZE = 64;
 const MAX_PAYLOAD_SIZE = REPORT_SIZE - 1;
 
-// ~8 mm at 180 DPI — blank feed added before and after the bitmap so the
-// printed area can be cut cleanly on both sides.
-const FEED_MARGIN_PX = 57;
+/**
+ * Convert a millimetre value to dot count at the given DPI.
+ *
+ * Rounds half-away-from-zero so the migration from the old
+ * `FEED_MARGIN_PX = 57` constant lands on the same integer dot count
+ * (`8 mm × 180 / 25.4 ≈ 56.6929` → `57`).
+ */
+function mmToDots(mm: number, dpi: number): number {
+  return Math.round((mm * dpi) / 25.4);
+}
 
 function toReport(payload: number[]): Uint8Array {
   if (payload.length > MAX_PAYLOAD_SIZE) {
@@ -57,17 +70,42 @@ export function buildResetSequence(options?: LabelManagerPrintOptions): Uint8Arr
  * **Transformations** —
  *   1. Scale `widthPx` to the head dot count (preserving aspect).
  *      `scaleBitmap` only targets `heightPx`, so we swap-scale-swap.
- *   2. Pad top/bottom by `FEED_MARGIN_PX` so the printed area can be
- *      cut cleanly on both leading and trailing edges.
+ *   2. Pad the leading edge by `engine.printableArea.leading` (mm,
+ *      converted to dots at `engine.dpi`) — chassis dead-zone
+ *      correction so authored content lands clear of the head-to-cutter
+ *      gap.
+ *   3. Pad the trailing edge by `engine.forcedTrailingFeedMm` (mm,
+ *      converted to dots at `engine.dpi`) — encoder-emitted
+ *      post-print feed so the printed area is clear of the cutter
+ *      before the firmware-side `ESC G` advance kicks in.
  *
  * Each output row carries one head-line of dots — exactly
  * `Math.ceil(headDots / 8)` bytes per row.
+ *
+ * **Byte parity migration note.** Pre-0.6.0 the encoder hard-coded
+ * `FEED_MARGIN_PX = 57` and padded the same count on both edges. Today
+ * every LabelManager device entry ships
+ * `printableArea: { leading: 8, ... }` and `forcedTrailingFeedMm: 8`
+ * — `Math.round(8 × 180 / 25.4)` is `57`, so the wire bytes stay
+ * identical. Future LabelManager chassis with different geometry plug
+ * in by setting different mm values on their engine entry; the
+ * encoder follows the data.
  */
-function prepareForEmission(bitmap: LabelBitmap, headDots: number): LabelBitmap {
+function prepareForEmission(
+  bitmap: LabelBitmap,
+  headDots: number,
+  engine: PrintEngine,
+  media?: MediaDescriptor,
+): LabelBitmap {
   const swapped = rotateBitmap(bitmap, 90);
   const scaled = scaleBitmap(swapped, headDots);
   const headAligned = rotateBitmap(scaled, 270);
-  return padBitmap(headAligned, { top: FEED_MARGIN_PX, bottom: FEED_MARGIN_PX });
+
+  const printableArea = getPrintableArea(engine, media);
+  const leadingDots = mmToDots(printableArea.leading, engine.dpi);
+  const trailingDots = mmToDots(getForcedTrailingFeedMm(engine), engine.dpi);
+
+  return padBitmap(headAligned, { top: leadingDots, bottom: trailingDots });
 }
 
 /**
@@ -79,10 +117,12 @@ function prepareForEmission(bitmap: LabelBitmap, headDots: number): LabelBitmap 
  */
 export function buildBitmapRows(
   bitmap: LabelBitmap,
+  engine: PrintEngine,
   options?: LabelManagerPrintOptions,
+  media?: MediaDescriptor,
 ): Uint8Array[] {
   const headDots = tapeWidthToHeadDots(options?.tapeWidth);
-  const padded = prepareForEmission(bitmap, headDots);
+  const padded = prepareForEmission(bitmap, headDots, engine, media);
 
   const reports: Uint8Array[] = [];
   for (let y = 0; y < padded.heightPx; y += 1) {
@@ -113,11 +153,13 @@ export function buildFormFeed(): Uint8Array[] {
  */
 export function buildPrinterStream(
   bitmap: LabelBitmap,
+  engine: PrintEngine,
   options: LabelManagerPrintOptions = {},
+  media?: MediaDescriptor,
 ): Uint8Array {
   const copies = Math.max(1, options.copies ?? 1);
   const headDots = tapeWidthToHeadDots(options.tapeWidth);
-  const padded = prepareForEmission(bitmap, headDots);
+  const padded = prepareForEmission(bitmap, headDots, engine, media);
   const bytesPerLine = Math.ceil(headDots / 8);
 
   const chunks: number[] = [];
@@ -141,19 +183,28 @@ export function buildPrinterStream(
  * Encode a complete label job into HID report payloads.
  *
  * @param bitmap Bitmap to print (head-aligned, see `prepareForEmission`).
+ * @param engine The `PrintEngine` whose `printableArea` and
+ *   `forcedTrailingFeedMm` drive the leading / trailing pad. Pass the
+ *   `engines[0]` of the device entry returned from `findDevice` /
+ *   `DEVICES`.
  * @param options Density/copies options.
+ * @param media Optional media descriptor — surfaces per-roll
+ *   `printableArea` overrides (e.g. LabelWriter 5xx NFC tag); ignored
+ *   for D1 tape today, plumbed for forward-compatibility.
  * @returns Full report list for one or more copies.
  */
 export function encodeLabel(
   bitmap: LabelBitmap,
+  engine: PrintEngine,
   options: LabelManagerPrintOptions = {},
+  media?: MediaDescriptor,
 ): Uint8Array[] {
   const copies = Math.max(1, options.copies ?? 1);
   const reports: Uint8Array[] = [];
 
   for (let i = 0; i < copies; i += 1) {
     reports.push(...buildResetSequence(options));
-    reports.push(...buildBitmapRows(bitmap, options));
+    reports.push(...buildBitmapRows(bitmap, engine, options, media));
     reports.push(...buildFormFeed());
   }
 

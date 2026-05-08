@@ -12,6 +12,12 @@
       dpi: 180,
       headDots: 64,
       mediaCompatibility: ['d1', 'd1-19', 'd1-wide'],
+      // Hoisted from the encoder's pre-0.6.0 `FEED_MARGIN_PX = 57`
+      // constant — see LM_PNP.json5 for the rationale. Same values
+      // on every D1 chassis today; re-validate per-device as
+      // measurements arrive.
+      printableArea: { leading: 8, trailing: 0, left: 0, right: 0 },
+      forcedTrailingFeedMm: 8,
     },
   ],
   hardwareQuirks: 'Chassis accepts D1 cartridges up to 24mm — flagged `d1-wide` so the per-device compat surface reflects the hardware. The 24mm rasterizer cap-lift has not landed yet (see plans/backlog/wide-tier-media-compatibility.md), so no 24mm media currently activates against this engine even where the chassis would physically take them.',

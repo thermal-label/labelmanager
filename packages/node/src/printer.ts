@@ -75,10 +75,21 @@ export class DymoPrinter implements PrinterAdapter {
 
     const rotate = pickRotation(image, resolvedMedia, ROTATE_DIRECTION, options?.rotate);
     const bitmap = renderImage(image, { dither: true, rotate });
-    const stream = buildPrinterStream(bitmap, {
-      ...options,
-      tapeWidth: resolvedMedia.tapeWidthMm,
-    });
+    const [engine] = this.device.engines;
+    if (!engine) {
+      // Registry invariant — every device entry carries at least one
+      // engine. Guard so the encoder call below stays type-safe.
+      throw new Error(`Device ${this.device.key} has no print engines`);
+    }
+    const stream = buildPrinterStream(
+      bitmap,
+      engine,
+      {
+        ...options,
+        tapeWidth: resolvedMedia.tapeWidthMm,
+      },
+      resolvedMedia,
+    );
     await this.writeStream(stream);
   }
 
