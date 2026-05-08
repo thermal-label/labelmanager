@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPrinterStream } from '../protocol.js';
 import type { LabelBitmap } from '@mbtech-nl/bitmap';
 import type { PrintEngine } from '@thermal-label/contracts';
+import type { LabelManagerMedia } from '../types.js';
 
 /**
  * Make a head-aligned bitmap fixture.
@@ -185,5 +186,142 @@ describe('buildPrinterStream', () => {
     const single = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12 });
     const triple = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12, copies: 3 });
     expect(triple).toHaveLength(single.length * 3);
+  });
+
+  it('derives ESC C selector from media colours', () => {
+    const blackOnBlue = {
+      id: 'd1-standard-bbl-12',
+      name: 'test',
+      type: 'tape',
+      widthMm: 12,
+      tapeWidthMm: 12,
+      printableDots: 64,
+      bytesPerLine: 8,
+      text: 'black',
+      background: 'blue',
+    } satisfies LabelManagerMedia;
+
+    const bitmap = makeBitmap(64, 8);
+    const stream = buildPrinterStream(bitmap, ENGINE, {}, blackOnBlue);
+
+    // ESC C selector at offset 2 — black-on-blue → 1
+    expect(stream[0]).toBe(0x1b);
+    expect(stream[1]).toBe(0x43);
+    expect(stream[2]).toBe(0x01);
+  });
+
+  it('honours options.tapeType override over media-derived selector', () => {
+    const blackOnWhite = {
+      id: 'd1-standard-bw-12',
+      name: 'test',
+      type: 'tape',
+      widthMm: 12,
+      tapeWidthMm: 12,
+      printableDots: 64,
+      bytesPerLine: 8,
+      text: 'black',
+      background: 'white',
+    } satisfies LabelManagerMedia;
+
+    const bitmap = makeBitmap(64, 8);
+    const stream = buildPrinterStream(bitmap, ENGINE, { tapeType: 9 }, blackOnWhite);
+
+    expect(stream[2]).toBe(0x09);
+  });
+
+  it('rejects out-of-range options.tapeType', () => {
+    const bitmap = makeBitmap(64, 8);
+    expect(() => buildPrinterStream(bitmap, ENGINE, { tapeType: 13, tapeWidth: 12 })).toThrow(
+      RangeError,
+    );
+    expect(() => buildPrinterStream(bitmap, ENGINE, { tapeType: -1, tapeWidth: 12 })).toThrow(
+      RangeError,
+    );
+  });
+
+  it('emits ESC E before ESC A when engine.capabilities.autocut is set', () => {
+    const cuttingEngine: PrintEngine = {
+      ...ENGINE,
+      capabilities: { autocut: true },
+    };
+    const bitmap = makeBitmap(64, 8);
+    const stream = buildPrinterStream(bitmap, cuttingEngine, { tapeWidth: 12 });
+
+    // Tail layout: … ESC E ESC A
+    expect(stream.at(-4)).toBe(0x1b);
+    expect(stream.at(-3)).toBe(0x45);
+    expect(stream.at(-2)).toBe(0x1b);
+    expect(stream.at(-1)).toBe(0x41);
+  });
+
+  it('omits ESC E for manual-cutter engines (no autocut capability)', () => {
+    const bitmap = makeBitmap(64, 8);
+    const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12 });
+
+    // Tail is just ESC A — the byte before is the last skip-line SYN
+    // (or the last content row byte), never ESC E.
+    expect(stream.at(-2)).toBe(0x1b);
+    expect(stream.at(-1)).toBe(0x41);
+    expect(stream.at(-3)).not.toBe(0x45);
+  });
+
+  it('emits ESC E once per copy when autocut is set', () => {
+    const cuttingEngine: PrintEngine = {
+      ...ENGINE,
+      capabilities: { autocut: true },
+    };
+    const bitmap = makeBitmap(64, 8);
+    const stream = buildPrinterStream(bitmap, cuttingEngine, { tapeWidth: 12, copies: 3 });
+
+    let cutCount = 0;
+    for (let i = 0; i < stream.length - 1; i += 1) {
+      if (stream[i] === 0x1b && stream[i + 1] === 0x45) cutCount += 1;
+    }
+    expect(cutCount).toBe(3);
+  });
+
+  it('prefers media.printableDots over options.tapeWidth for raster width', () => {
+    const narrow = {
+      id: 'd1-standard-bw-6',
+      name: 'test',
+      type: 'tape',
+      widthMm: 6,
+      tapeWidthMm: 6,
+      printableDots: 32,
+      bytesPerLine: 4,
+      text: 'black',
+      background: 'white',
+    } satisfies LabelManagerMedia;
+
+    const bareEngine: PrintEngine = {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+    };
+    const bitmap = makeBitmap(32, 8);
+    // Pass a misleading tapeWidth: 19 (would map to 64) — media wins.
+    const stream = buildPrinterStream(bitmap, bareEngine, { tapeWidth: 19 }, narrow);
+
+    // ESC D N at offset 3 — bytes-per-line should be ceil(32/8) = 4.
+    expect(stream[3]).toBe(0x1b);
+    expect(stream[4]).toBe(0x44);
+    expect(stream[5]).toBe(4);
+  });
+
+  it('caps raster width at engine.headDots', () => {
+    // Engine claims a 32-dot head; media wants 64 → cap at 32.
+    const narrowEngine: PrintEngine = {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 32,
+    };
+    const bitmap = makeBitmap(32, 8);
+    const stream = buildPrinterStream(bitmap, narrowEngine, { tapeWidth: 12 });
+
+    expect(stream[3]).toBe(0x1b);
+    expect(stream[4]).toBe(0x44);
+    expect(stream[5]).toBe(4); // 32 dots → 4 bytes
   });
 });

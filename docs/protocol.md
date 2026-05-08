@@ -135,9 +135,9 @@ the device until power-cycle. Don't experiment in production code.
 | `SYN`   | `16` + N   | Print one row (or, with `ESC D 0` set, advance one row).          |
 | `ESC A` | `1B 41`    | Status query — see [Status](#status).                             |
 | `ESC B` | `1B 42 N`  | Set bias offset (`dot_tab`). Unused by this driver.               |
-| `ESC C` | `1B 43 0`  | Set tape type. Always `00` (D1 tape) for this driver.             |
+| `ESC C` | `1B 43 n`  | Set tape type / colour palette (`n = 0..12`, see [`ESC C n`](#esc-c-n--set-tape-type)). |
 | `ESC D` | `1B 44 N`  | Set bytes-per-line. `ESC D 0` enables MLF skip-line mode.         |
-| `ESC E` | `1B 45`    | Cut. Drives the blade on motorised-cutter chassis; no-op on manual-cutter chassis. Safe to emit at end of every job. |
+| `ESC E` | `1B 45`    | Cut. Drives the blade on motorised-cutter chassis; no-op on manual-cutter chassis. Emitted by the encoder only when `engine.capabilities.autocut` is set. |
 
 ## Print job structure
 
@@ -146,12 +146,13 @@ endpoint, repeated once per copy:
 
 ```
 [per copy]
-  ESC C 0           — set media type to "tape"
+  ESC C n           — set tape type / colour palette (n = 0..12)
   [if leading skip:  ESC D 0 + N × SYN]   — chassis dead-zone
-  ESC D N           — set bytes-per-line for content (N = ceil(headDots / 8))
+  ESC D N           — set bytes-per-line for content (N = ceil(rasterDots / 8))
   [for each row]
     SYN row…        — one column of pixel data
   [if trailing skip: ESC D 0 + N × SYN]   — post-print tape advance
+  [if autocut:       ESC E]               — cut tape (autocut chassis only)
   ESC A             — status query (ends the job)
 ```
 
@@ -163,14 +164,44 @@ no printed payload — same physical feed as a blank padded row but at
 
 All values are hexadecimal. Each opcode is described below.
 
-### `ESC C 0` — set media type
+### `ESC C n` — set tape type
 
 ```
-1B 43 00
+1B 43 nn
 ```
 
-Selects D1 tape mode. Always send this **before** the bytes-per-line
-command. Sent once per copy (not per row).
+`n` selects the tape-type / colour palette (the cassette's text +
+substrate combination); the firmware uses it to pick the right strobe
+profile / heat-sensitivity curve. The byte is **host-declared** —
+LabelManager firmware can detect cassette presence but **not** type,
+so the host has to tell it what's loaded (normally via the user's
+media selection). The byte does **not** change the printed ink (ink
+is determined by the cassette itself); but the matching value gives
+correct heat calibration and noticeably better print quality on
+coloured / reverse-print substrates. Sending `0` when the user hasn't
+selected a cartridge is safe.
+
+Spec table per `LabelWriter 400 Series Technical Reference` p.24
+(LabelManager firmware uses the same table; the protocol is shared
+D1):
+
+|  n  | Combination                  |  n  | Combination                |
+| --: | ---------------------------- | --: | -------------------------- |
+| `0` | Black on white or clear      | `7` | Black on fluorescent green |
+| `1` | Black on blue                | `8` | Black on fluorescent red   |
+| `2` | Black on red                 | `9` | White on clear             |
+| `3` | Black on silver              | `10`| White on black             |
+| `4` | Black on yellow              | `11`| Blue on white or clear     |
+| `5` | Black on gold                | `12`| Red on white or clear      |
+| `6` | Black on green               |     |                            |
+
+The encoder derives `n` from the user-selected media's `text` /
+`background` colours via `tapeTypeFor(media)`; callers can override
+via `LabelManagerPrintOptions.tapeType`. When neither is supplied,
+`n` defaults to `0`.
+
+Always send this **before** the bytes-per-line command. Sent once per
+copy (not per row).
 
 ### `ESC D N` — set bytes-per-line
 
@@ -179,8 +210,10 @@ command. Sent once per copy (not per row).
 ```
 
 `N` is the number of payload bytes that will follow each `SYN` opcode,
-computed as `ceil(headDots / 8)` — `4` bytes for 6 mm tape, `6` for
-9 mm, `8` for 12/19 mm.
+computed as `ceil(rasterDots / 8)` where `rasterDots` is the
+cartridge-printable dot count (`media.printableDots`, capped by
+`engine.headDots`) — `4` bytes for 6 mm tape, `6` for 9 mm, `8` for
+12/19 mm on the 64-pin LabelManager head.
 
 `ESC D 0` is a special case used for skip-lines: each subsequent
 `SYN` byte feeds one dot row with **zero** payload bytes. Re-issue

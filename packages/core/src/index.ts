@@ -44,6 +44,7 @@ export {
 export { ROTATE_DIRECTION } from './orientation.js';
 export { buildPrinterStream } from './protocol.js';
 export { STATUS_REQUEST, parseStatus } from './status.js';
+export { TAPE_TYPE_DEFAULT, TAPE_TYPE_MAX, tapeTypeFor } from './tape-type.js';
 export { createPreviewOffline } from './preview.js';
 export type {
   LabelManagerDevice,

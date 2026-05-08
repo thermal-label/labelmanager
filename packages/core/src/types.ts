@@ -69,9 +69,17 @@ export interface LabelManagerMedia extends MediaDescriptor {
  * values the printer supports. `rotate` overrides the orientation
  * heuristic — `'auto'` (default) defers to the media's
  * `defaultOrientation`; an explicit angle bypasses it.
+ *
+ * `tapeType` is the `ESC C` selector (0..12) — host-declared, since
+ * LabelManager firmware cannot detect cartridge type. Normally
+ * derived from the user-selected media's `text` / `background` via
+ * `tapeTypeFor()` and not passed by the caller; defaults to `0` when
+ * neither this option nor a media descriptor is supplied. Override
+ * here only when bench-testing a specific selector.
  */
 export interface LabelManagerPrintOptions extends PrintOptions {
   density?: 'normal' | 'high';
   tapeWidth?: TapeWidth;
+  tapeType?: number;
   rotate?: 'auto' | 0 | 90 | 180 | 270;
 }
