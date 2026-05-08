@@ -42,13 +42,7 @@ export {
   findMediaByTapeWidth,
 } from './media.js';
 export { ROTATE_DIRECTION } from './orientation.js';
-export {
-  buildBitmapRows,
-  buildFormFeed,
-  buildPrinterStream,
-  buildResetSequence,
-  encodeLabel,
-} from './protocol.js';
+export { buildPrinterStream } from './protocol.js';
 export { STATUS_REQUEST, parseStatus } from './status.js';
 export { createPreviewOffline } from './preview.js';
 export type {

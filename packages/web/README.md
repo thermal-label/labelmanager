@@ -1,6 +1,6 @@
 # @thermal-label/labelmanager-web
 
-WebHID browser driver for DYMO LabelManager printers.
+WebUSB browser driver for DYMO LabelManager / LabelPoint D1 tape printers.
 
 Use this package to connect and print labels directly from supported browsers.
 
@@ -20,7 +20,7 @@ npm install @thermal-label/labelmanager-web
 import { requestPrinter } from '@thermal-label/labelmanager-web';
 
 const printer = await requestPrinter();
-await printer.printText('Hello WebHID', { tapeWidth: 12 });
+await printer.printText('Hello WebUSB', { tapeWidth: 12 });
 ```
 
 ## Usage
@@ -33,7 +33,6 @@ import { requestPrinter } from '@thermal-label/labelmanager-web';
 const printer = await requestPrinter();
 await printer.printText('Shipping Label', {
   tapeWidth: 12,
-  density: 'high',
   copies: 1,
 });
 ```
@@ -49,7 +48,7 @@ await printer.printImageURL('/assets/label.png', { tapeWidth: 12, dither: true }
 
 ## Requirements
 
-- Browser with WebHID support (for example recent Chromium-based browsers).
+- Browser with WebUSB support (for example recent Chromium-based browsers).
 - Secure context (`https://` or `http://localhost`).
 - `requestPrinter()` must be triggered from a user gesture (button click, etc.).
 

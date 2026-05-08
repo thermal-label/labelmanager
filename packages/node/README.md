@@ -1,6 +1,6 @@
 # @thermal-label/labelmanager-node
 
-Node.js USB HID driver for DYMO LabelManager printers.
+Node.js USB driver for DYMO LabelManager / LabelPoint D1 tape printers.
 
 Use this package to discover connected printers and print text or images from Node.js.
 
@@ -56,7 +56,7 @@ console.log(generateUdevRules());
 ## Requirements
 
 - Node.js 24 or newer.
-- Access to USB HID devices.
+- Access to the printer's USB Printer-class interface.
 - Linux users typically need udev rules and `usb_modeswitch`.
 - Optional image decoding dependency: `@napi-rs/canvas` (required for image file and buffer decoding).
 

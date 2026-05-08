@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildBitmapRows,
-  buildFormFeed,
-  buildPrinterStream,
-  buildResetSequence,
-  encodeLabel,
-} from '../protocol.js';
+import { buildPrinterStream } from '../protocol.js';
 import type { LabelBitmap } from '@mbtech-nl/bitmap';
 import type { PrintEngine } from '@thermal-label/contracts';
 
@@ -44,148 +38,127 @@ const ENGINE: PrintEngine = {
   forcedTrailingFeedMm: 8,
 };
 
-// Resolved feed-margin dot count for the reference engine (8 mm @ 180 dpi
-// rounds to 57 — the same number the encoder used as a hard-coded
-// constant before the dead-zone-model migration).
+// 8 mm @ 180 dpi rounds to 57 dots — the same number the pre-0.6.0
+// encoder used as a hard-coded `FEED_MARGIN_PX` constant.
 const FEED_MARGIN_PX = 57;
 
-describe('protocol', () => {
-  it('builds reset sequence with normal and high density', () => {
-    const normal = buildResetSequence();
-    const high = buildResetSequence({ density: 'high' });
-    const normalReset = normal[0]!;
-    const normalDensity = normal[2]!;
-    const highDensity = high[2]!;
-
-    expect(normal).toHaveLength(3);
-    expect(normalReset.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
-    expect(normalDensity.slice(0, 3)).toEqual(new Uint8Array([0x1b, 0x65, 0x00]));
-    expect(highDensity.slice(0, 3)).toEqual(new Uint8Array([0x1b, 0x65, 0x01]));
-  });
-
-  it('scales head-perpendicular dimension to head dots and adds feed margin', () => {
-    // 64×64 head-aligned: widthPx=head-perp=64 (already at 12mm head), heightPx=feed=64.
-    // Scale leaves widthPx at 64; pad adds 2×57 to heightPx → 178 rows.
-    const bitmap = makeBitmap(64, 64);
-    const reports = buildBitmapRows(bitmap, ENGINE);
-    const first = reports[0]!;
-
-    expect(reports).toHaveLength(64 + 2 * FEED_MARGIN_PX); // 178
-    expect(first).toHaveLength(64); // 64-byte HID frame
-    expect(first[0]).toBe(0x16);
-    expect(first[63]).toBe(0x00);
-  });
-
-  it('upscales head-perpendicular and grows feed length proportionally', () => {
-    // Head-aligned: widthPx=53 (head-perp), heightPx=64 (feed).
-    // Scale widthPx 53→64 (12mm head): heightPx grows 64*(64/53)=77.
-    const bitmap = makeBitmap(53, 64);
-    const scaledFeed = Math.round(64 * (64 / 53)); // 77
-    const reports = buildBitmapRows(bitmap, ENGINE);
-
-    expect(reports).toHaveLength(scaledFeed + 2 * FEED_MARGIN_PX);
-    expect(reports[0]).toHaveLength(64);
-  });
-
-  it('scales head-perpendicular to head dot count for each tape width', () => {
-    // 8×40 head-aligned input. Scale widthPx 8 → headDots; heightPx
-    // grows by (headDots / 8).
-    const bitmap = makeBitmap(8, 40);
-    const scaledFeed6 = Math.round(40 * (32 / 8)); // 160
-    const scaledFeed9 = Math.round(40 * (48 / 8)); // 240
-    const scaledFeed12 = Math.round(40 * (64 / 8)); // 320
-
-    const reports6 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 6 });
-    const reports9 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 9 });
-    const reports12 = buildBitmapRows(bitmap, ENGINE, { tapeWidth: 12 });
-
-    expect(reports6).toHaveLength(scaledFeed6 + 2 * FEED_MARGIN_PX);
-    expect(reports9).toHaveLength(scaledFeed9 + 2 * FEED_MARGIN_PX);
-    expect(reports12).toHaveLength(scaledFeed12 + 2 * FEED_MARGIN_PX);
-
-    // Each report is still a full 64-byte HID packet
-    expect(reports6[0]).toHaveLength(64);
-    expect(reports12[0]).toHaveLength(64);
-  });
-
-  it('creates form feed command', () => {
-    const reports = buildFormFeed();
-    const formFeed = reports[0]!;
-
-    expect(reports).toHaveLength(1);
-    expect(formFeed.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
-  });
-
-  it('encodes complete report sequence and copies', () => {
-    // 64×64 → 64+114=178 bitmap rows. Per copy: 3 reset + 178 + 1 ff = 182; ×2 = 364.
-    const bitmap = makeBitmap(64, 64);
-    const reportsPerCopy = 3 + (64 + 2 * FEED_MARGIN_PX) + 1; // 182
-    const reports = encodeLabel(bitmap, ENGINE, { copies: 2, density: 'high' });
-    const first = reports[0]!;
-    const endOfFirstCopy = reports[reportsPerCopy - 1]!; // index 181
-    const firstOfSecondCopy = reports[reportsPerCopy]!; // index 182
-
-    expect(reports).toHaveLength(reportsPerCopy * 2);
-    expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
-    expect(endOfFirstCopy.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
-    expect(firstOfSecondCopy.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
-  });
-
-  it('buildPrinterStream produces labelle-compatible raw byte stream', () => {
-    // 8×40 head-aligned → scaled feed 320, padded 434. Each row: SYN+8 = 9.
-    // Total: 3 (ESC C 0) + 3 (ESC D 8) + 434×9 + 2 (ESC A) = 3914.
+describe('buildPrinterStream', () => {
+  it('emits content via SYN+row and skip-lines via ESC D 0 + bare SYN', () => {
+    // 8×40 head-aligned → scaled feed 320 content rows. ENGINE has
+    // leading=8mm (57 dots) and trailing=8mm (57 dots).
+    //
+    // Wire layout per copy:
+    //   ESC C 0                        3
+    //   ESC D 0                        3   (leading skip block)
+    //   SYN × 57                      57   (leading skip-lines)
+    //   ESC D 8                        3   (bytes-per-line for content)
+    //   (SYN + 8 bytes) × 320       2880   (content rows)
+    //   ESC D 0                        3   (trailing skip block)
+    //   SYN × 57                      57   (trailing skip-lines)
+    //   ESC A                          2
     const scaledFeed = Math.round(40 * (64 / 8)); // 320
-    const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 434
     const bitmap = makeBitmap(8, 40);
     const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12 });
+
+    const expectedLength =
+      3 + // ESC C 0
+      3 +
+      FEED_MARGIN_PX + // leading: ESC D 0 + 57×SYN
+      3 + // ESC D 8
+      scaledFeed * 9 + // content rows (SYN + 8 bytes each)
+      3 +
+      FEED_MARGIN_PX + // trailing: ESC D 0 + 57×SYN
+      2; // ESC A
+
+    expect(stream).toHaveLength(expectedLength);
 
     // Starts with ESC C 0 (tape type)
     expect(stream[0]).toBe(0x1b);
     expect(stream[1]).toBe(0x43);
     expect(stream[2]).toBe(0x00);
 
-    // Followed by ESC D 8 (bytes per line for 12mm)
+    // Leading skip block: ESC D 0 then 57 bare SYNs
     expect(stream[3]).toBe(0x1b);
     expect(stream[4]).toBe(0x44);
-    expect(stream[5]).toBe(8);
+    expect(stream[5]).toBe(0x00);
+    for (let i = 0; i < FEED_MARGIN_PX; i += 1) {
+      expect(stream[6 + i]).toBe(0x16);
+    }
 
-    expect(stream).toHaveLength(3 + 3 + rows * 9 + 2);
-    expect(stream[6]).toBe(0x16); // SYN starts first row
+    // ESC D 8 marks end of leading skip block / start of content
+    const contentDOffset = 6 + FEED_MARGIN_PX;
+    expect(stream[contentDOffset]).toBe(0x1b);
+    expect(stream[contentDOffset + 1]).toBe(0x44);
+    expect(stream[contentDOffset + 2]).toBe(8);
+    expect(stream[contentDOffset + 3]).toBe(0x16); // first content SYN
 
     // Ends with ESC A
     expect(stream.at(-2)).toBe(0x1b);
     expect(stream.at(-1)).toBe(0x41);
+
+    // Trailing block sits immediately before ESC A: SYN × 57 then ESC A.
+    for (let i = 0; i < FEED_MARGIN_PX; i += 1) {
+      expect(stream[stream.length - 2 - FEED_MARGIN_PX + i]).toBe(0x16);
+    }
+    // Preceded by ESC D 0
+    const trailingDOffset = stream.length - 2 - FEED_MARGIN_PX - 3;
+    expect(stream[trailingDOffset]).toBe(0x1b);
+    expect(stream[trailingDOffset + 1]).toBe(0x44);
+    expect(stream[trailingDOffset + 2]).toBe(0x00);
   });
 
-  it('buildPrinterStream uses correct bytes per line for 6mm tape', () => {
-    // 8×10 head-aligned → scaled feed 40 (32/8 ratio), padded 154.
-    // Each row: SYN+4 = 5. Total: 3 + 3 + 154×5 + 2 = 778.
-    const scaledFeed = Math.round(10 * (32 / 8)); // 40
-    const rows = scaledFeed + 2 * FEED_MARGIN_PX; // 154
+  it('uses correct bytes per line for each tape width', () => {
+    // 8×10 head-aligned → scaled feed scales by (headDots / 8). Each
+    // content row is `SYN + bytesPerLine` bytes; skip-lines blocks
+    // contribute ESC D 0 + 57×SYN per side.
     const bitmap = makeBitmap(8, 10);
-    const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 6 });
+    const cases: Array<{ tapeWidth: 6 | 9 | 12 | 19; headDots: number; bytesPerLine: number }> = [
+      { tapeWidth: 6, headDots: 32, bytesPerLine: 4 },
+      { tapeWidth: 9, headDots: 48, bytesPerLine: 6 },
+      { tapeWidth: 12, headDots: 64, bytesPerLine: 8 },
+      { tapeWidth: 19, headDots: 64, bytesPerLine: 8 },
+    ];
 
-    // ESC D 4 (4 bytes per line for 6mm / 32 dots)
+    for (const { tapeWidth, headDots, bytesPerLine } of cases) {
+      const stream = buildPrinterStream(bitmap, ENGINE, { tapeWidth });
+      const scaledFeed = Math.round(10 * (headDots / 8));
+
+      // ESC D N sits right after the leading skip block (3 + 3 + 57 = 63).
+      const contentDOffset = 3 + 3 + FEED_MARGIN_PX;
+      expect(stream[contentDOffset]).toBe(0x1b);
+      expect(stream[contentDOffset + 1]).toBe(0x44);
+      expect(stream[contentDOffset + 2]).toBe(bytesPerLine);
+
+      expect(stream).toHaveLength(
+        3 +
+          3 +
+          FEED_MARGIN_PX +
+          3 +
+          scaledFeed * (1 + bytesPerLine) +
+          3 +
+          FEED_MARGIN_PX +
+          2,
+      );
+    }
+  });
+
+  it('omits skip-line blocks when leading + trailing are zero', () => {
+    // Bare engine — no leading or trailing pad. Stream collapses to
+    // ESC C 0 / ESC D N / SYN content / ESC A.
+    const bareEngine: PrintEngine = {
+      role: 'primary',
+      protocol: 'd1-tape',
+      dpi: 180,
+      headDots: 64,
+    };
+    const bitmap = makeBitmap(64, 64);
+    const stream = buildPrinterStream(bitmap, bareEngine, { tapeWidth: 12 });
+
+    expect(stream).toHaveLength(3 + 3 + 64 * 9 + 2);
     expect(stream[3]).toBe(0x1b);
     expect(stream[4]).toBe(0x44);
-    expect(stream[5]).toBe(4);
-
-    expect(stream).toHaveLength(3 + 3 + rows * 5 + 2);
-  });
-
-  it('encodes one column report per label column for narrower tape', () => {
-    // 8×40 head-aligned + 6mm: scaled feed 160, padded 274.
-    // Per copy: 3 reset + 274 bitmap + 1 form feed = 278.
-    const bitmap = makeBitmap(8, 40);
-    const scaledFeed = Math.round(40 * (32 / 8)); // 160
-    const bitmapRows = scaledFeed + 2 * FEED_MARGIN_PX; // 274
-    const reports = encodeLabel(bitmap, ENGINE, { tapeWidth: 6 });
-    const first = reports[0]!;
-    const formFeed = reports[3 + bitmapRows]!; // index 277
-
-    expect(reports).toHaveLength(3 + bitmapRows + 1);
-    expect(first.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x40]));
-    expect(formFeed.slice(0, 2)).toEqual(new Uint8Array([0x1b, 0x47]));
+    expect(stream[5]).toBe(8); // ESC D 8 directly after ESC C 0 — no leading block
+    expect(stream[6]).toBe(0x16); // first content SYN
   });
 
   it('reads leading pad from engine.printableArea and trailing from forcedTrailingFeedMm', () => {
@@ -201,23 +174,16 @@ describe('protocol', () => {
     const trailingDots = Math.round((12 * 180) / 25.4); // 85
 
     const bitmap = makeBitmap(64, 64);
-    const reports = buildBitmapRows(bitmap, asymEngine);
+    const stream = buildPrinterStream(bitmap, asymEngine, { tapeWidth: 12 });
 
-    expect(reports).toHaveLength(64 + leadingDots + trailingDots);
+    // 3 (ESC C 0) + 3 + 28 (leading) + 3 (ESC D 8) + 64×9 + 3 + 85 (trailing) + 2 (ESC A).
+    expect(stream).toHaveLength(3 + 3 + leadingDots + 3 + 64 * 9 + 3 + trailingDots + 2);
   });
 
-  it('treats absent printableArea / forcedTrailingFeedMm as zero pad', () => {
-    // Engine without dead-zone fields populated — encoder should emit
-    // exactly the scaled bitmap with no leading/trailing pad.
-    const bareEngine: PrintEngine = {
-      role: 'primary',
-      protocol: 'd1-tape',
-      dpi: 180,
-      headDots: 64,
-    };
+  it('repeats the per-copy block for copies > 1', () => {
     const bitmap = makeBitmap(64, 64);
-    const reports = buildBitmapRows(bitmap, bareEngine);
-
-    expect(reports).toHaveLength(64);
+    const single = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12 });
+    const triple = buildPrinterStream(bitmap, ENGINE, { tapeWidth: 12, copies: 3 });
+    expect(triple).toHaveLength(single.length * 3);
   });
 });

@@ -1,7 +1,7 @@
 # Core
 
 `@thermal-label/labelmanager-core` is the shared protocol layer used by
-both the Node.js and Web packages. It contains the ESC-sequence
+both the Node.js and Web packages. It contains the byte-stream
 encoder, the bitmap pipeline wiring, the device and media registries,
 the status parser, and the offline preview helper. It also re-exports
 the `@thermal-label/contracts` base types (`PrinterAdapter`,
@@ -27,30 +27,34 @@ porting checklist for other languages or runtimes.
 | `STATUS_REQUEST`                                                     | `ESC A` byte sequence                                         |
 | `parseStatus(bytes)`                                                 | Parse the status byte into `PrinterStatus` (contracts shape)  |
 | `createPreviewOffline(image, media)`                                 | Render `PreviewResult` without a live printer connection      |
-| `buildPrinterStream(bitmap, opts)`                                   | Encode a full label job as a raw USB byte stream              |
-| `buildBitmapRows(bitmap, opts)`                                      | Encode a bitmap as HID-style row reports                      |
-| `buildResetSequence(opts)`                                           | ESC reset + media type + density                              |
-| `buildFormFeed()`                                                    | Form-feed / cut                                               |
-| `encodeLabel(bitmap, opts)`                                          | Full HID report sequence for one or more copies               |
+| `buildPrinterStream(bitmap, engine, opts, media)`                    | Encode a full label job as a contiguous USB byte stream       |
 | `LabelManagerDevice`                                                 | Device descriptor type (extends contracts `DeviceDescriptor`) |
 | `LabelManagerMedia`                                                  | Media descriptor type (extends contracts `MediaDescriptor`)   |
-| `LabelManagerPrintOptions`                                           | Protocol options (`density`, `copies`, `tapeWidth`)           |
+| `LabelManagerPrintOptions`                                           | Protocol options (`copies`, `tapeWidth`, `rotate`)            |
 | `TapeWidth`                                                          | `6 \| 9 \| 12 \| 19`                                          |
 | `PrinterAdapter`, `MediaDescriptor`, `PrinterStatus`, `Transport`, … | Re-exported from `@thermal-label/contracts`                   |
 
-## Why we don't use the HID interface for printing
+## One encoder, transport's choice of interface
 
-Several DYMO LabelManager models present three USB interfaces — Printer
-class on Interface 0, Mass Storage on Interface 1, and HID on Interface 2. The HID interface only describes the on-device keyboard and feature
-buttons; **no output report is defined**, so writing print data to it
-fails silently at the firmware level.
+`buildPrinterStream` produces a single contiguous byte stream — the
+opcode order is fixed and bench-validated against the labelle Python
+prior art (see [protocol reference](./protocol)). The transport layer
+is responsible for chunking that stream to the target endpoint's
+`wMaxPacketSize` (64 bytes) and for selecting which USB interface to
+write to.
 
-Worse: an unrecognised command token (e.g. raw `ESC @` sent as a HID
-report body) corrupts the printer's parser state machine across both
-interfaces. Subsequent commands to Interface 0 are then also blocked
-until a USB reset. Earlier prototypes of this driver hit exactly this
-trap — the conclusion is to claim Interface 0 directly via `libusb` (or
-WebUSB) and never touch the HID interface for printing.
+The stream prints correctly on either of the two viable interfaces a
+LabelManager exposes after mode-switch:
 
-See the [protocol reference](./protocol) for the full USB topology and
-the byte sequences that actually work.
+- **Printer class** (Interface 0, bulk EP `0x05` OUT) — the default.
+  Linux doesn't bind a kernel driver to it, so no `detachKernelDriver`
+  step is needed and the udev story is conventional.
+- **HID** (Interface 2, interrupt EP `0x01` OUT) — viable, but the
+  Node driver needs to detach `usbhid` first; the browser would use
+  WebHID instead of WebUSB. Not currently exposed by the Node or web
+  packages, but the encoder output is interface-agnostic.
+
+The byte stream is identical in either case. There is no separate
+"HID-style report" output shape — that was a misconception in earlier
+versions of this driver, drawn from generic ESC/POS receipt-printer
+conventions that don't apply to D1.

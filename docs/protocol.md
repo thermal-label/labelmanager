@@ -12,20 +12,20 @@ issues, or extending the package.
 - [Hardware](./hardware) — supported devices, USB IDs, tape widths.
   :::
 
-::: info Cousin protocol
-The DYMO LabelWriter Duo's tape engine uses a closely related variant
-(SYN-row framing, the same `ESC C` / `ESC D` opcodes) but diverges on
-the cut command and the status reply shape. See
-[LabelWriter Duo tape protocol](https://thermal-label.github.io/labelwriter/protocol/duo-tape).
+::: info Same protocol on LabelWriter Duo
+The DYMO LabelWriter Duo's tape engine speaks the same D1 wire
+protocol — same opcode set, same SYN-row framing. The status reply
+shape may differ on Duo (longer, additional cassette fields); the
+print path is otherwise identical.
 :::
 
 ## Models and engines
 
 LabelManager / LabelPoint chassis sharing the D1 cassette and the same
-HID-printer-class wire protocol. All models share VID `0x0922` and a
-single 64-pin print head; printable region narrows to 32 / 48 / 64 dots
-by tape width. Per-model PIDs, mode-switch siblings, and verification
-status live on the [Hardware](./hardware) page.
+wire protocol. All models share VID `0x0922` and a single 64-pin
+print head; printable region narrows to 32 / 48 / 64 dots by tape
+width. Per-model PIDs, mode-switch siblings, and verification status
+live on the [Hardware](./hardware) page.
 
 | Tape widths        | Models                                                                                      |
 | ------------------ | ------------------------------------------------------------------------------------------- |
@@ -36,24 +36,32 @@ status live on the [Hardware](./hardware) page.
 
 All supported devices share Vendor ID **`0x0922`** (DYMO-CoStar Corp.).
 After mode-switch (see below), each enumerates as a composite USB
-device with a Printer-class interface:
+device with three interfaces:
 
 ```
 Configuration 1
-  Interface 0  —  Printer class  (bInterfaceClass 0x07)
+  Interface 0 — Printer class (bInterfaceClass 0x07)
     Endpoint 0x05  OUT   Bulk    (print data)
-    Endpoint 0x85  IN    Bulk    (1-byte status responses)
-  Interface 1+ —  HID  (used by the device's keyboard/feature buttons)
+    Endpoint 0x85  IN    Bulk    (1-byte status response)
+  Interface 1 — Mass Storage (vestigial; firmware-update mode)
+  Interface 2 — HID (bInterfaceClass 0x03)
+    Endpoint 0x01  OUT   Interrupt
+    Endpoint 0x81  IN    Interrupt
 ```
 
-Print data is sent **directly to the Printer-class interface** via raw
-USB bulk transfers — _not_ via the HID interface. The HID interface
-exists for the on-device keyboard input and is not used for printing.
+The exact same byte stream prints correctly on **either** the Printer
+class OUT endpoint **or** the HID OUT endpoint — bench-verified
+2026-05-08. The driver targets the Printer-class interface by default
+because Linux doesn't bind a kernel driver to it (so no
+`detachKernelDriver` dance), and because the udev rule for the
+printer-class device node is conventional. The HID interface is a
+viable alternative transport; choosing it is a transport-layer
+concern, not a protocol-layer one.
 
-The Node driver chunks writes at **64 bytes** with a 5 ms delay between
-chunks. The chunking matches the device's internal report-size
-expectation observed during reverse engineering; smaller chunks work,
-larger ones risk truncation on some firmware revisions.
+The encoder produces one contiguous byte stream
+(`buildPrinterStream`); the transport layer chunks that stream as
+needed for its endpoint's `wMaxPacketSize` (64 bytes for both the bulk
+EP 5 and the interrupt EP 1).
 
 ### Mode-switch (Linux only)
 
@@ -76,14 +84,6 @@ package ships generators for both — see
 switch to printer mode when the OS driver loads, so no host-side action
 is needed.
 
-::: warning Do not send `ESC @`
-Do **not** send the generic reset opcode `1B 40` (`ESC @`) to the
-Printer-class interface — it corrupts D1 firmware's parser state and
-the next job will print garbage until the device is power-cycled.
-The driver uses the LabelWriter-style `ESC @` only on LabelWriter
-devices, never on LabelManager.
-:::
-
 ## Status
 
 Send the single-byte command `1B 41` (`ESC A`) to the OUT endpoint.
@@ -95,13 +95,15 @@ The printer replies with **one byte** on the IN endpoint:
 |   1 | No tape inserted         |
 |   2 | Tape supply low          |
 
-All other bits are reserved and observed as zero.
+All other bits are reserved and observed as zero. LabelWriter Duo's
+status reply is longer and includes additional cassette fields — that
+is the only known divergence between the LM and Duo D1 implementations.
 
-The status request is also used as a job-flush at the end of a print
-stream — see [Print job structure](#print-job-structure). LabelManager
-does **not** report the loaded tape width over the wire; callers must
-always pass `media` explicitly to `print()` (or rely on the
-`DEFAULT_MEDIA` 12 mm fallback for previews).
+`ESC A` is a pure status query: it does not cut, it does not advance
+the tape, and it does not flush a buffer. LabelManager does **not**
+report the loaded tape width over the wire; callers must always pass
+`media` explicitly to `print()` (or rely on the `DEFAULT_MEDIA` 12 mm
+fallback for previews).
 
 ## Tape width and head geometry
 
@@ -121,25 +123,45 @@ the bitmap by padding the head-perpendicular axis to the head-dot count
 before emitting columns. See `prepareForEmission()` in
 `packages/core/src/protocol.ts`.
 
-A leading and trailing **8 mm blank-feed** (~57 px at 180 DPI) is
-prepended and appended to every job so the cutter can divide the
-printed region cleanly on both edges.
+## Opcode vocabulary
+
+The complete D1 vocabulary is **`ESC A` through `ESC E`** plus the
+`SYN` data opcode. Anything else is unrecognised by the firmware;
+some unrecognised opcodes silently corrupt the parser state and brick
+the device until power-cycle. Don't experiment in production code.
+
+| Opcode  | Bytes      | Meaning                                                           |
+| ------- | ---------- | ----------------------------------------------------------------- |
+| `SYN`   | `16` + N   | Print one row (or, with `ESC D 0` set, advance one row).          |
+| `ESC A` | `1B 41`    | Status query — see [Status](#status).                             |
+| `ESC B` | `1B 42 N`  | Set bias offset (`dot_tab`). Unused by this driver.               |
+| `ESC C` | `1B 43 0`  | Set tape type. Always `00` (D1 tape) for this driver.             |
+| `ESC D` | `1B 44 N`  | Set bytes-per-line. `ESC D 0` enables MLF skip-line mode.         |
+| `ESC E` | `1B 45`    | Cut. Drives the blade on motorised-cutter chassis; no-op on manual-cutter chassis. Safe to emit at end of every job. |
 
 ## Print job structure
 
-A complete job is a single byte stream sent to EP `0x05` OUT, repeated
-once per copy:
+A complete job is a single byte stream sent to the device's OUT
+endpoint, repeated once per copy:
 
 ```
 [per copy]
   ESC C 0           — set media type to "tape"
-  ESC D N           — set bytes-per-line (N = ceil(headDots / 8))
+  [if leading skip:  ESC D 0 + N × SYN]   — chassis dead-zone
+  ESC D N           — set bytes-per-line for content (N = ceil(headDots / 8))
   [for each row]
-    SYN row...      — one column of pixel data
-  ESC A             — flush / status request (printer replies on IN)
+    SYN row…        — one column of pixel data
+  [if trailing skip: ESC D 0 + N × SYN]   — post-print tape advance
+  ESC A             — status query (ends the job)
 ```
 
-All values are hexadecimal. Each command is described below.
+Leading and trailing tape advance are emitted as **zero-payload SYN
+rows** against `ESC D 0` (the "MLF skip-lines" pattern from labelle's
+`_skip_lines` helper). Each bare `0x16` byte advances one dot row with
+no printed payload — same physical feed as a blank padded row but at
+1 byte per row instead of `1 + bytesPerLine`.
+
+All values are hexadecimal. Each opcode is described below.
 
 ### `ESC C 0` — set media type
 
@@ -156,9 +178,13 @@ command. Sent once per copy (not per row).
 1B 44 N
 ```
 
-`N` is the number of payload bytes that will follow the SYN opcode in
-each raster row, computed as `ceil(headDots / 8)` — `4` bytes for 6 mm
-tape, `6` for 9 mm, `8` for 12/19 mm.
+`N` is the number of payload bytes that will follow each `SYN` opcode,
+computed as `ceil(headDots / 8)` — `4` bytes for 6 mm tape, `6` for
+9 mm, `8` for 12/19 mm.
+
+`ESC D 0` is a special case used for skip-lines: each subsequent
+`SYN` byte feeds one dot row with **zero** payload bytes. Re-issue
+`ESC D N` to return to printing.
 
 ### `SYN <row bytes>` — raster row (one column)
 
@@ -176,68 +202,35 @@ D1 tape printers feed the tape **forward by one column per row** — the
 the head. The driver rotates landscape input 90° clockwise via
 `pickRotation` before emission.
 
-### `ESC A` — flush / status request
+### `ESC A` — status query (job terminator)
 
 ```
 1B 41
 ```
 
-Terminates the job. The printer:
+Acts as a non-destructive status read; the printer replies with a
+1-byte status on the IN endpoint (see [Status](#status)). Used at the
+end of every job by convention, but the firmware will accept and print
+the preceding stream regardless. Cutting and tape advance are handled
+by the opcodes above, not by `ESC A`.
 
-1. Cuts the tape (D1 cassettes have a built-in cutter; LabelManager
-   models trigger it on `ESC A`).
-2. Replies with a 1-byte status on the IN endpoint (see
-   [Status](#status)).
+## Encoder + transport split
 
-The driver does not always read this mid-stream reply; it is consumed
-by the next `getStatus()` call.
+The driver produces **one** contiguous byte stream — the order of
+opcodes in [Print job structure](#print-job-structure) is fixed. The
+encoder lives in `packages/core/src/protocol.ts`:
 
-## Optional commands
+| Function             | Output       | Notes                                       |
+| -------------------- | ------------ | ------------------------------------------- |
+| `buildPrinterStream` | `Uint8Array` | Full job stream (per `LabelManagerPrintOptions`) |
 
-### `ESC e <density>` — print density
-
-```
-1B 65 nn
-```
-
-`nn = 0x00` for normal density, `0x01` for high. Affects how aggressively
-the head heats each pin. Sent during the reset sequence in the HID-style
-encoder path (`buildResetSequence`); the bulk-stream path
-(`buildPrinterStream`) omits it because the firmware defaults are
-correct for the canonical D1 cassettes.
-
-### `ESC G` — form-feed / advance
-
-```
-1B 47
-```
-
-Advances tape without printing — useful for a manual cut in HID-driven
-flows. The bulk-stream path replaces this with `ESC A` (which both
-flushes and triggers the cutter on D1 hardware).
-
-::: info LabelWriter Duo divergence
-The LabelWriter Duo's tape engine uses **`ESC E` (`1B 45`)** as its
-cut command instead of `ESC G` / `ESC A`. The Duo's status reply is
-also longer (8 bytes vs LabelManager's 1 byte) and includes additional
-fields about the loaded cassette. See
-[LabelWriter Duo tape protocol](https://thermal-label.github.io/labelwriter/protocol/duo-tape).
-:::
-
-## Two transports, one protocol
-
-The driver exposes two encoder entry points for different use cases:
-
-| Entry point          | Output         | Used by                                    |
-| -------------------- | -------------- | ------------------------------------------ |
-| `buildPrinterStream` | `Uint8Array`   | Direct USB bulk transfer (Node + WebUSB)   |
-| `encodeLabel`        | `Uint8Array[]` | HID report path (legacy / OS-paired flows) |
-
-The two share `prepareForEmission` (geometry pipeline) and emit the
-same opcodes; the HID variant wraps each command in a 64-byte report
-with the report ID prefix. New code should prefer `buildPrinterStream`
-— it matches what the device actually wants on the Printer-class
-interface.
+The transport layer is responsible for shipping that stream:
+chunking to the endpoint's `wMaxPacketSize` (64 bytes for both the
+bulk Printer-class endpoint and the HID interrupt endpoint), inserting
+inter-chunk delays, and selecting the target interface. The Node
+driver targets the Printer-class interface (IF 0, EP 5 OUT) by default;
+the HID interface (IF 2, EP 1 OUT) is a valid alternative that requires
+detaching `usbhid` first.
 
 ## Flow control (synwait)
 
@@ -279,7 +272,8 @@ async function writeWithSynwait(stream: Uint8Array, transport: Transport) {
 
 ## WebUSB
 
-The browser package uses the WebUSB API:
+The browser package uses the WebUSB API to target the Printer-class
+interface:
 
 ```ts
 device.open()
@@ -294,18 +288,22 @@ is not possible from the browser — devices stuck in mass-storage mode
 are filtered out at discovery and surface a "set up via the desktop
 installer first" message.
 
+WebHID against the HID interface (IF 2) is also viable in principle —
+the same byte stream prints there — but the package doesn't currently
+expose that path.
+
 ## References
 
 - [`labelle`](https://github.com/labelle-org/labelle) — Python driver
-  for the same hardware family. Primary reference for the bulk-stream
-  command shape (`ESC C` / `ESC D` / `SYN` / `ESC A`) and synwait
-  flow control.
-- [`dymoprint`](https://github.com/computerlyrik/dymoprint) — Rust
-  secondary cross-reference for the HID-report path and tape-width
-  margin geometry.
+  for the same hardware family. Primary reference for the D1 opcode
+  set (`ESC C` / `ESC D` / `SYN` / `ESC E` / `ESC A`), the MLF
+  skip-lines pattern, and synwait flow control.
+- [`dymoprint`](https://github.com/computerlyrik/dymoprint) — Python
+  predecessor of labelle (deprecated 2023). Original reverse-engineering
+  effort; PR #56 documents the migration from raw HID file I/O to
+  PyUSB.
 - Implementation in this driver:
-  - `packages/core/src/protocol.ts` — encoder (both stream and HID
-    variants).
+  - `packages/core/src/protocol.ts` — encoder.
   - `packages/core/src/status.ts` — status-byte parser.
   - `packages/node/src/printer.ts` — chunked USB write loop.
   - `packages/node/src/udev.ts` — Linux `usb_modeswitch` rule

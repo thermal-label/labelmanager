@@ -1,6 +1,6 @@
 # Hardware Compatibility
 
-This project targets DYMO LabelManager USB HID printers in the D1 family.
+This project targets DYMO LabelManager / LabelPoint USB printers in the D1 tape family.
 
 ## Compatibility Matrix
 
@@ -13,16 +13,15 @@ work — see `plans/backlog/wide-tier-media-compatibility.md`.
 | Device | VID:PID | Tape Widths | Status | Notes |
 |---|---|---|---|---|
 | LabelManager PnP | `0922:1002` | 6, 9, 12mm | Verified | Reference test device. 12 mm chassis cap. |
+| LabelManager 280 | `0922:1005 -> 0922:1006` | 6, 9, 12mm | Expected | Requires mode-switch. PID single-sourced from labelle — needs hardware verification. |
 | LabelManager 420P | `0922:1004` | 6, 9, 12, 19mm | Expected | 19 mm chassis cap per [DYMO product page](https://www.dymo.com/label-makers-printers/labelmanager-label-makers/dymo-labelmanager-420p-high-performance-label-maker/SP_95482.html). |
 | LabelManager Wireless PnP | `0922:1008` | 6, 9, 12, 19, 24mm† | Expected | USB cable mode only. 24 mm chassis cap per [DYMO Wireless PnP technical datasheet](https://download.dymo.com/dymo/user-guides/LabelManager/LMWirelessPnP/LabelManager_Wireless_PnP_Technical_Datasheet.pdf); 24 mm rasterizer path not yet implemented. |
 | LabelManager PC | `0922:1001 -> 0922:1002` | 6, 9, 12mm | Expected | Requires mode-switch. Width cap untested — conservative default. |
-| LabelPoint 350 | `0922:1003` | 6, 9, 12mm | Expected | Same HID command set. Width cap untested — conservative default. |
+| LabelPoint 350 | `0922:1003` | 6, 9, 12mm | Expected | Same D1 command set. Width cap untested — conservative default. |
 | MobileLabeler | `0922:1009` | 6, 9, 12, 19, 24mm† | Experimental | 24 mm chassis cap per maintainer report; 24 mm rasterizer path not yet implemented. Community verification needed. |
 
 > † `d1-wide` chassis: physical slot accepts 24 mm but the rasterizer
 > cap-lift has not landed — only ≤19 mm media activates today.
-
-> LabelManager 280 (`0922:1005`) is not a HID target and is out of scope.
 
 ## Supported Media
 
@@ -107,7 +106,7 @@ Please include:
 ## Linux Mode-Switch Notes
 
 Some Linux systems expose LabelManager PC as mass storage first (`PID 1001`).
-Use `usb_modeswitch` and the generated udev rules to switch to HID mode.
+Use `usb_modeswitch` and the generated udev rules to switch to printer mode.
 
 CLI helper:
 
