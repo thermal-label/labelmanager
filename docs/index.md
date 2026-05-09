@@ -45,11 +45,11 @@ features:
     </span>
     <span class="ref-arrow">→</span>
   </a>
-  <a href="./protocol.html" class="ref-link">
+  <a href="../d1-core/protocol.html" class="ref-link">
     <span class="ref-icon">📡</span>
     <span class="ref-body">
       <strong>D1 tape protocol</strong>
-      <span>USB topology, ESC sequences, status bits, porting guide</span>
+      <span>USB topology, ESC sequences, status bits — shared with the LabelWriter Duo (in d1-core)</span>
     </span>
     <span class="ref-arrow">→</span>
   </a>

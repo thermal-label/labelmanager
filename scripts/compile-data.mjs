@@ -24,11 +24,8 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
 const CORE_PKG = resolve(REPO_ROOT, 'packages/core');
 const DEVICES_DIR = resolve(CORE_PKG, 'data/devices');
-const MEDIA_FILE = resolve(CORE_PKG, 'data/media.json5');
 const DEVICES_OUT = resolve(CORE_PKG, 'data/devices.json');
-const MEDIA_OUT = resolve(CORE_PKG, 'data/media.json');
 const DEVICES_TS = resolve(CORE_PKG, 'src/devices.generated.ts');
-const MEDIA_TS = resolve(CORE_PKG, 'src/media.generated.ts');
 
 const DRIVER = 'labelmanager';
 const SCHEMA_VERSION = 1;
@@ -244,23 +241,6 @@ function legacyToVerifications(entry) {
 
 // `expandVerifications` is imported from `@thermal-label/contracts`.
 
-function loadMedia() {
-  const entries = readJson5(MEDIA_FILE);
-  if (!Array.isArray(entries)) {
-    fail(`media.json5: top-level must be an array`);
-    return [];
-  }
-  const seenIds = new Set();
-  for (const [i, m] of entries.entries()) {
-    if (m?.id == null) fail(`media[${i}]: missing \`id\``);
-    else if (seenIds.has(m.id)) fail(`media[${i}]: duplicate id \`${m.id}\``);
-    else seenIds.add(m.id);
-    if (typeof m?.widthMm !== 'number') fail(`media[${i}]: widthMm must be a number`);
-    if (typeof m?.type !== 'string') fail(`media[${i}]: type must be a string`);
-  }
-  return entries;
-}
-
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(value, null, 2) + '\n', 'utf8');
@@ -278,7 +258,6 @@ export const ${exportName} = ${JSON.stringify(value, null, 2)} as const satisfie
 }
 
 const devices = loadDevices();
-const media = loadMedia();
 
 if (errors.length > 0) {
   console.error(`[compile-data] ${errors.length} error(s):`);
@@ -327,7 +306,6 @@ const leanRegistry = {
 };
 
 writeJson(DEVICES_OUT, richRegistry);
-writeJson(MEDIA_OUT, media);
 
 writeGeneratedTs(
   DEVICES_TS,
@@ -354,14 +332,6 @@ export type RegistryWithStatus = Omit<DeviceRegistry, 'devices'> & {
   leanRegistry,
 );
 
-writeGeneratedTs(
-  MEDIA_TS,
-  "import type { LabelManagerMedia } from './types.js';",
-  'MEDIA_LIST',
-  'readonly LabelManagerMedia[]',
-  media,
-);
-
 console.log(
-  `[compile-data] OK — ${devices.length} devices, ${media.length} media entries → data/devices.json, data/media.json`,
+  `[compile-data] OK — ${devices.length} devices → data/devices.json. Media catalogue lives in @thermal-label/d1-core.`,
 );

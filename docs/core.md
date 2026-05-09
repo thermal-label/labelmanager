@@ -12,9 +12,10 @@ for production code. Core is useful when you need the protocol encoder
 or offline preview without a live printer.
 
 ::: tip Looking for byte-level details?
-The [D1 tape protocol reference](./protocol) documents the USB
-topology, exact byte sequences, status bits, mode-switch flow, and a
-porting checklist for other languages or runtimes.
+The [D1 tape protocol reference](../d1-core/protocol) (in d1-core,
+shared with the LabelWriter Duo) documents the USB topology, exact
+byte sequences, status bits, mode-switch flow, and a porting checklist
+for other languages or runtimes.
 :::
 
 ## Core API
@@ -38,7 +39,7 @@ porting checklist for other languages or runtimes.
 
 `buildPrinterStream` produces a single contiguous byte stream — the
 opcode order is fixed and bench-validated against the labelle Python
-prior art (see [protocol reference](./protocol)). The transport layer
+prior art (see [protocol reference](../d1-core/protocol)). The transport layer
 is responsible for chunking that stream to the target endpoint's
 `wMaxPacketSize` (64 bytes) and for selecting which USB interface to
 write to.

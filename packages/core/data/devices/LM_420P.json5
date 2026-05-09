@@ -11,7 +11,7 @@
       protocol: 'd1-tape',
       dpi: 180,
       headDots: 64,
-      mediaCompatibility: ['d1', 'd1-19'],
+      mediaCompatibility: ['d1', 'd1-wide'],
       // D1 cassette dead-zone defaults — see LM_PNP.json5 for
       // the geometry rationale. Same values on every D1 chassis
       // today; re-validate per-device as measurements arrive.
