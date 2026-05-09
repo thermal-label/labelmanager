@@ -50,7 +50,8 @@ describe('WebDymoPrinter', () => {
   });
 
   it('getStatus sends ESC A and returns the contracts shape', async () => {
-    const device = createMockUSBDevice();
+    // 0x40 = bit 6 set = loaded + ready (LM_PNP bench-confirmed).
+    const device = createMockUSBDevice(0x0922, 0x1002, 0x40);
     const printer = await fromUSBDevice(device);
 
     const status = await printer.getStatus();

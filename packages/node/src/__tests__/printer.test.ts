@@ -52,7 +52,8 @@ describe('DymoPrinter', () => {
   });
 
   it('getStatus writes ESC A and returns the contracts shape', async () => {
-    const { transport, write } = makeTransport(0);
+    // 0x40 = bit 6 set = loaded + ready (LM_PNP bench-confirmed).
+    const { transport, write } = makeTransport(0x40);
     const printer = new DymoPrinter(device, transport);
 
     const status = await printer.getStatus();
@@ -64,13 +65,16 @@ describe('DymoPrinter', () => {
   });
 
   it('getStatus surfaces structured error codes', async () => {
-    const { transport } = makeTransport(0b00000111);
+    // 0x14 = bits 4 + 2 set = cutter jammed (no media; bit 6 clear).
+    // Cutter-jam suppresses the catch-all general-error so the
+    // operator sees the more specific signal.
+    const { transport } = makeTransport(0b00010100);
     const printer = new DymoPrinter(device, transport);
 
     const status = await printer.getStatus();
     expect(status.ready).toBe(false);
     expect(status.mediaLoaded).toBe(false);
-    expect(status.errors.map(e => e.code)).toEqual(['not_ready', 'no_media', 'low_media']);
+    expect(status.errors.map(e => e.code)).toEqual(['no_media', 'paper_jam']);
   });
 
   it('print() sends encoded bytes when media is provided', async () => {
