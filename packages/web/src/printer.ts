@@ -130,11 +130,33 @@ export const DEFAULT_FILTERS: USBDeviceFilter[] = Object.values(DEVICES)
  *
  * Requires a user gesture (click, keypress). Opens the device and claims
  * interface 0 via `WebUsbTransport.fromDevice`.
+ *
+ * Single-instance entry point — preserved for back-compat with existing
+ * consumers (CLIs, ad-hoc scripts). For the symmetric driver-web shape
+ * (1-key map keyed by engine role) call `requestPrinters()` instead;
+ * the harness shell uses that path.
  */
 export async function requestPrinter(options: RequestOptions = {}): Promise<WebDymoPrinter> {
   const filters = options.filters ?? DEFAULT_FILTERS;
   const usbDevice = await navigator.usb.requestDevice({ filters });
   return fromUSBDevice(usbDevice);
+}
+
+/**
+ * Show the browser's USB picker and return one `PrinterAdapter` per
+ * drivable engine on the selected device, keyed by engine role.
+ *
+ * LabelManager devices are always single-engine — this returns a 1-key
+ * record keyed by the device's `engines[0].role` (typically `'primary'`).
+ * Mirrors the labelwriter driver's `requestPrinters()` factory so harness
+ * adapters can stay symmetric across driver families.
+ */
+export async function requestPrinters(
+  options: RequestOptions = {},
+): Promise<Record<string, WebDymoPrinter>> {
+  const filters = options.filters ?? DEFAULT_FILTERS;
+  const usbDevice = await navigator.usb.requestDevice({ filters });
+  return fromUSBDeviceAll(usbDevice);
 }
 
 /**
@@ -151,4 +173,30 @@ export async function fromUSBDevice(usbDevice: USBDevice): Promise<WebDymoPrinte
   }
   const transport = await WebUsbTransport.fromDevice(usbDevice);
   return new WebDymoPrinter(descriptor, transport);
+}
+
+/**
+ * Wrap an already-selected `USBDevice` and return a 1-key adapter map
+ * keyed by the device's `engines[0].role`. Public surface for
+ * `requestPrinters()`; exported so harnesses that already hold a
+ * `USBDevice` (e.g. picked-up via `navigator.usb.getDevices()` on a
+ * returning visit) can skip the picker.
+ *
+ * Single-interface only — LabelManager's USB transport always claims
+ * IF 0 (Printer Class, EP 5 bulk). The HID interface (IF 2) is real
+ * but unused by this driver.
+ */
+export async function fromUSBDeviceAll(
+  usbDevice: USBDevice,
+): Promise<Record<string, WebDymoPrinter>> {
+  const descriptor = findDevice(usbDevice.vendorId, usbDevice.productId);
+  if (!descriptor) {
+    throw new Error('Unsupported USB device for DYMO LabelManager protocol.');
+  }
+  const engine = descriptor.engines[0];
+  if (!engine) {
+    throw new Error(`Device ${descriptor.key} has no engines.`);
+  }
+  const transport = await WebUsbTransport.fromDevice(usbDevice);
+  return { [engine.role]: new WebDymoPrinter(descriptor, transport) };
 }
