@@ -6,11 +6,12 @@
 
 # Type Alias: SupportStatus
 
-> **SupportStatus** = `"verified"` \| `"partial"` \| `"broken"` \| `"untested"`
+> **SupportStatus** = `"verified"` \| `"partial"` \| `"unsupported"`
 
-Verification status for a device, transport, or engine.
+Stored verification rung — what a maintainer has directly observed.
 
 - `'verified'` — known-good against a recent reporter.
 - `'partial'` — works for some operations / paths but not all.
-- `'broken'` — known-broken; do not promise support.
-- `'untested'` — no accepted report yet.
+  Transport- or context-specific by nature; does not propagate.
+- `'unsupported'` — known-broken; do not promise support. Beats any
+  `'expected'` from propagation.

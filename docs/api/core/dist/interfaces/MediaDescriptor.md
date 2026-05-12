@@ -63,10 +63,6 @@ const m: MediaDescriptor = {
 };
 ```
 
-## Extended by
-
-- [`LabelManagerMedia`](LabelManagerMedia.md)
-
 ## Properties
 
 ### category?

@@ -14,7 +14,7 @@
 
 - [DeviceEntry](interfaces/DeviceEntry.md)
 - [DeviceRegistry](interfaces/DeviceRegistry.md)
-- [DeviceSupport](interfaces/DeviceSupport.md)
+- [~~DeviceSupport~~](interfaces/DeviceSupport.md)
 - [LabelManagerMedia](interfaces/LabelManagerMedia.md)
 - [LabelManagerPrintOptions](interfaces/LabelManagerPrintOptions.md)
 - [MediaDescriptor](interfaces/MediaDescriptor.md)
@@ -52,19 +52,18 @@
 - [TAPE\_19MM](variables/TAPE_19MM.md)
 - [TAPE\_6MM](variables/TAPE_6MM.md)
 - [TAPE\_9MM](variables/TAPE_9MM.md)
+- [TAPE\_TYPE\_DEFAULT](variables/TAPE_TYPE_DEFAULT.md)
+- [TAPE\_TYPE\_MAX](variables/TAPE_TYPE_MAX.md)
 
 ## Functions
 
-- [buildBitmapRows](functions/buildBitmapRows.md)
-- [buildFormFeed](functions/buildFormFeed.md)
 - [buildPrinterStream](functions/buildPrinterStream.md)
-- [buildResetSequence](functions/buildResetSequence.md)
 - [createPreviewOffline](functions/createPreviewOffline.md)
-- [encodeLabel](functions/encodeLabel.md)
 - [findDevice](functions/findDevice.md)
 - [findMediaByTapeWidth](functions/findMediaByTapeWidth.md)
 - [parseStatus](functions/parseStatus.md)
 - [pickRotation](functions/pickRotation.md)
+- [tapeTypeFor](functions/tapeTypeFor.md)
 
 ## References
 

@@ -12,5 +12,5 @@ Default media used when a caller invokes `createPreview()` without
 providing explicit media and without a detected media (LabelManager
 can never detect media).
 
-Chosen as the middle supported width so previews at least approximate
-the most common tape size.
+Chosen as the middle supported width so previews at least
+approximate the most common tape size.

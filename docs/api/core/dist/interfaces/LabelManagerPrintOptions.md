@@ -8,16 +8,22 @@
 
 Protocol-internal print options.
 
-Extends the cross-driver `PrintOptions` with LabelManager-specific
-`tapeWidth` — the protocol encoder needs it to pick the right
-`ESC D N` byte-per-line setting. `density` is narrowed to the
-values the printer supports. `rotate` overrides the orientation
-heuristic — `'auto'` (default) defers to the media's
-`defaultOrientation`; an explicit angle bypasses it.
+Extends the cross-driver `PrintOptions` and the D1 shared shape
+(`D1PrintOptions` — `copies`, `tapeType`) with LabelManager-specific
+`tapeWidth` (informational; the encoder reads `media.printableDots`),
+`density` narrowed to printer-supported values, and `rotate` to
+override the orientation heuristic — `'auto'` (default) defers to
+the media's `defaultOrientation`; an explicit angle bypasses it.
+
+`tapeType` is the `ESC C` selector (0..12), inherited from
+`D1PrintOptions`. Host-declared (LabelManager firmware cannot
+detect cartridge type); normally derived from the user-selected
+media's `text` / `background` via `tapeTypeFor()` and not passed by
+the caller. Override only when bench-testing a specific selector.
 
 ## Extends
 
-- [`PrintOptions`](PrintOptions.md)
+- [`PrintOptions`](PrintOptions.md).`D1PrintOptions`
 
 ## Properties
 
@@ -79,6 +85,16 @@ sentinel.
 ### rotate?
 
 > `optional` **rotate?**: `0` \| `90` \| `270` \| `"auto"` \| `180`
+
+***
+
+### tapeType?
+
+> `optional` **tapeType?**: `number`
+
+#### Inherited from
+
+`D1PrintOptions.tapeType`
 
 ***
 

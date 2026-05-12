@@ -8,16 +8,16 @@
 
 DYMO LabelManager media descriptor.
 
-Extends the contracts base `MediaDescriptor`. Tape is always
-continuous — `heightMm` is omitted. `type` is the literal string
-`'tape'` for structural matching. All LabelManager media is
-single-ink, so the base `palette` field is left undefined; the
-cartridge's printed colour and substrate colour live on the
-driver-side `text` and `background` fields below.
+Extends `D1Media` from `@thermal-label/d1-core` (the shared D1 tape
+shape — `printableDots`, `text`, `background` consumed by the
+encoder + tape-type selector) with LabelManager-specific narrowing:
+`type` is fixed to `'tape'`, `tapeWidthMm` is narrowed to the
+supported widths, and `material` carries the D1 substrate family
+for picker UX.
 
 ## Extends
 
-- [`MediaDescriptor`](MediaDescriptor.md)
+- `D1Media`
 
 ## Properties
 
@@ -27,11 +27,21 @@ driver-side `text` and `background` fields below.
 
 Substrate colour, named.
 
+#### Overrides
+
+`D1Media.background`
+
 ***
 
 ### bytesPerLine
 
 > **bytesPerLine**: `number`
+
+Bytes-per-line (`ceil(printableDots / 8)`). Convenience mirror of `printableDots`.
+
+#### Overrides
+
+`D1Media.bytesPerLine`
 
 ***
 
@@ -44,7 +54,7 @@ common values listed for cross-driver consistency.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`category`](MediaDescriptor.md#category)
+`D1Media.category`
 
 ***
 
@@ -60,7 +70,7 @@ rounded rectangle degenerates to a circle.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`cornerRadiusMm`](MediaDescriptor.md#cornerradiusmm)
+`D1Media.cornerRadiusMm`
 
 ***
 
@@ -82,7 +92,7 @@ Drives the auto-rotate decision in `print()`:
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`defaultOrientation`](MediaDescriptor.md#defaultorientation)
+`D1Media.defaultOrientation`
 
 ***
 
@@ -97,7 +107,7 @@ Physical height/length in mm.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`heightMm`](MediaDescriptor.md#heightmm)
+`D1Media.heightMm`
 
 ***
 
@@ -109,7 +119,7 @@ Unique identifier within the driver family.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`id`](MediaDescriptor.md#id)
+`D1Media.id`
 
 ***
 
@@ -118,6 +128,10 @@ Unique identifier within the driver family.
 > `optional` **material?**: [`LabelManagerMaterial`](../type-aliases/LabelManagerMaterial.md)
 
 D1 substrate family.
+
+#### Overrides
+
+`D1Media.material`
 
 ***
 
@@ -129,7 +143,7 @@ Human-readable name, e.g. `"62mm continuous"` or `"DK-22251"`.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`name`](MediaDescriptor.md#name)
+`D1Media.name`
 
 ***
 
@@ -149,13 +163,19 @@ For DK-22251 (the only multi-ink media we ship today):
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`palette`](MediaDescriptor.md#palette)
+`D1Media.palette`
 
 ***
 
 ### printableDots
 
 > **printableDots**: `number`
+
+Cartridge-printable raster width in dots.
+
+#### Overrides
+
+`D1Media.printableDots`
 
 ***
 
@@ -192,7 +212,7 @@ safe to design within.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`printMargins`](MediaDescriptor.md#printmargins)
+`D1Media.printMargins`
 
 ***
 
@@ -207,13 +227,19 @@ by UI consumers that let users search by SKU.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`skus`](MediaDescriptor.md#skus)
+`D1Media.skus`
 
 ***
 
 ### tapeWidthMm
 
 > **tapeWidthMm**: [`TapeWidth`](../type-aliases/TapeWidth.md)
+
+Tape width in mm — informational; the encoder reads `printableDots`.
+
+#### Overrides
+
+`D1Media.tapeWidthMm`
 
 ***
 
@@ -229,7 +255,7 @@ Omit = fits every device in the family.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`targetModels`](MediaDescriptor.md#targetmodels)
+`D1Media.targetModels`
 
 ***
 
@@ -238,6 +264,10 @@ Omit = fits every device in the family.
 > `optional` **text?**: `string`
 
 Printed ink colour, named (the only ink the cartridge carries).
+
+#### Overrides
+
+`D1Media.text`
 
 ***
 
@@ -252,7 +282,7 @@ Drivers may define additional values as needed.
 
 #### Overrides
 
-[`MediaDescriptor`](MediaDescriptor.md).[`type`](MediaDescriptor.md#type)
+`D1Media.type`
 
 ***
 
@@ -264,4 +294,4 @@ Physical width in mm.
 
 #### Inherited from
 
-[`MediaDescriptor`](MediaDescriptor.md).[`widthMm`](MediaDescriptor.md#widthmm)
+`D1Media.widthMm`

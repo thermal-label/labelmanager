@@ -14,7 +14,7 @@
 //                SYN still feeds one dot row but carries no payload, so
 //                we get the same physical advance as bitmap padding but
 //                ~9× less wire traffic. Prior art: labelle's
-//                `_skip_lines` / `_bytes_per_line(0)` (MLF) pattern.
+//                `_skip_lines` / `_bytes_per_line(0)`.
 //
 // Run on hardware and eyeball the two strips. Things to watch for on B:
 //   - Does the printed area land clear of the cutter? (i.e. is the
@@ -114,7 +114,7 @@ async function sendStream(stream, label) {
 }
 
 // Splice `ESC D 0 + count × SYN` in front of the trailing ESC A. Each
-// bare SYN advances one dot row with zero-byte payload (labelle's MLF
+// bare SYN advances one dot row with zero-byte payload (labelle's
 // skip-lines trick).
 function insertSkipLinesBeforeCut(stream, count) {
   const tail = stream.subarray(stream.length - 2);

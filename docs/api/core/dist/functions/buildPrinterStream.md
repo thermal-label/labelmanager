@@ -6,14 +6,34 @@
 
 # Function: buildPrinterStream()
 
-> **buildPrinterStream**(`bitmap`, `options?`): `Uint8Array`
+> **buildPrinterStream**(`bitmap`, `engine`, `options?`, `media?`): `Uint8Array`
 
-Build a raw byte stream for the USB Printer class endpoint (Interface 0).
+Build a raw byte stream for the USB Printer-class endpoint.
 
-Uses the labelle-compatible protocol: ESC C 0, ESC D N, SYN + row, ESC A.
-No HID report framing — send directly to EP 5 OUT.
+Wire shape per copy:
+  ESC C n
+  [if leading skip-lines: ESC D 0 + N × SYN]
+  ESC D N (bytes-per-line for content)
+  SYN + row × M (content)
+  [if trailing skip-lines: ESC D 0 + N × SYN]
+  [if engine.capabilities.autocut: ESC E]
+  ESC A
 
-Input is head-aligned (see `prepareForEmission`).
+`n` for `ESC C` is the tape-type / colour-palette selector. The
+firmware can't detect cartridge type — the host declares it.
+Resolved from `options.tapeType` (explicit override), else
+`tapeTypeFor(media)` (user-selected media → palette index), else
+`0` (safe fallback). `ESC E` is emitted only when the engine
+declares `capabilities.autocut: true`; manual-cutter chassis (every
+standalone LabelManager today) skip it.
+
+Leading + trailing tape advance is emitted as bare SYN bytes against
+`ESC D 0` (zero bytes-per-line). Each bare SYN advances one dot row
+with no payload — same physical feed as a padded blank row but at
+1 byte/row instead of `1 + bytesPerLine` bytes/row.
+
+Input bitmap is head-aligned (caller's responsibility — typically
+via `pickRotation` + `renderImage`).
 
 ## Parameters
 
@@ -21,9 +41,17 @@ Input is head-aligned (see `prepareForEmission`).
 
 `LabelBitmap`
 
+### engine
+
+[`PrintEngine`](../interfaces/PrintEngine.md)
+
 ### options?
 
-[`LabelManagerPrintOptions`](../interfaces/LabelManagerPrintOptions.md)
+`D1PrintOptions`
+
+### media?
+
+`D1Media`
 
 ## Returns
 
