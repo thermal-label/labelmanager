@@ -82,4 +82,21 @@ describe('WebDymoPrinter', () => {
     expect(printer.model).toBe('LabelManager PnP');
     expect(printer.device.family).toBe('labelmanager');
   });
+
+  it('onStatus subscribes via the contracts polling shim (plan 11)', async () => {
+    const device = createMockUSBDevice(0x0922, 0x1002, 0x40);
+    const printer = await fromUSBDevice(device);
+
+    // The polling shim kicks an immediate getStatus(); wait one tick
+    // and confirm the subscriber sees a status frame.
+    let received = 0;
+    const unsub = printer.onStatus(() => {
+      received += 1;
+    });
+    // Allow microtask + sleep for the immediate kick to land.
+    await new Promise<void>(r => setTimeout(r, 30));
+    unsub();
+    await printer.close();
+    expect(received).toBeGreaterThanOrEqual(1);
+  });
 });

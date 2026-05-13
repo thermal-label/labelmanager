@@ -20,7 +20,7 @@ import {
   type RawImageData,
   type Transport,
 } from '@thermal-label/labelmanager-core';
-import { MediaNotSpecifiedError } from '@thermal-label/contracts';
+import { MediaNotSpecifiedError, pollingOnStatus } from '@thermal-label/contracts';
 import { WebUsbTransport } from '@thermal-label/transport/web';
 
 const CHUNK_SIZE = 64;
@@ -99,6 +99,20 @@ export class WebDymoPrinter implements PrinterAdapter {
     const status = parseStatus(response);
     this.lastStatus = status;
     return status;
+  }
+
+  /**
+   * Subscribe to status updates. LabelManager firmware doesn't push
+   * unsolicited status frames; this is a polling shim built on
+   * `pollingOnStatus` from contracts, which calls `getStatus()` every
+   * 4 s and forwards each result to the subscriber.
+   *
+   * Per plan 11 §`onStatus` parity — every driver-web printer
+   * implements `onStatus` so the harness shell can collapse its
+   * push-vs-pull branch into a single subscription path.
+   */
+  onStatus(cb: (status: PrinterStatus) => void): () => void {
+    return pollingOnStatus(this, cb);
   }
 
   async close(): Promise<void> {
