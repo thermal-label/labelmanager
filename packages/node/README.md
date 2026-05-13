@@ -66,6 +66,11 @@ console.log(generateUdevRules());
 - Repository: https://github.com/thermal-label/labelmanager
 - Issues: https://github.com/thermal-label/labelmanager/issues
 
+## Supported hardware
+
+<!-- HARDWARE_TABLE:START -->
+<!-- HARDWARE_TABLE:END -->
+
 ## License
 
 MIT
