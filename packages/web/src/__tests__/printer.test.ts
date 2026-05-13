@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- intentionally exercises the deprecated per-transport factories during plan-10 transition */
 import { describe, expect, it } from 'vitest';
 import { MediaNotSpecifiedError } from '@thermal-label/contracts';
 import { TAPE_12MM } from '@thermal-label/labelmanager-core';

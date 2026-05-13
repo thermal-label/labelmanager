@@ -131,14 +131,13 @@ export const DEFAULT_FILTERS: USBDeviceFilter[] = Object.values(DEVICES)
  * Requires a user gesture (click, keypress). Opens the device and claims
  * interface 0 via `WebUsbTransport.fromDevice`.
  *
- * Single-instance entry point — preserved for back-compat with existing
- * consumers (CLIs, ad-hoc scripts). For the symmetric driver-web shape
- * (1-key map keyed by engine role) call `requestPrinters()` instead;
- * the harness shell uses that path.
+ * @deprecated Use `requestPrinters({ transport: 'usb' })` from
+ *   `./request-printers.ts`. Removed once consumers migrate (plan 11).
  */
 export async function requestPrinter(options: RequestOptions = {}): Promise<WebDymoPrinter> {
   const filters = options.filters ?? DEFAULT_FILTERS;
   const usbDevice = await navigator.usb.requestDevice({ filters });
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- legacy alias chain
   return fromUSBDevice(usbDevice);
 }
 
@@ -146,16 +145,17 @@ export async function requestPrinter(options: RequestOptions = {}): Promise<WebD
  * Show the browser's USB picker and return one `PrinterAdapter` per
  * drivable engine on the selected device, keyed by engine role.
  *
- * LabelManager devices are always single-engine — this returns a 1-key
- * record keyed by the device's `engines[0].role` (typically `'primary'`).
- * Mirrors the labelwriter driver's `requestPrinters()` factory so harness
- * adapters can stay symmetric across driver families.
+ * @deprecated Use `requestPrinters({ transport: 'usb' })` from
+ *   `./request-printers.ts`; the legacy USB-only `requestPrinters` is
+ *   preserved as `requestPrintersUsbLegacy` for back-compat. Removed
+ *   once consumers migrate (plan 11).
  */
-export async function requestPrinters(
+export async function requestPrintersUsbLegacy(
   options: RequestOptions = {},
 ): Promise<Record<string, WebDymoPrinter>> {
   const filters = options.filters ?? DEFAULT_FILTERS;
   const usbDevice = await navigator.usb.requestDevice({ filters });
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- legacy alias chain
   return fromUSBDeviceAll(usbDevice);
 }
 
@@ -165,6 +165,9 @@ export async function requestPrinters(
  *
  * @throws if the USB device's VID/PID does not match any supported
  *   LabelManager in the device registry.
+ *
+ * @deprecated Use `requestPrinters({ transport: 'usb' })` from
+ *   `./request-printers.ts`. Removed once consumers migrate (plan 11).
  */
 export async function fromUSBDevice(usbDevice: USBDevice): Promise<WebDymoPrinter> {
   const descriptor = findDevice(usbDevice.vendorId, usbDevice.productId);
@@ -177,14 +180,10 @@ export async function fromUSBDevice(usbDevice: USBDevice): Promise<WebDymoPrinte
 
 /**
  * Wrap an already-selected `USBDevice` and return a 1-key adapter map
- * keyed by the device's `engines[0].role`. Public surface for
- * `requestPrinters()`; exported so harnesses that already hold a
- * `USBDevice` (e.g. picked-up via `navigator.usb.getDevices()` on a
- * returning visit) can skip the picker.
+ * keyed by the device's `engines[0].role`.
  *
- * Single-interface only — LabelManager's USB transport always claims
- * IF 0 (Printer Class, EP 5 bulk). The HID interface (IF 2) is real
- * but unused by this driver.
+ * @deprecated Use `requestPrinters({ transport: 'usb' })` from
+ *   `./request-printers.ts`. Removed once consumers migrate (plan 11).
  */
 export async function fromUSBDeviceAll(
   usbDevice: USBDevice,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- intentionally exercises the deprecated per-transport factories during plan-10 transition */
 import { describe, expect, it, vi } from 'vitest';
 import { fromUSBDevice, requestPrinter } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
