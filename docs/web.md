@@ -168,7 +168,9 @@ driver) and sends in 64-byte chunks via `transferOut`.
 `print`, `createPreview`, `getStatus`, `close`, plus the `family`,
 `model`, `device`, `connected` getters.
 
-## Live demo
+## Hardware harness
 
-→ [Open the interactive demo](/demo/labelmanager) to preview and print a label from
-your browser.
+→ [Open the LabelManager harness](https://thermal-label.github.io/harness/labelmanager/)
+to pair a printer over WebUSB, run a diagnostic print, and file a
+verification report against the device registry — all from the
+browser.
