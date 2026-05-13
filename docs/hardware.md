@@ -5,10 +5,11 @@ The canonical per-device matrix lives on the org-wide hardware page:
 It's generated from each driver's `data/devices/*.json5` source of truth — for
 this driver, those entries live under
 [`packages/core/data/devices/`](https://github.com/thermal-label/labelmanager/tree/main/packages/core/data/devices).
-Got an untested device? Follow the
-[verification checklist](./verification-checklist) and file a hardware
-verification issue; the PID, support status, and quirks for that entry land
-inline in the JSON5 file.
+Got an untested device? Run the
+[verification harness](./verification-checklist) — the browser app
+walks through detection, diagnostic-print, and report submission; the
+PID, support status, and quirks for that entry land inline in the
+JSON5 file once the report is merged.
 
 ## Supported devices
 
