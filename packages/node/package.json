@@ -5,7 +5,7 @@
   "type": "module",
   "author": "Mannes Brak",
   "license": "MIT",
-  "homepage": "https://thermal-label.github.io/labelmanager/",
+  "homepage": "https://thermal-label.github.io/labelmanager/node",
   "keywords": [
     "dymo",
     "labelmanager",
