@@ -24,7 +24,23 @@ import { MediaNotSpecifiedError, pollingOnStatus } from '@thermal-label/contract
 import { WebUsbTransport } from '@thermal-label/transport/web';
 
 const CHUNK_SIZE = 64;
-const STATUS_READ_LENGTH = 64;
+
+/** LabelManager status reply length — a single D1 status byte. */
+const D1_STATUS_BYTE_COUNT = 1;
+
+/**
+ * Read deadline for `getStatus()`. Without it a non-responsive
+ * LabelManager hangs `transport.read()` forever, freezing the `onStatus`
+ * poll loop; the deadline turns that into a thrown transport failure the
+ * poll loop can absorb. Matches the labelwriter driver's
+ * `STATUS_READ_TIMEOUT_MS`.
+ *
+ * The Chromium sub-packet `transferIn` stall is handled in
+ * `WebUsbTransport.read()`, which rounds the request up to the IN
+ * endpoint's `wMaxPacketSize` — the driver no longer pads the read
+ * length itself.
+ */
+const STATUS_READ_TIMEOUT_MS = 2000;
 
 export interface RequestOptions {
   filters?: USBDeviceFilter[];
@@ -95,7 +111,7 @@ export class WebDymoPrinter implements PrinterAdapter {
 
   async getStatus(): Promise<PrinterStatus> {
     await this.transport.write(STATUS_REQUEST);
-    const response = await this.transport.read(STATUS_READ_LENGTH);
+    const response = await this.transport.read(D1_STATUS_BYTE_COUNT, STATUS_READ_TIMEOUT_MS);
     const status = parseStatus(response);
     this.lastStatus = status;
     return status;
