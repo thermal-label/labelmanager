@@ -20,7 +20,7 @@ import {
   type RawImageData,
   type Transport,
 } from '@thermal-label/labelmanager-core';
-import { MediaNotSpecifiedError, pollingOnStatus } from '@thermal-label/contracts';
+import { MediaNotSpecifiedError, pollingOnStatus, WriteSerializer } from '@thermal-label/contracts';
 import { WebUsbTransport } from '@thermal-label/transport/web';
 
 const CHUNK_SIZE = 64;
@@ -60,6 +60,14 @@ export class WebDymoPrinter implements PrinterAdapter {
 
   private readonly transport: Transport;
   private lastStatus: PrinterStatus | undefined;
+  /**
+   * Serialises every transport-touching method (`print` + `getStatus`)
+   * so a 4 s status poll can't interleave its `write()` between two
+   * raster `write()`s of an in-flight `print()` — that would inject
+   * non-raster bytes into the D1 command stream and corrupt the print.
+   * See `WriteSerializer` in `@thermal-label/contracts`.
+   */
+  private readonly serializer = new WriteSerializer();
 
   constructor(device: LabelManagerDevice, transport: Transport) {
     this.device = device;
@@ -74,7 +82,18 @@ export class WebDymoPrinter implements PrinterAdapter {
     return this.transport.connected;
   }
 
-  async print(
+  print(
+    image: RawImageData,
+    media?: MediaDescriptor,
+    options?: LabelManagerPrintOptions,
+  ): Promise<void> {
+    // Whole-method wrap (plan 15 A3): encoding is cheap relative to
+    // print time, so holding the lock across it costs at most one
+    // delayed poll tick and keeps the wrap shape uniform across drivers.
+    return this.serializer.run(() => this.doPrint(image, media, options));
+  }
+
+  private async doPrint(
     image: RawImageData,
     media?: MediaDescriptor,
     options?: LabelManagerPrintOptions,
@@ -109,7 +128,13 @@ export class WebDymoPrinter implements PrinterAdapter {
     });
   }
 
-  async getStatus(): Promise<PrinterStatus> {
+  getStatus(): Promise<PrinterStatus> {
+    // Serialised against `print()` — `getStatus()` writes a status
+    // request and reads, and must not land mid-raster-stream.
+    return this.serializer.run(() => this.doGetStatus());
+  }
+
+  private async doGetStatus(): Promise<PrinterStatus> {
     await this.transport.write(STATUS_REQUEST);
     const response = await this.transport.read(D1_STATUS_BYTE_COUNT, STATUS_READ_TIMEOUT_MS);
     const status = parseStatus(response);

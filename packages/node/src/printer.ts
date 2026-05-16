@@ -18,7 +18,7 @@ import {
   type RawImageData,
   type Transport,
 } from '@thermal-label/labelmanager-core';
-import { MediaNotSpecifiedError } from '@thermal-label/contracts';
+import { MediaNotSpecifiedError, WriteSerializer } from '@thermal-label/contracts';
 
 const WRITE_DELAY_MS = 5;
 const CHUNK_SIZE = 64;
@@ -47,6 +47,15 @@ export class DymoPrinter implements PrinterAdapter {
 
   private readonly transport: Transport;
   private lastStatus: PrinterStatus | undefined;
+  /**
+   * Serialises every transport-touching method (`print` + `getStatus`)
+   * so concurrent callers can't interleave a status `write()` into an
+   * in-flight raster stream. Node ships no `onStatus` poll today, but
+   * any consumer that calls `getStatus()` during `print()` hits the
+   * same hazard — wrapped for uniformity with the web driver. See
+   * `WriteSerializer` in `@thermal-label/contracts`.
+   */
+  private readonly serializer = new WriteSerializer();
 
   constructor(device: LabelManagerDevice, transport: Transport) {
     this.device = device;
@@ -61,7 +70,16 @@ export class DymoPrinter implements PrinterAdapter {
     return this.transport.connected;
   }
 
-  async print(
+  print(
+    image: RawImageData,
+    media?: MediaDescriptor,
+    options?: LabelManagerPrintOptions,
+  ): Promise<void> {
+    // Whole-method wrap (plan 15 A3) — uniform with the web driver.
+    return this.serializer.run(() => this.doPrint(image, media, options));
+  }
+
+  private async doPrint(
     image: RawImageData,
     media?: MediaDescriptor,
     options?: LabelManagerPrintOptions,
@@ -100,7 +118,12 @@ export class DymoPrinter implements PrinterAdapter {
     });
   }
 
-  async getStatus(): Promise<PrinterStatus> {
+  getStatus(): Promise<PrinterStatus> {
+    // Serialised against `print()` — see the `serializer` field doc.
+    return this.serializer.run(() => this.doGetStatus());
+  }
+
+  private async doGetStatus(): Promise<PrinterStatus> {
     await this.transport.write(STATUS_REQUEST);
     const response = await this.transport.read(64);
     const status = parseStatus(response);

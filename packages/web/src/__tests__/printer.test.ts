@@ -1,9 +1,40 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- intentionally exercises the deprecated per-transport factories during plan-10 transition */
 import { describe, expect, it } from 'vitest';
 import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-import { TAPE_12MM } from '@thermal-label/labelmanager-core';
-import { fromUSBDevice } from '../printer.js';
+import type { Transport } from '@thermal-label/contracts';
+import { TAPE_12MM, findDevice } from '@thermal-label/labelmanager-core';
+import { fromUSBDevice, WebDymoPrinter } from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
+
+/**
+ * Fake `Transport` that records every write/read in call order and
+ * introduces an async hop on each write so concurrent callers can
+ * actually interleave if nothing serialises them.
+ */
+class RecordingTransport implements Transport {
+  readonly calls: { kind: 'write' | 'read'; firstByte: number | undefined }[] = [];
+  connected = true;
+
+  async write(data: Uint8Array): Promise<void> {
+    this.calls.push({ kind: 'write', firstByte: data[0] });
+    // Yield twice so an unserialised concurrent caller has a real
+    // opportunity to slip a write in between this driver's writes.
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+
+  async read(): Promise<Uint8Array> {
+    this.calls.push({ kind: 'read', firstByte: undefined });
+    await Promise.resolve();
+    // One D1 status byte: 0x40 = loaded + ready.
+    return new Uint8Array([0x40]);
+  }
+
+  close(): Promise<void> {
+    this.connected = false;
+    return Promise.resolve();
+  }
+}
 
 function solidRgba(
   width: number,
@@ -81,6 +112,30 @@ describe('WebDymoPrinter', () => {
     expect(printer.family).toBe('labelmanager');
     expect(printer.model).toBe('LabelManager PnP');
     expect(printer.device.family).toBe('labelmanager');
+  });
+
+  it('serialises getStatus() behind an in-flight print() (plan 15 A3)', async () => {
+    const transport = new RecordingTransport();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- LM PnP is in the registry
+    const device = findDevice(0x0922, 0x1002)!;
+    const printer = new WebDymoPrinter(device, transport);
+
+    // Kick a print and, before it resolves, fire a status poll —
+    // exactly the hazard the 4 s poll loop creates against a long job.
+    const printDone = printer.print(solidRgba(64, 64), TAPE_12MM);
+    const statusDone = printer.getStatus();
+    await Promise.all([printDone, statusDone]);
+
+    // getStatus() is the only caller that issues a `read()`. With the
+    // serializer in place, its write+read round-trip must land
+    // entirely after every print write — i.e. the single read is the
+    // very last recorded call and no write follows it.
+    const firstReadIdx = transport.calls.findIndex(c => c.kind === 'read');
+    expect(firstReadIdx).toBeGreaterThan(0);
+    expect(firstReadIdx).toBe(transport.calls.length - 1);
+    // Every call before the read is a print write — no status write
+    // interleaved into the raster stream.
+    expect(transport.calls.slice(0, firstReadIdx).every(c => c.kind === 'write')).toBe(true);
   });
 
   it('onStatus subscribes via the contracts polling shim (plan 11)', async () => {
