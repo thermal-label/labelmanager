@@ -21,7 +21,7 @@ unconditional rotate). Override per-call with `options.rotate`.
 
 ## Implements
 
-- [`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md)
+- [`PrinterAdapter`](/contracts/api/interfaces/PrinterAdapter)
 
 ## Constructors
 
@@ -37,7 +37,7 @@ unconditional rotate). Override per-call with `options.rotate`.
 
 ##### transport
 
-[`Transport`](../../../core/dist/interfaces/Transport.md)
+[`Transport`](/contracts/api/interfaces/Transport)
 
 #### Returns
 
@@ -57,7 +57,7 @@ raw TCP connection to a known IP).
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`device`](../../../core/dist/interfaces/PrinterAdapter.md#device)
+`PrinterAdapter.device`
 
 ***
 
@@ -69,7 +69,7 @@ Driver family identifier, e.g. `'brother-ql'` or `'labelwriter'`.
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`family`](../../../core/dist/interfaces/PrinterAdapter.md#family)
+`PrinterAdapter.family`
 
 ## Accessors
 
@@ -85,11 +85,9 @@ Whether the printer is currently connected.
 
 `boolean`
 
-Whether the printer is currently connected.
-
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`connected`](../../../core/dist/interfaces/PrinterAdapter.md#connected)
+`PrinterAdapter.connected`
 
 ***
 
@@ -105,11 +103,9 @@ Human-readable model name from the driver's device registry.
 
 `string`
 
-Human-readable model name from the driver's device registry.
-
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`model`](../../../core/dist/interfaces/PrinterAdapter.md#model)
+`PrinterAdapter.model`
 
 ## Methods
 
@@ -125,13 +121,13 @@ Close the connection. Always call in `finally` blocks.
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`close`](../../../core/dist/interfaces/PrinterAdapter.md#close)
+`PrinterAdapter.close`
 
 ***
 
 ### createPreview()
 
-> **createPreview**(`image`, `options?`): `Promise`\<[`PreviewResult`](../../../core/dist/interfaces/PreviewResult.md)\>
+> **createPreview**(`image`, `options?`): `Promise`\<[`PreviewResult`](/contracts/api/interfaces/PreviewResult)\>
 
 Generate a preview showing how this printer would reproduce the
 design on the given media. Returns separated 1bpp planes with
@@ -156,7 +152,7 @@ For offline preview without a live connection, use the static
 
 ##### options?
 
-[`PreviewOptions`](../../../core/dist/interfaces/PreviewOptions.md)
+[`PreviewOptions`](/contracts/api/interfaces/PreviewOptions)
 
 — optional media override. If media is omitted, uses
   detected media from the last `getStatus()`. If no status is
@@ -165,27 +161,27 @@ For offline preview without a live connection, use the static
 
 #### Returns
 
-`Promise`\<[`PreviewResult`](../../../core/dist/interfaces/PreviewResult.md)\>
+`Promise`\<[`PreviewResult`](/contracts/api/interfaces/PreviewResult)\>
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`createPreview`](../../../core/dist/interfaces/PrinterAdapter.md#createpreview)
+`PrinterAdapter.createPreview`
 
 ***
 
 ### getStatus()
 
-> **getStatus**(): `Promise`\<[`PrinterStatus`](../../../core/dist/interfaces/PrinterStatus.md)\>
+> **getStatus**(): `Promise`\<[`PrinterStatus`](/contracts/api/interfaces/PrinterStatus)\>
 
 Query printer status including detected media.
 
 #### Returns
 
-`Promise`\<[`PrinterStatus`](../../../core/dist/interfaces/PrinterStatus.md)\>
+`Promise`\<[`PrinterStatus`](/contracts/api/interfaces/PrinterStatus)\>
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`getStatus`](../../../core/dist/interfaces/PrinterAdapter.md#getstatus)
+`PrinterAdapter.getStatus`
 
 ***
 
@@ -226,7 +222,7 @@ between sequential `print()` calls within the same session).
 
 ##### media?
 
-[`MediaDescriptor`](../../../core/dist/interfaces/MediaDescriptor.md)
+[`MediaDescriptor`](/contracts/api/interfaces/MediaDescriptor)
 
 — which media to print on. Determines dimensions,
   margins, and colour mode. If omitted, uses detected media from
@@ -248,4 +244,4 @@ MediaNotSpecifiedError if no media is known.
 
 #### Implementation of
 
-[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`print`](../../../core/dist/interfaces/PrinterAdapter.md#print)
+`PrinterAdapter.print`

@@ -6,7 +6,7 @@
 
 # Type Alias: LabelManagerDevice
 
-> **LabelManagerDevice** = [`DeviceEntry`](../interfaces/DeviceEntry.md) & `object`
+> **LabelManagerDevice** = [`DeviceEntry`](/contracts/api/interfaces/DeviceEntry) & `object`
 
 DYMO LabelManager device entry.
 

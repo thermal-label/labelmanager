@@ -6,7 +6,7 @@
 
 # Function: requestPrinters()
 
-> **requestPrinters**(`opts`): `Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md)\>\>\>
+> **requestPrinters**(`opts`): `Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](/contracts/api/interfaces/PrinterAdapter)\>\>\>
 
 Unified browser-picker factory for the labelmanager driver family.
 
@@ -24,8 +24,8 @@ picked device's VID/PID is not in the labelmanager registry.
 
 ### opts
 
-[`ConnectOptions`](../type-aliases/ConnectOptions.md)
+[`ConnectOptions`](/contracts/api/type-aliases/ConnectOptions)
 
 ## Returns
 
-`Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md)\>\>\>
+`Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](/contracts/api/interfaces/PrinterAdapter)\>\>\>

@@ -8,17 +8,11 @@
 
 ## Classes
 
-- [DeviceIdentificationRequiredError](classes/DeviceIdentificationRequiredError.md)
 - [WebDymoPrinter](classes/WebDymoPrinter.md)
 
 ## Interfaces
 
 - [RequestOptions](interfaces/RequestOptions.md)
-
-## Type Aliases
-
-- [ConnectOptions](type-aliases/ConnectOptions.md)
-- [PrinterAdapterMap](type-aliases/PrinterAdapterMap.md)
 
 ## Variables
 

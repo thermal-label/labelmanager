@@ -6,7 +6,7 @@
 
 # Function: createPreviewOffline()
 
-> **createPreviewOffline**(`image`, `media`): [`PreviewResult`](../interfaces/PreviewResult.md)
+> **createPreviewOffline**(`image`, `media`): [`PreviewResult`](/contracts/api/interfaces/PreviewResult)
 
 Generate an offline preview without a live printer connection.
 
@@ -28,4 +28,4 @@ to match the selected tape width.
 
 ## Returns
 
-[`PreviewResult`](../interfaces/PreviewResult.md)
+[`PreviewResult`](/contracts/api/interfaces/PreviewResult)
