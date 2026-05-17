@@ -6,11 +6,7 @@ import {
   type Transport,
   type TransportType,
 } from '@thermal-label/contracts';
-import {
-  DEVICES,
-  findDevice,
-  type LabelManagerDevice,
-} from '@thermal-label/labelmanager-core';
+import { DEVICES, findDevice, type LabelManagerDevice } from '@thermal-label/labelmanager-core';
 import { WebUsbTransport } from '@thermal-label/transport/web';
 import { DEFAULT_FILTERS, WebDymoPrinter } from './printer.js';
 
@@ -29,9 +25,7 @@ import { DEFAULT_FILTERS, WebDymoPrinter } from './printer.js';
  */
 export async function requestPrinters(opts: ConnectOptions): Promise<PrinterAdapterMap> {
   if (opts.transport !== 'usb') {
-    throw new Error(
-      `labelmanager: transport "${opts.transport}" is not supported (USB only)`,
-    );
+    throw new Error(`labelmanager: transport "${opts.transport}" is not supported (USB only)`);
   }
   return requestPrintersUsb(opts);
 }

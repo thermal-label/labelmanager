@@ -6,22 +6,26 @@
 
 # Function: requestPrinters()
 
-> **requestPrinters**(`options?`): `Promise`\<`Record`\<`string`, [`WebDymoPrinter`](../classes/WebDymoPrinter.md)\>\>
+> **requestPrinters**(`opts`): `Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md)\>\>\>
 
-Show the browser's USB picker and return one `PrinterAdapter` per
-drivable engine on the selected device, keyed by engine role.
+Unified browser-picker factory for the labelmanager driver family.
 
-LabelManager devices are always single-engine — this returns a 1-key
-record keyed by the device's `engines[0].role` (typically `'primary'`).
-Mirrors the labelwriter driver's `requestPrinters()` factory so harness
-adapters can stay symmetric across driver families.
+LabelManager devices are USB-only — the registry declares no other
+transports. The factory accepts `ConnectOptions` for uniformity
+across drivers but rejects non-USB transports up-front.
+
+USB path: opens the picker, auto-identifies via
+`usbDevice.vendorId/productId`. Throws
+`DeviceIdentificationRequiredError` (with USB-capable candidates +
+a `continueWith` closure reusing the picked USBDevice) when the
+picked device's VID/PID is not in the labelmanager registry.
 
 ## Parameters
 
-### options?
+### opts
 
-[`RequestOptions`](../interfaces/RequestOptions.md)
+[`ConnectOptions`](../type-aliases/ConnectOptions.md)
 
 ## Returns
 
-`Promise`\<`Record`\<`string`, [`WebDymoPrinter`](../classes/WebDymoPrinter.md)\>\>
+`Promise`\<`Readonly`\<`Record`\<`string`, [`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md)\>\>\>

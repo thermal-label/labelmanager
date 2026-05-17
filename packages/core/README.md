@@ -24,11 +24,7 @@ npm install @thermal-label/labelmanager-core
 ## Quick Start
 
 ```ts
-import {
-  buildPrinterStream,
-  findDevice,
-  renderText,
-} from '@thermal-label/labelmanager-core';
+import { buildPrinterStream, findDevice, renderText } from '@thermal-label/labelmanager-core';
 
 const device = findDevice(0x0922, 0x1002);
 if (!device) throw new Error('Unsupported DYMO device');
@@ -54,11 +50,7 @@ to the endpoint's `wMaxPacketSize` (64 bytes).
 ### Render and encode text with print options
 
 ```ts
-import {
-  buildPrinterStream,
-  findDevice,
-  renderText,
-} from '@thermal-label/labelmanager-core';
+import { buildPrinterStream, findDevice, renderText } from '@thermal-label/labelmanager-core';
 
 const device = findDevice(0x0922, 0x1002)!;
 const bitmap = renderText('Shelf A-17', { invert: false });
@@ -71,11 +63,7 @@ const stream = buildPrinterStream(bitmap, device.engines[0], {
 ### Convert raw RGBA image pixels into a print stream
 
 ```ts
-import {
-  buildPrinterStream,
-  findDevice,
-  renderImage,
-} from '@thermal-label/labelmanager-core';
+import { buildPrinterStream, findDevice, renderImage } from '@thermal-label/labelmanager-core';
 
 const device = findDevice(0x0922, 0x1002)!;
 const raw = {
@@ -126,20 +114,22 @@ https://thermal-label.github.io/labelmanager/
 ## Supported hardware
 
 <!-- HARDWARE_TABLE:START -->
+
 **8 devices** — 1 verified · 0 partial · 1 broken · 6 untested
 
-| Model | Key | USB PID | Transports | Status |
-| --- | --- | --- | --- | --- |
-| [LabelManager 280](https://thermal-label.github.io/hardware/labelmanager/lm-280) | `LM_280` | 0x1006 | USB | ⏳ untested |
-| [LabelManager 400](https://thermal-label.github.io/hardware/labelmanager/lm-400) | `LM_400` | 0x0013 | USB | ⏳ untested |
-| [LabelManager 420P](https://thermal-label.github.io/hardware/labelmanager/lm-420p) | `LM_420P` | 0x1004 | USB | ⏳ untested |
-| [LabelManager PC](https://thermal-label.github.io/hardware/labelmanager/lm-pc) | `LM_PC` | 0x0011 | USB | ⏳ untested |
-| [LabelManager PnP](https://thermal-label.github.io/hardware/labelmanager/lm-pnp) | `LM_PNP` | 0x1002 | USB | ✅ verified |
-| [LabelManager Wireless PnP](https://thermal-label.github.io/hardware/labelmanager/lm-wireless-pnp) | `LM_WIRELESS_PNP` | 0x1008 | USB | ⏳ untested |
-| [LabelPoint 350](https://thermal-label.github.io/hardware/labelmanager/labelpoint-350) | `LABELPOINT_350` | 0x0015 | USB | ⏳ untested |
-| [MobileLabeler](https://thermal-label.github.io/hardware/labelmanager/mobile-labeler) | `MOBILE_LABELER` | 0x1009 | USB | ❌ broken |
+| Model                                                                                              | Key               | USB PID | Transports | Status      |
+| -------------------------------------------------------------------------------------------------- | ----------------- | ------- | ---------- | ----------- |
+| [LabelManager 280](https://thermal-label.github.io/hardware/labelmanager/lm-280)                   | `LM_280`          | 0x1006  | USB        | ⏳ untested |
+| [LabelManager 400](https://thermal-label.github.io/hardware/labelmanager/lm-400)                   | `LM_400`          | 0x0013  | USB        | ⏳ untested |
+| [LabelManager 420P](https://thermal-label.github.io/hardware/labelmanager/lm-420p)                 | `LM_420P`         | 0x1004  | USB        | ⏳ untested |
+| [LabelManager PC](https://thermal-label.github.io/hardware/labelmanager/lm-pc)                     | `LM_PC`           | 0x0011  | USB        | ⏳ untested |
+| [LabelManager PnP](https://thermal-label.github.io/hardware/labelmanager/lm-pnp)                   | `LM_PNP`          | 0x1002  | USB        | ✅ verified |
+| [LabelManager Wireless PnP](https://thermal-label.github.io/hardware/labelmanager/lm-wireless-pnp) | `LM_WIRELESS_PNP` | 0x1008  | USB        | ⏳ untested |
+| [LabelPoint 350](https://thermal-label.github.io/hardware/labelmanager/labelpoint-350)             | `LABELPOINT_350`  | 0x0015  | USB        | ⏳ untested |
+| [MobileLabeler](https://thermal-label.github.io/hardware/labelmanager/mobile-labeler)              | `MOBILE_LABELER`  | 0x1009  | USB        | ❌ broken   |
 
 Click any model to open its detail page on the docs site, where engines, supported media, and verification reports live. The same data backs the [interactive cross-driver table](https://thermal-label.github.io/hardware/).
+
 <!-- HARDWARE_TABLE:END -->
 
 ## License

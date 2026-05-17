@@ -82,7 +82,7 @@ Full docs at **<https://thermal-label.github.io/labelmanager/>**.
 - [Node guide](https://thermal-label.github.io/labelmanager/node)
 - [Web guide](https://thermal-label.github.io/labelmanager/web)
 - [API reference](https://thermal-label.github.io/labelmanager/api/)
-- [Hardware harness](https://thermal-label.github.io/harness/labelmanager/) — pair, diagnostic-print, and file a verification report from the browser.
+- [Live demo](https://thermal-label.github.io/demo/labelmanager)
 
 ## Packages
 

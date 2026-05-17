@@ -183,6 +183,35 @@ Query printer status including detected media.
 
 ***
 
+### onStatus()
+
+> **onStatus**(`cb`): () => `void`
+
+Subscribe to status updates. LabelManager firmware doesn't push
+unsolicited status frames; this is a polling shim built on
+`pollingOnStatus` from contracts, which calls `getStatus()` every
+4 s and forwards each result to the subscriber.
+
+Per plan 11 §`onStatus` parity — every driver-web printer
+implements `onStatus` so the harness shell can collapse its
+push-vs-pull branch into a single subscription path.
+
+#### Parameters
+
+##### cb
+
+(`status`) => `void`
+
+#### Returns
+
+() => `void`
+
+#### Implementation of
+
+[`PrinterAdapter`](../../../core/dist/interfaces/PrinterAdapter.md).[`onStatus`](../../../core/dist/interfaces/PrinterAdapter.md#onstatus)
+
+***
+
 ### print()
 
 > **print**(`image`, `media?`, `options?`): `Promise`\<`void`\>

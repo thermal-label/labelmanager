@@ -4,6 +4,7 @@ export { renderImage, renderText } from '@mbtech-nl/bitmap';
 export type {
   DeviceEntry,
   DeviceRegistry,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- retained for consumers during alias transition; remove with DeviceSupport cleanup PR
   DeviceSupport,
   MediaDescriptor,
   PreviewOptions,

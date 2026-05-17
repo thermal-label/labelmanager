@@ -116,7 +116,6 @@ describe('WebDymoPrinter', () => {
 
   it('serialises getStatus() behind an in-flight print() (plan 15 A3)', async () => {
     const transport = new RecordingTransport();
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- LM PnP is in the registry
     const device = findDevice(0x0922, 0x1002)!;
     const printer = new WebDymoPrinter(device, transport);
 
