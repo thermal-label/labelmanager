@@ -12,7 +12,15 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     coverage: {
-      exclude: ['dist/**', '**/*.d.ts', 'vitest.config.ts'],
+      exclude: [
+        'dist/**',
+        '**/*.d.ts',
+        'src/index.ts',
+        '**/*.config.*',
+        '**/__tests__/**',
+        '**/*.test.ts',
+      ],
+      thresholds: { lines: 90, statements: 90, functions: 90, branches: 90 },
     },
   },
 });

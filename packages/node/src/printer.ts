@@ -94,6 +94,7 @@ export class DymoPrinter implements PrinterAdapter {
     const rotate = pickRotation(image, resolvedMedia, ROTATE_DIRECTION, options?.rotate);
     const bitmap = renderImage(image, { dither: true, rotate });
     const [engine] = this.device.engines;
+    /* v8 ignore next 4 -- registry invariant: every LabelManager device entry carries >=1 engine; guard is type-safety only, unreachable */
     if (!engine) {
       // Registry invariant — every device entry carries at least one
       // engine. Guard so the encoder call below stays type-safe.
@@ -109,6 +110,7 @@ export class DymoPrinter implements PrinterAdapter {
     if (override) {
       return Promise.resolve(createPreviewOffline(image, override));
     }
+    /* v8 ignore next 3 -- LabelManager firmware never reports detectedMedia (presence-only detection); branch retained for cross-driver shape parity */
     if (detected) {
       return Promise.resolve(createPreviewOffline(image, detected));
     }

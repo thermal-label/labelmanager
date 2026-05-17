@@ -61,6 +61,7 @@ async function requestPrintersUsb(
 
 function adapterMap(entry: DeviceEntry, transport: Transport): PrinterAdapterMap {
   const engine = entry.engines[0];
+  /* v8 ignore next -- registry invariant: every LabelManager device entry carries >=1 engine; guard is type-safety only, unreachable */
   if (!engine) throw new Error(`Device ${entry.key} has no engines.`);
   // `DeviceEntry` (contracts-typed) narrows to `LabelManagerDevice`
   // (driver-typed) at the registry boundary — every entry in this

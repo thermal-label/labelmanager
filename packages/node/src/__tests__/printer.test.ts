@@ -139,6 +139,31 @@ describe('DymoPrinter', () => {
     expect(preview.media).toBe(TAPE_12MM);
   });
 
+  it('createPreview() consults the last status before falling back to DEFAULT_MEDIA', async () => {
+    // LabelManager never reports detectedMedia, so even after a status
+    // read a media-less createPreview still falls back to DEFAULT_MEDIA
+    // and marks the preview assumed — this exercises the
+    // `lastStatus?.detectedMedia` lookup with a populated lastStatus.
+    const { transport } = makeTransport(0x40);
+    const printer = new DymoPrinter(device, transport);
+
+    await printer.getStatus();
+    const preview = await printer.createPreview(solidRgba(8, 8));
+    expect(preview.assumed).toBe(true);
+    expect(preview.media).toBe(TAPE_12MM);
+  });
+
+  it('print() after a status read still requires explicit media', async () => {
+    // The `media ?? lastStatus?.detectedMedia` fallback resolves to
+    // undefined because LabelManager firmware never detects media —
+    // print must throw even once a status has been cached.
+    const { transport } = makeTransport(0x40);
+    const printer = new DymoPrinter(device, transport);
+
+    await printer.getStatus();
+    await expect(printer.print(solidRgba(8, 8))).rejects.toBeInstanceOf(MediaNotSpecifiedError);
+  });
+
   it('close() awaits the transport', async () => {
     const { transport, close } = makeTransport();
     const printer = new DymoPrinter(device, transport);

@@ -61,6 +61,21 @@ describe('LabelManagerDiscovery', () => {
     expect(printers[0]!.device.family).toBe('labelmanager');
   });
 
+  it('omits serialNumber when the string descriptor read errors', async () => {
+    const device = makeDevice(0x0922, 0x1002, 'ignored');
+    // Force the descriptor callback into its error path.
+    device.getStringDescriptor.mockImplementation(
+      (_idx: number, cb: (err: Error, val?: string) => void) => {
+        cb(new Error('descriptor read failed'));
+      },
+    );
+    __setDevices([device]);
+
+    const printers = await discovery.listPrinters();
+    expect(printers).toHaveLength(1);
+    expect(printers[0]!.serialNumber).toBeUndefined();
+  });
+
   it('uses bus:address as the connectionId', async () => {
     __setDevices([makeDevice(0x0922, 0x1002, undefined, 3, 7)]);
 
@@ -98,6 +113,43 @@ describe('LabelManagerDiscovery', () => {
     const printer = await discovery.openPrinter({ vid: 0x0922, pid: 0x1004 });
     expect(printer.device.transports.usb?.pid).toBe('0x1004');
     expect(transportOpen).toHaveBeenCalledWith(0x0922, 0x1004);
+  });
+
+  it('openPrinter with no options opens the first discovered device', async () => {
+    __setDevices([makeDevice(0x0922, 0x1002, 'A1')]);
+    transportOpen.mockResolvedValue({
+      get connected() {
+        return true;
+      },
+      write: vi.fn(),
+      read: vi.fn(),
+      close: vi.fn(),
+    });
+
+    const printer = await discovery.openPrinter();
+    expect(printer.device.transports.usb?.pid).toBe('0x1002');
+    expect(transportOpen).toHaveBeenCalledWith(0x0922, 0x1002);
+  });
+
+  it('openPrinter matches on vid alone, ignoring pid', async () => {
+    __setDevices([makeDevice(0x0922, 0x1004, 'A1')]);
+    transportOpen.mockResolvedValue({
+      get connected() {
+        return true;
+      },
+      write: vi.fn(),
+      read: vi.fn(),
+      close: vi.fn(),
+    });
+
+    const printer = await discovery.openPrinter({ vid: 0x0922 });
+    expect(printer.device.transports.usb?.pid).toBe('0x1004');
+  });
+
+  it('listPrinters omits serialNumber when the device reports none', async () => {
+    __setDevices([makeDevice(0x0922, 0x1002)]);
+    const printers = await discovery.listPrinters();
+    expect(printers[0]!.serialNumber).toBeUndefined();
   });
 
   it('throws when no compatible printer matches', async () => {

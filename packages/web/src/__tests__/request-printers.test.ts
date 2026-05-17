@@ -42,6 +42,32 @@ describe('requestPrinters(opts) — labelmanager generic factory', () => {
       await printer.close();
     });
 
+    it('honours an explicit deviceKey, bypassing VID/PID auto-identify', async () => {
+      // Picked device has an unknown VID/PID; the explicit deviceKey
+      // must take precedence and still yield an adapter map.
+      const device = createMockUSBDevice(0xdead, 0xbeef);
+      vi.stubGlobal('navigator', { usb: { requestDevice: vi.fn().mockResolvedValue(device) } });
+
+      const printers = await requestPrinters({ transport: 'usb', deviceKey: DEVICES.LM_PNP.key });
+      const roles = Object.keys(printers);
+      expect(roles).toHaveLength(1);
+      const printer = printers[roles[0]!]!;
+      // The adapter must be keyed/built from the explicit deviceKey's
+      // engine role, not the (unknown) picked device.
+      expect(roles[0]).toBe(DEVICES.LM_PNP.engines[0]!.role);
+      expect(printer.family).toBe('labelmanager');
+      await printer.close();
+    });
+
+    it('throws for an unknown explicit deviceKey', async () => {
+      const device = createMockUSBDevice();
+      vi.stubGlobal('navigator', { usb: { requestDevice: vi.fn().mockResolvedValue(device) } });
+
+      await expect(requestPrinters({ transport: 'usb', deviceKey: 'NO_SUCH_KEY' })).rejects.toThrow(
+        /unknown deviceKey/,
+      );
+    });
+
     it('throws DeviceIdentificationRequiredError when picked device has unknown VID/PID', async () => {
       const device = createMockUSBDevice(0xdead, 0xbeef);
       const usbStub = { requestDevice: vi.fn().mockResolvedValue(device) };
@@ -70,6 +96,19 @@ describe('requestPrinters(opts) — labelmanager generic factory', () => {
         // continueWith must NOT open the picker a second time.
         expect(requestDevice).toHaveBeenCalledTimes(1);
         await printers[roles[0]!]!.close();
+      }
+    });
+
+    it('continueWith rejects an unknown deviceKey', async () => {
+      const device = createMockUSBDevice(0xdead, 0xbeef);
+      vi.stubGlobal('navigator', { usb: { requestDevice: vi.fn().mockResolvedValue(device) } });
+
+      try {
+        await requestPrinters({ transport: 'usb' });
+        throw new Error('expected DeviceIdentificationRequiredError');
+      } catch (err) {
+        if (!(err instanceof DeviceIdentificationRequiredError)) throw err;
+        await expect(err.continueWith('NO_SUCH_KEY')).rejects.toThrow(/unknown deviceKey/);
       }
     });
   });

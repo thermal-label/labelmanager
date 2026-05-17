@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- intentionally exercises the deprecated per-transport factories during plan-10 transition */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MediaNotSpecifiedError } from '@thermal-label/contracts';
 import type { Transport } from '@thermal-label/contracts';
 import { TAPE_12MM, findDevice } from '@thermal-label/labelmanager-core';
-import { fromUSBDevice, WebDymoPrinter } from '../printer.js';
+import {
+  fromUSBDevice,
+  fromUSBDeviceAll,
+  requestPrinter,
+  requestPrintersUsbLegacy,
+  WebDymoPrinter,
+} from '../printer.js';
 import { createMockUSBDevice } from './webusb-mock.js';
 
 /**
@@ -152,5 +158,83 @@ describe('WebDymoPrinter', () => {
     unsub();
     await printer.close();
     expect(received).toBeGreaterThanOrEqual(1);
+  });
+
+  it('print() honours an explicit rotate override', async () => {
+    const device = createMockUSBDevice();
+    const printer = await fromUSBDevice(device);
+
+    // An explicit rotate angle bypasses the orientation heuristic; the
+    // call must still succeed and emit raster transfers.
+    await printer.print(solidRgba(8, 8), TAPE_12MM, { rotate: 0 });
+    expect(device.__transfers.length).toBeGreaterThan(0);
+  });
+
+  it('print() falls back to detectedMedia from the last status', async () => {
+    // detectedMedia is always undefined on LabelManager (no media
+    // detection), so a media-less print after getStatus still has no
+    // resolvable media and must throw — exercising the `media ??
+    // lastStatus?.detectedMedia` fallback branch.
+    const device = createMockUSBDevice(0x0922, 0x1002, 0x40);
+    const printer = await fromUSBDevice(device);
+
+    await printer.getStatus();
+    await expect(printer.print(solidRgba(8, 8))).rejects.toBeInstanceOf(MediaNotSpecifiedError);
+  });
+});
+
+describe('createPreview', () => {
+  it('uses the media override from PreviewOptions when supplied', async () => {
+    const printer = await fromUSBDevice(createMockUSBDevice());
+    const result = await printer.createPreview(solidRgba(8, 8), { media: TAPE_12MM });
+    expect(result.media).toBe(TAPE_12MM);
+    expect(result.assumed).toBe(false);
+  });
+
+  it('falls back to DEFAULT_MEDIA and marks the preview assumed without media', async () => {
+    const printer = await fromUSBDevice(createMockUSBDevice());
+    const result = await printer.createPreview(solidRgba(8, 8));
+    expect(result.assumed).toBe(true);
+    expect(result.planes).toHaveLength(1);
+  });
+});
+
+describe('deprecated USB-only factories', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('requestPrinter opens the picked device', async () => {
+    const device = createMockUSBDevice();
+    vi.stubGlobal('navigator', { usb: { requestDevice: vi.fn().mockResolvedValue(device) } });
+
+    const printer = await requestPrinter();
+    expect(printer.connected).toBe(true);
+    await printer.close();
+  });
+
+  it('requestPrintersUsbLegacy returns a 1-key adapter map keyed by engine role', async () => {
+    const device = createMockUSBDevice();
+    vi.stubGlobal('navigator', { usb: { requestDevice: vi.fn().mockResolvedValue(device) } });
+
+    const printers = await requestPrintersUsbLegacy();
+    const roles = Object.keys(printers);
+    expect(roles).toHaveLength(1);
+    expect(printers[roles[0]!]!.family).toBe('labelmanager');
+    await printers[roles[0]!]!.close();
+  });
+
+  it('fromUSBDeviceAll wraps an already-selected device', async () => {
+    const printers = await fromUSBDeviceAll(createMockUSBDevice());
+    const roles = Object.keys(printers);
+    expect(roles).toHaveLength(1);
+    expect(printers[roles[0]!]!.model).toBe('LabelManager PnP');
+    await printers[roles[0]!]!.close();
+  });
+
+  it('fromUSBDeviceAll throws for an unsupported USB device', async () => {
+    await expect(fromUSBDeviceAll(createMockUSBDevice(0x1234, 0x5678))).rejects.toThrow(
+      /Unsupported USB device/,
+    );
   });
 });

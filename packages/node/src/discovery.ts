@@ -21,6 +21,7 @@ export const DEFAULT_FILTERS: { vendorId: number; productId: number }[] = Object
 
 async function readSerialNumber(device: usb.Device): Promise<string | undefined> {
   const idx = device.deviceDescriptor.iSerialNumber;
+  /* v8 ignore next -- enumerateDymoDevices only calls this when iSerialNumber is truthy; guard is defensive */
   if (!idx) return;
   return new Promise(resolve => {
     device.getStringDescriptor(idx, (err, value) => {
@@ -83,6 +84,7 @@ export class LabelManagerDiscovery implements PrinterDiscovery {
     const found = await enumerateDymoDevices();
     const candidates = found.filter(entry => {
       const usb = entry.descriptor.transports.usb;
+      /* v8 ignore next -- registry invariant: every LabelManager entry declares a USB transport; guard is defensive */
       if (!usb) return false;
       const vid = parseInt(usb.vid, 16);
       const pid = parseInt(usb.pid, 16);
@@ -97,6 +99,7 @@ export class LabelManagerDiscovery implements PrinterDiscovery {
     if (!match) throw new Error('No compatible DYMO LabelManager printer found.');
 
     const matchUsb = match.descriptor.transports.usb;
+    /* v8 ignore next -- registry invariant: matched device always has a USB transport (it passed the usb filter above); guard is defensive */
     if (!matchUsb) throw new Error('Matched device has no USB transport.');
     const transport = await UsbTransport.open(
       parseInt(matchUsb.vid, 16),
