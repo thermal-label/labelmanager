@@ -27,7 +27,7 @@ driver thresholds/dithers to 1bpp internally, with the same
 
 ##### device
 
-`LabelManagerDevice`
+[`LabelManagerDevice`](../../../core/src/type-aliases/LabelManagerDevice.md)
 
 ##### transport
 
@@ -41,7 +41,7 @@ driver thresholds/dithers to 1bpp internally, with the same
 
 ### device
 
-> `readonly` **device**: `LabelManagerDevice`
+> `readonly` **device**: [`LabelManagerDevice`](../../../core/src/type-aliases/LabelManagerDevice.md)
 
 The device entry for the connected printer.
 
@@ -253,7 +253,7 @@ between sequential `print()` calls within the same session).
 
 ##### options?
 
-`LabelManagerPrintOptions`
+[`LabelManagerPrintOptions`](../../../core/src/interfaces/LabelManagerPrintOptions.md)
 
 — per-call options (copies, density, etc.).
 

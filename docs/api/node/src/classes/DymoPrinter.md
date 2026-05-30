@@ -33,7 +33,7 @@ unconditional rotate). Override per-call with `options.rotate`.
 
 ##### device
 
-`LabelManagerDevice`
+[`LabelManagerDevice`](../../../core/src/type-aliases/LabelManagerDevice.md)
 
 ##### transport
 
@@ -47,7 +47,7 @@ unconditional rotate). Override per-call with `options.rotate`.
 
 ### device
 
-> `readonly` **device**: `LabelManagerDevice`
+> `readonly` **device**: [`LabelManagerDevice`](../../../core/src/type-aliases/LabelManagerDevice.md)
 
 The device entry for the connected printer.
 
@@ -230,7 +230,7 @@ between sequential `print()` calls within the same session).
 
 ##### options?
 
-`LabelManagerPrintOptions`
+[`LabelManagerPrintOptions`](../../../core/src/interfaces/LabelManagerPrintOptions.md)
 
 — per-call options (copies, density, etc.).
 

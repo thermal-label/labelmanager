@@ -51,10 +51,10 @@ export {
   parseStatus,
   tapeTypeFor,
 } from '@thermal-label/d1-core';
+export type { D1Material } from '@thermal-label/d1-core';
 export { createPreviewOffline } from './preview.js';
 export type {
   LabelManagerDevice,
-  LabelManagerMaterial,
   LabelManagerMedia,
   LabelManagerPrintOptions,
   TapeWidth,

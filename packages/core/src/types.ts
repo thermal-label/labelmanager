@@ -16,49 +16,21 @@ export type TapeWidth = 6 | 9 | 12 | 19;
 export type LabelManagerDevice = DeviceEntry & { family: 'labelmanager' };
 
 /**
- * D1 cartridge substrate family. Picker / preview UX hint — the
- * rasterizer does not branch on this.
- *
- * The `rhino-*` values cover DYMO's industrial Rhino™ cartridge line.
- * Rhino cartridges are mechanically the same shape as D1 and physically
- * fit LabelManager chassis; DYMO does not officially endorse the
- * cross-use, and the stiffer industrial substrates (especially
- * heat-shrink polyolefin and durable polyester) accelerate cutter blade
- * and motor wear over time. Use at your own risk — see HARDWARE.md.
- */
-export type LabelManagerMaterial =
-  | 'standard'
-  | 'permanent-polyester'
-  | 'flexible-nylon'
-  | 'durable'
-  | 'rhino-vinyl'
-  | 'rhino-permanent-polyester'
-  | 'rhino-flexible-nylon'
-  | 'rhino-heat-shrink'
-  | 'rhino-non-adhesive-tag'
-  | 'rhino-self-laminating';
-
-/**
  * DYMO LabelManager media descriptor.
  *
- * Extends `D1Media` from `@thermal-label/d1-core` (the shared D1 tape
- * shape — `printableDots`, `text`, `background` consumed by the
- * encoder + tape-type selector) with LabelManager-specific narrowing:
- * `type` is fixed to `'tape'`, `tapeWidthMm` is narrowed to the
- * supported widths, and `material` carries the D1 substrate family
- * for picker UX.
+ * `D1Media` from `@thermal-label/d1-core` already carries every field
+ * this driver needs (`printableDots`, `bytesPerLine`, `tapeWidthMm`,
+ * `text`, `background`, `material`). This interface adds no fields of
+ * its own — it only narrows the shared shape to the LabelManager
+ * chassis: `type` fixed to `'tape'`, `tapeWidthMm` to the supported
+ * widths, and `printableDots` / `bytesPerLine` made required (the
+ * encoder always sizes the raster from them on catalogued media).
  */
 export interface LabelManagerMedia extends D1Media {
   type: 'tape';
   tapeWidthMm: TapeWidth;
   printableDots: number;
   bytesPerLine: number;
-  /** D1 substrate family. */
-  material?: LabelManagerMaterial;
-  /** Printed ink colour, named (the only ink the cartridge carries). */
-  text?: string;
-  /** Substrate colour, named. */
-  background?: string;
 }
 
 /**

@@ -14,7 +14,6 @@
 ## Type Aliases
 
 - [LabelManagerDevice](type-aliases/LabelManagerDevice.md)
-- [LabelManagerMaterial](type-aliases/LabelManagerMaterial.md)
 - [TapeWidth](type-aliases/TapeWidth.md)
 
 ## Variables

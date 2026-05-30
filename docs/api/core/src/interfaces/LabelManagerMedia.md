@@ -8,30 +8,19 @@
 
 DYMO LabelManager media descriptor.
 
-Extends `D1Media` from `@thermal-label/d1-core` (the shared D1 tape
-shape — `printableDots`, `text`, `background` consumed by the
-encoder + tape-type selector) with LabelManager-specific narrowing:
-`type` is fixed to `'tape'`, `tapeWidthMm` is narrowed to the
-supported widths, and `material` carries the D1 substrate family
-for picker UX.
+`D1Media` from `@thermal-label/d1-core` already carries every field
+this driver needs (`printableDots`, `bytesPerLine`, `tapeWidthMm`,
+`text`, `background`, `material`). This interface adds no fields of
+its own — it only narrows the shared shape to the LabelManager
+chassis: `type` fixed to `'tape'`, `tapeWidthMm` to the supported
+widths, and `printableDots` / `bytesPerLine` made required (the
+encoder always sizes the raster from them on catalogued media).
 
 ## Extends
 
 - `D1Media`
 
 ## Properties
-
-### background?
-
-> `optional` **background?**: `string`
-
-Substrate colour, named.
-
-#### Overrides
-
-`D1Media.background`
-
-***
 
 ### bytesPerLine
 
@@ -42,18 +31,6 @@ Bytes-per-line (`ceil(printableDots / 8)`). Convenience mirror of `printableDots
 #### Overrides
 
 `D1Media.bytesPerLine`
-
-***
-
-### material?
-
-> `optional` **material?**: [`LabelManagerMaterial`](../type-aliases/LabelManagerMaterial.md)
-
-D1 substrate family.
-
-#### Overrides
-
-`D1Media.material`
 
 ***
 
@@ -78,18 +55,6 @@ Tape width in mm — informational; the encoder reads `printableDots`.
 #### Overrides
 
 `D1Media.tapeWidthMm`
-
-***
-
-### text?
-
-> `optional` **text?**: `string`
-
-Printed ink colour, named (the only ink the cartridge carries).
-
-#### Overrides
-
-`D1Media.text`
 
 ***
 
